@@ -1,0 +1,45 @@
+header {
+    display: flex;
+    padding: 10px;
+}
+
+header .logo-div {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+header .logo-text {
+    margin: auto 0 auto 20px;
+}
+
+header .login-btn-div {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.login-btn-div {
+    margin: auto;
+}
+
+.backdrop {
+    border: 3px dotted #333;
+    padding: 15px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.backdrop .description {
+    flex-grow: 1;
+    margin: 20px auto;
+}
+
+.backdrop .action-btn-group {
+    align-self: center;
+}
+
+.backdrop .action-btn {
+    align-self: center;
+    margin: 5px;
+}
