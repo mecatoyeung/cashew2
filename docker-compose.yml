@@ -1,7 +1,28 @@
 version: "3.9"
 
 services:
-  app:
+  nginx:
+    depends_on:
+      - backend
+      - frontend
+    restart: always
+    build:
+      dockerfile: ./nginx/Dockerfile
+      context: ./nginx
+    ports:
+      - "3050:80"
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      args:
+        - DEV=true
+        - DEBUG=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./frontend:/app"
+  backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
@@ -9,7 +30,7 @@ services:
         - DEV=true
         - DEBUG=true
     ports:
-      - "3000:3000"
+      - "5000:5000"
       - "8000:8000"
     volumes:
       - "./backend:/app"

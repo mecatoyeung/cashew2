@@ -3,11 +3,11 @@ LABEL maintainer="Cato Yeung"
 
 ENV PYTHONUNBUFFERED 1
 
-COPY ./requirements.txt /tmp/requirements.txt
-COPY ./requirements.dev.txt /tmp/requirements.dev.txt
-COPY ./app /app
+COPY ./backend/requirements.txt /tmp/requirements.txt
+COPY ./backend/requirements.dev.txt /tmp/requirements.dev.txt
+COPY ./backend /app
 WORKDIR /app
-EXPOSE 3000
+EXPOSE 5000
 EXPOSE 8000
 
 ARG DEV=false
