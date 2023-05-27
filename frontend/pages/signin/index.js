@@ -1,0 +1,162 @@
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Image from 'next/image'
+
+import { produce } from "immer"
+
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
+import { Button } from 'react-bootstrap'
+
+import service from '../../service'
+
+import OnePageLayout from '../../layouts/onePage'
+
+import signInStyles from "../../styles/SignIn.module.scss"
+
+export default function SignIn() {
+
+  const router = useRouter()
+
+  const [formValidation, setFormValidation] = useState({
+    isValid: true,
+    errorMessages: {
+      email: "",
+      password: ""
+    }
+  })
+
+  const [formSuccessMessage, setFormSuccessMessage] = useState("")
+  const [formErrorSummaryMessage, setFormErrorSummaryMessage] = useState("")
+
+  const [signInForm, setSignInForm] = useState({
+    email: "",
+    password: ""
+  })
+
+  const emailChangeHandler = (e) => {
+    setSignInForm(
+      produce((draft) => {
+        draft.email = e.target.value
+      })
+    )
+  }
+
+  const passwordChangeHandler = (e) => {
+    setSignInForm(
+      produce((draft) => {
+        draft.password = e.target.value
+      })
+    )
+  }
+
+  const signInBtnClickHandler = (e) => {
+    e.preventDefault()
+    if (validateSignInForm()) {
+      service.post("api/account/signin/",
+        signInForm,
+        response => {
+          console.log(response)
+          if (response.status == 200) {
+            router.push("/workspace/parsers")
+          } else {
+            setFormErrorSummaryMessage(response.message)
+          }
+        }
+      )
+    }
+
+  }
+
+  const validateSignInForm = () => {
+    let isValid = true
+    let errorMessages = []
+
+    let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+
+    if (signInForm.email.length <= 0) {
+      errorMessages.email = "'Email' cannot be empty."
+      isValid = false
+    } else if (!emailRegex.test(signInForm.email)) {
+      errorMessages.email = "'Email' format is not correct."
+      isValid = false
+    }
+    if (signInForm.password.length <= 0) {
+      errorMessages.password = "'Password' cannot be empty."
+      isValid = false
+    }
+    setFormValidation({
+      isValid,
+      errorMessages
+    })
+    return isValid
+  }
+
+  return (
+    <OnePageLayout>
+      <div className={signInStyles.wrapper}>
+        <div>
+          <i className={signInStyles.backBtn + " bi" + " bi-arrow-left"} onClick={(() => router.back())}></i>
+          <h1 className={signInStyles.h1}>Sign in</h1>
+        </div>
+        <div className={signInStyles.form}>
+          <Form>
+            <Row>
+              <Form.Group as={Col} className={signInStyles.col + " xs-12" + " md-3"} controlId="formEmail">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  placeholder="Enter email"
+                  onChange={(e) => emailChangeHandler(e)}
+                  value={signInForm.email} />
+                  {!formValidation.isValid && (
+                    <div className="formErrorMessage">
+                      {formValidation.errorMessages.email}
+                    </div>
+                  )}
+              </Form.Group>
+            </Row>
+            <Row className="xs-12 md-3">
+              <Form.Group as={Col} className={signInStyles.col + " xs-12" + " md-3"} controlId="formPassword">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="password"
+                  placeholder="Enter password"
+                  onChange={(e) => passwordChangeHandler(e)}
+                  value={signInForm.password} />
+                  {!formValidation.isValid && (
+                    <div className="formErrorMessage">
+                      {formValidation.errorMessages.password}
+                    </div>
+                  )}
+              </Form.Group>
+            </Row>
+            {formSuccessMessage && formSuccessMessage.length > 0 && (
+              <Row>
+                <div className="formSuccessMessage">
+                  {formSuccessMessage}
+                </div>
+              </Row>
+            )}
+            {formErrorSummaryMessage && formErrorSummaryMessage.length > 0 && (
+              <Row>
+                <div className="formErrorSummaryMessage">
+                  {formErrorSummaryMessage}
+                </div>
+            </Row>
+            )}
+            <Row>
+              <Form.Group as={Col} className={signInStyles.actions + " " + signInStyles.col + " xs-12" + " md-3"}>
+                <Button type="submit" className={signInStyles.signInBtn + " " + signInStyles.btn} onClick={(e) => signInBtnClickHandler(e)}>Sign in</Button>
+                <Button type="button" className={signInStyles.signUpBtn + " " + signInStyles.btn + " btn-secondary"} onClick={() => router.push("signup")}>Do not have account yet? Sign up now!</Button>
+              </Form.Group>
+            </Row>
+          </Form>
+        </div>
+      </div>
+    </OnePageLayout>
+  )
+}

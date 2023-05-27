@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Run Django",
+        "type": "python",
+        "request": "attach",
+        "clientOS": "windows",
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}/backend/",
+            "remoteRoot": "/app/"
+          }
+        ],
+        "windows": {
+          "pathMappings": [
+            {
+              "localRoot": "${workspaceFolder}/backend/",
+              "remoteRoot": "/app/"
+            }
+          ],
+        },
+        "port": 5000,
+        "host": "0.0.0.0",
+      }
+    ]
+  }

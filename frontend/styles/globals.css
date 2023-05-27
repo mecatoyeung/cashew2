@@ -1,0 +1,39 @@
+html {
+  min-height: 100vh;
+}
+
+body {
+}
+
+h1 {
+  font-family: Oswald, sans;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+div, p {
+  font-family: Merriweather Sans, sans;
+}
+
+button.btn {
+  font-family: Merriweather Sans, sans;
+}
+
+.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+  font-weight: bold !important;
+}
+
+.formErrorMessage {
+  color: red;
+  padding: 5px;
+}
+
+.formErrorSummaryMessage {
+  color: red;
+  padding: 5px;
+}
+
+.formSuccessMessage {
+  color: green;
+  padding: 5px;
+}

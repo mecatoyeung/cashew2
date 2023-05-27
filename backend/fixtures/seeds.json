@@ -1,0 +1,12 @@
+[
+    {
+      "model": "core.User",
+      "pk": 1,
+      "fields": {
+        "email": "me@catoyeung.com",
+        "name": "Cato Yeung",
+        "is_active": true,
+        "is_staff": true
+      }
+    }
+  ]

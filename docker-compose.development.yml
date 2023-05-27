@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  nginx:
+    depends_on:
+      - backend
+      - frontend
+    restart: always
+    build:
+      context: ./nginx
+      dockerfile: ./Dockerfile.development
+    volumes:
+      - static_volume:/vol/static
+    ports:
+      - "80:80"
+  frontend:
+    depends_on:
+      - backend
+    restart: always
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile.development
+      args:
+        - DEV=true
+        - DEBUG=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./frontend:/app"
+      - /app/node_modules
+      - /app/.next
+  backend:
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.development
+      args:
+        - DEV=true
+        - DEBUG=true
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    volumes:
+      - "./backend:/app"
+      - static_volume:/vol/static
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOST=${DJANGO_ALLOWED_HOSTS}
+      - DEBUG=1
+      - USE_PTVSD=true
+      - profile=development
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+
+volumes:
+  dev-db-data:
+  static_volume:
+  media_volume:

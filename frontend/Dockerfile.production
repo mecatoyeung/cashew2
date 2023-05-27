@@ -1,0 +1,14 @@
+FROM node:18-alpine
+LABEL maintainer="Cato Yeung"
+
+WORKDIR /app
+
+COPY ./package.json ./
+RUN npm install
+
+COPY ./ ./
+
+RUN npm run build
+ENV NODE_ENV=development
+
+CMD ["npm", "run" ,"start"]

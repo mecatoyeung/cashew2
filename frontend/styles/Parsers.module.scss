@@ -1,0 +1,37 @@
+.parsersUl {
+    padding: 10px 0;
+    margin: 0;
+}
+
+.parsersUl li {
+    border: 3px dotted #E31A2F;
+    border-radius: 6px;
+    margin: 10px;
+    width: 200px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    vertical-align: middle;
+    float: left;
+    cursor: pointer;
+    position: relative;
+}
+
+.parsersUl li:hover {
+    border: 3px solid #E31A2F;
+}
+
+.parserName {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 120px;
+}
+
+.parserActions {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+}
