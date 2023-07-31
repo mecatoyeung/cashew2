@@ -1,3 +1,5 @@
+import Head from 'next/head';
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
@@ -6,7 +8,7 @@ import { Button } from 'react-bootstrap'
 
 import PublicLayout from '../layouts/public'
 
-import homeStyles from "../styles/Home.module.scss"
+import homeStyles from "../styles/Home.module.css"
 
 const movingContentList = [
   "Invoices.",
@@ -36,6 +38,8 @@ export default function Home() {
 
   const [movingContentBreakdownIndex, setMovingContentBreakdownIndex] = useState(0)
 
+  const [expandHamburgerMenu, setExpandHamburgerMenu] = useState(false)
+
   useEffect(() => {
     const adsMovingContentInterval = setInterval(() => {
       if (movingContentBreakdownIndex < movingContentBreakdowns.length) {
@@ -48,78 +52,102 @@ export default function Home() {
   }, [movingContentBreakdownIndex]);
 
   return (
-    <PublicLayout>
-      <div className={homeStyles.wrapper}>
-        <header className={homeStyles.header}>
-          <div className="container">
-            <div className="row">
-              <div className="col-sm-4">
-                <div className={homeStyles.logoDiv}>
-                  <Image src="/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
+    <>
+      <Head>
+        <title>Cashew - Homepage</title>
+      </Head>
+      <PublicLayout>
+        <div className={homeStyles.wrapper}>
+          <header className={homeStyles.header}>
+            <div className="container">
+              <div className="row">
+                <div className="col-12 col-lg-4">
+                  <div className={homeStyles.logoDiv}>
+                    <Image src="/static/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
+                  </div>
+                  <h1 className={homeStyles.h1}>Cashew</h1>
                 </div>
-                <h1 className={homeStyles.h1}>Cashew Docparser</h1>
-              </div>
-              <div className="col-sm-8">
-                <nav className={homeStyles.nav}>
-                  <ul>
-                    <li>Why Cashew?</li>
-                    <li>Solutions</li>
-                    <li>Team</li>
-                    <li>About Us</li>
-                    <li>Contact Us</li>
-                  </ul>
-                </nav>
+                <div className="col-12 col-lg-8">
+                  <div className='hamburger-menu'>
+                    <span onClick={() => { setExpandHamburgerMenu(true) }}>
+                      <i className="bi bi-list"
+                        style={{display: expandHamburgerMenu ? "none": "inline-block" }}></i>
+                    </span>
+                    <span onClick={() => setExpandHamburgerMenu(false)}>
+                      <i className="bi bi-x-lg"
+                        style={{display: expandHamburgerMenu ? "inline-block": "none" }}></i>
+                    </span>
+                  </div>
+                  <nav className={homeStyles.hamburgerNav} style={{display: expandHamburgerMenu ? "block": "none" }}>
+                    <ul>
+                      <li>Why Cashew?</li>
+                      <li>Solutions</li>
+                      <li>Team</li>
+                      <li>About Us</li>
+                      <li>Contact Us</li>
+                    </ul>
+                  </nav>
+                  <nav className={homeStyles.nav}>
+                    <ul>
+                      <li>Why Cashew?</li>
+                      <li>Solutions</li>
+                      <li>Team</li>
+                      <li>About Us</li>
+                      <li>Contact Us</li>
+                    </ul>
+                  </nav>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
-        <hr className={homeStyles.headerHr}/>
-        <main className={homeStyles.main}>
-          <div className="container">
-            <div className="row">
-              <div className="col-sm col-lg-8" style={{paddingRight: 0}}>
-                <div className={homeStyles.ad}>
-                  <div className={homeStyles.content}>
-                    <div className={homeStyles.movingContent}>
-                      Our company need Document Automation for <span className={homeStyles.movingWords}>{movingContentBreakdowns[movingContentBreakdownIndex]}</span>
+          </header>
+          <hr className={homeStyles.headerHr}/>
+          <main className={homeStyles.main}>
+            <div className="container">
+              <div className="row">
+                <div className="col-sm col-lg-8" style={{marginBottom: 10}}>
+                  <div className={homeStyles.ad}>
+                    <div className={homeStyles.content}>
+                      <div className={homeStyles.movingContent}>
+                        Our company need Document Automation for <span className={homeStyles.movingWords}>{movingContentBreakdowns[movingContentBreakdownIndex]}</span>
+                      </div>
+                    </div>
+                    <div className={homeStyles.actions}>
+                      <Button className={homeStyles.btn + " signupBtn"} onClick={() => router.push("/signup")}>Try now!</Button>
+                      <Button className={homeStyles.btn + " signinBtn"} onClick={() => router.push("/signin")}>Sign in.</Button>
                     </div>
                   </div>
-                  <div className={homeStyles.actions}>
-                    <Button className={homeStyles.btn + " signupBtn"} onClick={() => router.push("/signup")}>Try now!</Button>
-                    <Button className={homeStyles.btn + " signinBtn"}>I already got an account.Sign in.</Button>
-                  </div>
                 </div>
-              </div>
-              <div className="col-sm col-lg-4">
-                <div className={homeStyles.sideAd}>
-                  <div className={homeStyles.content}>
-                    Not conviced?
-                  </div>
-                  <div className={homeStyles.talkToOurSales}>
-                    <Button className={homeStyles.talkToOurSales}>Arrange for a Demo!</Button>
+                <div className="col-sm col-lg-4" style={{marginBottom: 10}}>
+                  <div className={homeStyles.sideAd}>
+                    <div className={homeStyles.content}>
+                      Not conviced?
+                    </div>
+                    <div className={homeStyles.talkToOurSales}>
+                      <Button className={homeStyles.talkToOurSales}>Arrange for a Demo!</Button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </main>
-        <footer className={homeStyles.footer}>
-          <div className="container">
-            <div className="row">
-              <div className="col-sm col-lg-8">
-                <div className={homeStyles.copyright}>
-                  2023 @ Sonik Global Limited. All rights reserved.
+          </main>
+          <footer className={homeStyles.footer}>
+            <div className="container">
+              <div className="row">
+                <div className="col-sm col-lg-8">
+                  <div className={homeStyles.copyright}>
+                    2023 @ Sonik Global Limited. All rights reserved.
+                  </div>
                 </div>
-              </div>
-              <div className="col-sm col-lg-4">
-                <div className="social-media">
-                  <i className="fa fa-instagram" aria-hidden="true"></i>
+                <div className="col-sm col-lg-4">
+                  <div className="social-media">
+                    <i className="fa fa-instagram" aria-hidden="true"></i>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </footer>
-      </div>
-    </PublicLayout>
+          </footer>
+        </div>
+      </PublicLayout>
+    </>
   )
 }

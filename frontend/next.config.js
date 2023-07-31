@@ -8,6 +8,10 @@ const nextConfig = {
     return config
   },
   reactStrictMode: true,
+  images: {
+    loader: "custom",
+    loaderFile: './imageLoader.js'
+  }
 }
 
 module.exports = nextConfig

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
+import Head from 'next/head'
 
 import { produce } from "immer"
 
@@ -9,11 +10,15 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import { Button } from 'react-bootstrap'
 
+import Select from 'react-select'
+
 import service from '../../service'
 
 import OnePageLayout from '../../layouts/onePage'
 
-import signUpStyles from "../../styles/SignUp.module.scss"
+import signUpStyles from "../../styles/SignUp.module.css"
+
+import Loader from '../../assets/icons/loader.svg'
 
 export default function SignUp() {
 
@@ -22,27 +27,52 @@ export default function SignUp() {
   const [formValidation, setFormValidation] = useState({
     isValid: true,
     errorMessages: {
-      displayName: "",
+      username: "",
       email: "",
-      password: "",
-      confirmPassword: ""
+      password1: "",
+      password2: "",
+      fullName: "",
+      country: "",
+      companyName: ""
     }
   })
 
   const [formSuccessMessage, setFormSuccessMessage] = useState("")
-  const [formErrorSummaryMessage, setFormErrorSummaryMessage] = useState("")
+  const [formErrorMessages, setFormErrorMessages] = useState(null)
 
   const [signUpForm, setSignUpForm] = useState({
-    displayName: "",
+    username: "",
     email: "",
-    password: "",
-    confirmPassword: ""
+    password1: "",
+    password2: "",
+    fullName: "",
+    country: "",
+    companyName: "",
+    submitting: false
   })
 
-  const displayNameChangeHandler = (e) => {
+  const [userCountries, setUserCountries] = useState([])
+
+  const fullNameChangeHandler = (e) => {
     setSignUpForm(
       produce((draft) => {
-        draft.displayName = e.target.value
+        draft.fullName = e.target.value
+      })
+    )
+  }
+
+  const companyNameChangeHandler = (e) => {
+    setSignUpForm(
+      produce((draft) => {
+        draft.companyName = e.target.value
+      })
+    )
+  }
+
+  const countryChangeHandler = (e) => {
+    setSignUpForm(
+      produce((draft) => {
+        draft.country = e.value
       })
     )
   }
@@ -50,6 +80,7 @@ export default function SignUp() {
   const emailChangeHandler = (e) => {
     setSignUpForm(
       produce((draft) => {
+        draft.username = e.target.value
         draft.email = e.target.value
       })
     )
@@ -58,7 +89,7 @@ export default function SignUp() {
   const passwordChangeHandler = (e) => {
     setSignUpForm(
       produce((draft) => {
-        draft.password = e.target.value
+        draft.password1 = e.target.value
       })
     )
   }
@@ -66,7 +97,7 @@ export default function SignUp() {
   const confirmPasswordChangeHandler = (e) => {
     setSignUpForm(
       produce((draft) => {
-        draft.confirmPassword = e.target.value
+        draft.password2 = e.target.value
       })
     )
   }
@@ -74,16 +105,27 @@ export default function SignUp() {
   const signUpBtnClickHandler = (e) => {
     e.preventDefault()
     if (validateSignUpForm()) {
-      service.post("api/account/create/",
+      let updatedSignUpForm = {...signUpForm}
+      updatedSignUpForm.submitting = true
+      setSignUpForm(updatedSignUpForm)
+      setFormErrorMessages(null)
+
+      localStorage.removeItem("token")
+
+      service.post("rest-auth/registration/",
         signUpForm,
         response => {
           if (response.status == 201) {
-            // if response is valid and account is created
+            updatedSignUpForm.submitting = false
+            setSignUpForm(updatedSignUpForm)
+            router.push("/verify-email?email=" + signUpForm.email)
             setFormSuccessMessage("Your account has been created. Please sign in.")
           }
         },
         error => {
-          setFormErrorSummaryMessage(error.response.data.errorMessage)
+          updatedSignUpForm.submitting = false
+          setSignUpForm(updatedSignUpForm)
+          setFormErrorMessages(error.response.data)
         }
       )
     }
@@ -96,8 +138,8 @@ export default function SignUp() {
 
     let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
 
-    if (signUpForm.displayName.length <= 0) {
-      errorMessages.displayName = "'Display Name' cannot be empty."
+    if (signUpForm.fullName.length <= 0) {
+      errorMessages.fullName = "'Full Name' cannot be empty."
       isValid = false
     }
     if (signUpForm.email.length <= 0) {
@@ -107,16 +149,16 @@ export default function SignUp() {
       errorMessages.email = "'Email' format is not correct."
       isValid = false
     }
-    if (signUpForm.password.length <= 0) {
-      errorMessages.password = "'Password' cannot be empty."
+    if (signUpForm.password1.length <= 0) {
+      errorMessages.password1 = "'Password' cannot be empty."
       isValid = false
     }
-    if (signUpForm.confirmPassword.length <= 0) {
-      errorMessages.confirmPassword = "'Confirm Password' cannot be empty."
+    if (signUpForm.password2.length <= 0) {
+      errorMessages.password2 = "'Confirm Password' cannot be empty."
       isValid = false
     }
-    if (signUpForm.password != signUpForm.confirmPassword) {
-      errorMessages.confirmPassword = "'Confirm Password' is not matched 'Password'."
+    if (signUpForm.password1 != signUpForm.password2) {
+      errorMessages.password2 = "'Confirm Password' is not matched with 'Password'."
       isValid = false
     }
     setFormValidation({
@@ -126,102 +168,153 @@ export default function SignUp() {
     return isValid
   }
 
+  const getUserCountries = () => {
+    service.get("/user_countries/", response => {
+      setUserCountries(response.data)
+    })
+  }
+
+  useEffect(() => {
+    getUserCountries()
+  }, [])
+
   return (
-    <OnePageLayout>
-      <div className={signUpStyles.wrapper}>
-        <div>
-          <i className={signUpStyles.backBtn + " bi" + " bi-arrow-left"} onClick={(() => router.back())}></i>
-          <h1 className={signUpStyles.h1}>Sign up now!</h1>
-        </div>
-        <div className={signUpStyles.form}>
-          <Form>
-            <Row>
-              <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formDisplayName">
-                <Form.Label>Display Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="displayName"
-                  placeholder="Enter display name"
-                  onChange={(e) => displayNameChangeHandler(e)}
-                  value={signUpForm.displayName}/>
-                  {!formValidation.isValid && (
-                    <div className="formErrorMessage">
-                      {formValidation.errorMessages.displayName}
-                    </div>
-                  )}
-              </Form.Group>
-            </Row>
-            <Row>
-              <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formEmail">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  placeholder="Enter email"
-                  onChange={(e) => emailChangeHandler(e)}
-                  value={signUpForm.email} />
-                {!formValidation.isValid && (
-                    <div className="formErrorMessage">
-                      {formValidation.errorMessages.email}
-                    </div>
-                  )}
-              </Form.Group>
-            </Row>
-            <Row className="xs-12 md-3">
-              <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formPassword">
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="password"
-                  placeholder="Enter password"
-                  onChange={(e) => passwordChangeHandler(e)}
-                  value={signUpForm.password} />
-                {!formValidation.isValid && (
-                    <div className="formErrorMessage">
-                      {formValidation.errorMessages.password}
-                    </div>
-                  )}
-              </Form.Group>
-            </Row>
-            <Row className="xs-12 md-3">
-              <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formConfirmPassword">
-                <Form.Label>Confirm Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Enter confirm password"
-                  onChange={(e) => confirmPasswordChangeHandler(e)}
-                  value={signUpForm.confirmPassword} />
-                {!formValidation.isValid && (
-                    <div className="formErrorMessage">
-                      {formValidation.errorMessages.confirmPassword}
-                    </div>
-                  )}
-              </Form.Group>
-            </Row>
-            {formSuccessMessage && formSuccessMessage.length > 0 && (
+    <>
+      <Head>
+        <title>Cashew - Sign Up</title>
+      </Head>
+      <OnePageLayout>
+        <div className={signUpStyles.wrapper}>
+          <div>
+            <i className={signUpStyles.backBtn + " bi" + " bi-arrow-left"} onClick={(() => router.back())}></i>
+            <h1 className={signUpStyles.h1}>Sign up now!</h1>
+          </div>
+          <div className={signUpStyles.form}>
+            <Form>
               <Row>
-                <div className="formSuccessMessage">
-                  {formSuccessMessage}
-                </div>
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formFullName">
+                  <Form.Label>Full Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="fullName"
+                    placeholder="Enter full name"
+                    onChange={(e) => fullNameChangeHandler(e)}
+                    value={signUpForm.fullName}/>
+                    {!formValidation.isValid && (
+                      <div className="formErrorMessage">
+                        {formValidation.errorMessages.fullName}
+                      </div>
+                    )}
+                </Form.Group>
               </Row>
-            )}
-            {formErrorSummaryMessage && formErrorSummaryMessage.length > 0 && (
               <Row>
-                <div className="formErrorSummaryMessage">
-                  {formErrorSummaryMessage}
-                </div>
-            </Row>
-            )}
-            <Row>
-              <Form.Group as={Col} className={signUpStyles.actions + " " + signUpStyles.col + " xs-12" + " md-3"}>
-                <Button type="submit" className={signUpStyles.signUpBtn + " " + signUpStyles.btn} onClick={(e) => signUpBtnClickHandler(e)}>Sign up</Button>
-                <Button type="button" className={signUpStyles.signInBtn + " " + signUpStyles.btn + " btn-secondary"} onClick={() => router.push("signin")}>Sign in</Button>
-              </Form.Group>
-            </Row>
-          </Form>
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formCountry">
+                  <Form.Label>Country</Form.Label>
+                  <Select instanceId="userCountriesSelectId" options={userCountries} onChange={countryChangeHandler}/>
+                </Form.Group>
+              </Row>
+              <Row>
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formCompanyName">
+                  <Form.Label>Company Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="companyName"
+                    placeholder="Enter full name"
+                    onChange={(e) => companyNameChangeHandler(e)}
+                    value={signUpForm.companyName}/>
+                    {!formValidation.isValid && (
+                      <div className="formErrorMessage">
+                        {formValidation.errorMessages.companyName}
+                      </div>
+                    )}
+                </Form.Group>
+              </Row>
+              <Row>
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formEmail">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    placeholder="Enter email"
+                    autoComplete="username email"
+                    onChange={(e) => emailChangeHandler(e)}
+                    value={signUpForm.email} />
+                  {!formValidation.isValid && (
+                      <div className="formErrorMessage">
+                        {formValidation.errorMessages.email}
+                      </div>
+                    )}
+                </Form.Group>
+              </Row>
+              <Row className="xs-12 md-3">
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formPassword">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="password"
+                    placeholder="Enter password"
+                    autoComplete="new-password"
+                    onChange={(e) => passwordChangeHandler(e)}
+                    value={signUpForm.password1} />
+                  {!formValidation.isValid && (
+                      <div className="formErrorMessage">
+                        {formValidation.errorMessages.password1}
+                      </div>
+                    )}
+                </Form.Group>
+              </Row>
+              <Row className="xs-12 md-3">
+                <Form.Group as={Col} className={signUpStyles.col + " xs-12" + " md-3"} controlId="formConfirmPassword">
+                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="password2"
+                    placeholder="Enter confirm password"
+                    autoComplete="new-password"
+                    onChange={(e) => confirmPasswordChangeHandler(e)}
+                    value={signUpForm.password2} />
+                    {!formValidation.isValid && (
+                      <div className="formErrorMessage">
+                        {formValidation.errorMessages.password2}
+                      </div>
+                    )}
+                </Form.Group>
+              </Row>
+              {formSuccessMessage && formSuccessMessage.length > 0 && (
+                <Row>
+                  <div className="formSuccessMessage">
+                    {formSuccessMessage}
+                  </div>
+                </Row>
+              )}
+              <Row>
+              {formErrorMessages && Object.keys(formErrorMessages).length > 0 && Object.keys(formErrorMessages).map(function(key, index) {
+                return formErrorMessages[key].map(message => {
+                  return (
+                    <div className="formErrorMessage" key={message}>
+                      {message}
+                    </div>
+                  )
+                })
+              })}
+              </Row>
+              <Row>
+                <Form.Group as={Col} className={signUpStyles.actions + " " + signUpStyles.col + " xs-12" + " md-3"}>
+                  <Button type="submit"
+                          className={signUpStyles.signUpBtn + " " + signUpStyles.btn}
+                          onClick={(e) => signUpBtnClickHandler(e)}
+                          disabled={signUpForm.submitting}>
+                            {signUpForm.submitting && <img className="spinner" src={Loader.src} />}{signUpForm.submitting ? "Loading": "Sign up"}</Button>
+                  <Button type="button"
+                          className={signUpStyles.signInBtn + " " + signUpStyles.btn + " btn-secondary"}
+                          onClick={() => router.push("signin")}
+                          disabled={signUpForm.submitting}>Sign in</Button>
+                </Form.Group>
+              </Row>
+            </Form>
+          </div>
         </div>
-      </div>
-    </OnePageLayout>
+      </OnePageLayout>
+    </>
   )
 }

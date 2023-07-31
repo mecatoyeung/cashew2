@@ -1,0 +1,13 @@
+.actionsDiv {
+  padding: 16px;
+  display: flex;
+}
+
+.noDocumentsInQueue {
+  padding: 16px;
+  width: 100%;
+}
+
+.queueTableDiv {
+  padding: 0 16px;
+}

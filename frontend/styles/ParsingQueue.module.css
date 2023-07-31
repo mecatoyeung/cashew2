@@ -1,0 +1,19 @@
+.tdGrow {
+    width: 100%;
+  }
+
+  .tdNoWrap {
+    white-space: nowrap;
+  }
+
+  .performActionDropdown {
+    display: flex;
+    float: left;
+    margin-right: 15px;
+  }
+
+  .searchTxt {
+    float: left;
+    margin-right: 15px;
+    width: auto;
+  }

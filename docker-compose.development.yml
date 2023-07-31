@@ -10,9 +10,18 @@ services:
       context: ./nginx
       dockerfile: ./Dockerfile.development
     volumes:
-      - static_volume:/vol/static
+      - ./static:/vol/static
+      - ./nginx/conf:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
     ports:
       - "80:80"
+      - "443:443"
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
   frontend:
     depends_on:
       - backend
@@ -20,9 +29,6 @@ services:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile.development
-      args:
-        - DEV=true
-        - DEBUG=true
     ports:
       - "3000:3000"
     volumes:
@@ -34,15 +40,12 @@ services:
     build:
       context: ./backend
       dockerfile: ./Dockerfile.development
-      args:
-        - DEV=true
-        - DEBUG=true
     ports:
       - "5000:5000"
       - "8000:8000"
     volumes:
       - "./backend:/app"
-      - static_volume:/vol/static
+      - ./static:/vol/static
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
@@ -53,23 +56,55 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - SECRET_KEY=${DJANGO_SECRET_KEY}
-      - ALLOWED_HOST=${DJANGO_ALLOWED_HOSTS}
-      - DEBUG=1
-      - USE_PTVSD=true
+      - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - DEBUG=${DEBUG}
+      - USE_PTVSD=${USE_PTVSD}
       - profile=development
     depends_on:
       - db
 
   db:
-    image: postgres:13-alpine
+    restart: always
+    build:
+      context: ./postgres
+      dockerfile: ./Dockerfile.development
+    ports:
+      - "5432:5432"
     volumes:
       - dev-db-data:/var/lib/postgresql/data
+      - ./postgres/scripts/:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
 
+  #ravendb:
+    #build:
+    #  context: ./ravendb
+    #  dockerfile: ./Dockerfile.development
+    #volumes:
+    #  - ./ravendb/data:/opt/RavenDB/Server/RavenData
+      #- ./ravendb/certificate:/certificate
+      #- ./ravendb/certificate/A:/opt/RavenDB/config
+      #- ./ravendb/certificate/:/config/
+    #container_name: ravendb
+    #ports:
+    #  - "8080:8080"
+    #  - "38888:38888"
+    #  - "80:80"
+    #  - "443:443"
+    #dns:
+    #  - 8.8.8.8
+    #environment:
+      #- RAVEN_Setup_Mode=Initial
+      #- RAVEN_License_Eula_Accepted=true
+      #- RAVEN_Security_Certificate_Path=/certificate/A/cluster.server.certificate.sonikglobal.pfx
+      #- RAVEN_Public_Server_Url=https://a.sonikglobal.ravendb.community
+      #- RAVEN_Server_Url=https://localhost:8080
+      #- RAVEN_Security_Certificate_Path=/config/raven-server.certificate.pfx
+      #- RAVEN_Server_Url=https://localhost:8080
+
 volumes:
   dev-db-data:
-  static_volume:
   media_volume:
+  #ravendb-data:

@@ -7,10 +7,12 @@ class Service {
     });
     service.interceptors.response.use(this.handleSuccess, this.handleError)
     service.interceptors.request.use(function (config) {
-      const token = localStorage.getItem('access_token');
-      config.headers.Authorization = token ? `Bearer ${token}` : '';
-      return config;
-    });
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Token ${token}`
+      }
+      return config
+    })
     this.service = service
   }
 
@@ -20,20 +22,18 @@ class Service {
 
   handleError = (error) => {
     console.error(error)
-    let callbackLink
+    let callbackUrl
     switch (error.response.status) {
       case 400:
-        if (error.response.data.message == "Initial setup has not been completed.") {
-          //this.redirectTo(document, "/initial-setup")
-        }
+        console.error(error)
         break;
       case 401:
-        callbackLink = document.location
-        //this.redirectTo(document, '/account/signin?callback=' + callbackLink)
+        callbackUrl = document.location
+        this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
         break;
       case 403:
-        callbackLink = document.location
-        this.redirectTo(document, '/account/signin?callback=' + callbackLink)
+        callbackUrl = document.location
+        this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
         break;
       case 404:
         console.error(error)
@@ -53,6 +53,24 @@ class Service {
 
   get(path, callback) {
     return this.service.get(path).then(
+      (response) => callback(response)
+    );
+  }
+
+  getFile(path, callback) {
+    let service = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      responseType: "arraybuffer",
+    })
+    service.interceptors.response.use(this.handleSuccess, this.handleError)
+    service.interceptors.request.use(function (config) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Token ${token}`
+      }
+      return config
+    })
+    return service.get(path).then(
       (response) => callback(response)
     );
   }

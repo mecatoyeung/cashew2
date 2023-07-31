@@ -3,15 +3,21 @@ docker-compose -f docker-compose.development.yml up --build
 docker-compose -f docker-compose.testing.yml up --build
 docker-compose -f docker-compose.production.yml up --build
 docker-compose run --rm backend sh -c "python manage.py test"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "python manage.py startapp parsers"
 docker-compose down
 docker-compose build
 docker-compose run --rm backend sh -c "python manage.py startapp core"
-docker-compose run --rm backend sh -c "python manage.py test"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "python manage.py test"
 docker-compose run --rm backend sh -c "python manage.py wait_for_db"
 docker-compose run --rm backend sh -c "python manage.py wait_for_db && flake8"
-docker-compose run --rm backend sh -c "python manage.py makemigrations"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "alembic init alembic"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "alembic revision -m 'create user table'"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "alembic upgrade head"
+docker-compose -f docker-compose.development.yml run --rm backend sh -c "python manage.py createsuperuser"
 docker-compose run --rm backend sh -c "python manage.py wait_for_db && python manage.py migrate"
 
-docker-compose run --rm frontend sh -c "npm install cypress"
+docker-compose -f docker-compose.development.yml run --rm frontend sh -c "npm i @loadable/component"
 
 docker-compose down
+
+docker compose -f docker-compose.development.yml run --rm  certbot renew

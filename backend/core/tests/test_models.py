@@ -51,3 +51,14 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_vault(self):
+        """ Test creating a recipe is successful. """
+        vault = models.Vault.objects.create(
+            name="Sample Vault Name",
+            dbname="sampledb"
+            dbuser="sampleuser",
+            dbpassword="samplepassword"
+        )
+
+        self.assertEqual(str(vault), vault.name)

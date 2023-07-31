@@ -1,0 +1,271 @@
+.container {
+  height: 100%;
+  min-height: 100vh;
+}
+
+.editorWrapper {
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebarWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid #333;
+  width: 280px;
+  min-width: 280px;
+}
+
+.parsingRulesHeader {
+  color: #ffffff;
+  background: #0d2434;
+  font-size: 18px;
+  line-height: 40px;
+  padding: 10px;
+}
+
+.parsingRules {
+  background: #f5f5fd;
+  flex-grow: 1;
+}
+
+.parsingRules ul {
+  padding-left: 0;
+}
+
+.parsingRules ul li {
+  width: 100%;
+  list-style: none;
+  background: #ffffff;
+  color: #000000;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.parsingRules ul li:hover {
+  background: #ccc;
+}
+
+.parsingRuleTxtWrapper {
+  width: 100%;
+}
+
+.parsingRuleName {
+  width: 100%;
+  line-height: 38px;
+}
+
+.parsingRuleActions {
+  font-size: 18px;
+  line-height: 38px;
+}
+
+.parsingRuleActions * {
+  padding: 5px;
+}
+
+.parsingRuleWrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.parsingRulesFooter {
+  color: #cccccc;
+  background: #0d2434;
+  font-size: 18px;
+  line-height: 40px;
+  padding: 10px;
+}
+
+.workbenchWrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  max-width: calc(100% - 280px);
+}
+
+.workbenchWrapper button {
+  line-height: 22px;
+}
+
+.workbenchHeader {
+  color: #ffffff;
+  background: #0d2434;
+  font-size: 18px;
+  line-height: 40px;
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+}
+
+.guidelines {
+  flex-grow: 1;
+}
+
+.changeSampleDocumentWrapper {
+  display: flex;
+}
+
+.guideline {
+  flex-grow: 1;
+}
+
+.rulePropertiesWrapper {
+  position: relative;
+  flex-grow: 1;
+  width: auto;
+  height: auto;
+  overflow-x: scroll;
+  padding: 10px;
+}
+
+.regionSelectWrapper {
+  position: relative;
+  flex-grow: 1;
+  width: auto;
+  height: auto;
+  overflow-x: scroll;
+}
+
+.streamEditorWrapper {
+  flex-grow: 1;
+  overflow-y: scroll;
+  width: auto;
+  height: auto;
+  padding: 20px;
+}
+
+.mask {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.streamDescription {
+  font-weight: bold;
+  font-size: 24px;
+  padding: 10px 0;
+}
+
+.streamTable {
+  box-shadow: 4px 4px 14px -8px rgb(0 0 0 / 75%);
+  border: 1px solid #0d2434;
+  width: 100%;
+}
+
+.streamTable th {
+  border: 1px solid #0d2434;
+  padding: 10px;
+  color: #0d2434;
+  height: 45px;
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+
+.streamTable td {
+  border: 1px solid #0d2434;
+  padding: 10px;
+  color: #0d2434;
+  height: 45px;
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+
+.streamSeparatorWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.separator::before {
+  margin-left: auto;
+}
+
+.separator {
+  text-align: center;
+  font-size: 24px;
+}
+
+.separatorBefore,
+.addFilterDropDownWrapper {
+  margin-left: auto;
+}
+
+.workbenchFooter {
+  color: #ffffff;
+  background: #0d2434;
+  font-size: 18px;
+  line-height: 40px;
+  display: flex;
+  flex-direction: row;
+}
+
+.backBtnWrapper {
+  display: flex;
+  padding: 10px;
+}
+
+.copyrightWrapper {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 18px;
+  line-height: 60px;
+}
+
+.confirmBtnWrapper {
+  display: flex;
+  padding: 10px;
+}
+
+.regionSelectActions {
+  padding: 10px;
+}
+
+.regionSelectActions .addSeparatorBtn,
+.regionSelectActions .removeSeparatorBtn {
+  margin-right: 10px;
+}
+
+.tableSeparatorWrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.tableSeparator {
+  position: absolute;
+}
+
+.addFilterDropDownWrapper {
+  width: 400px;
+}
+
+.addFilterDropDownWrapper>* {
+  float: right;
+  margin-left: 10px;
+}
+
+.streamDeleteBtn {
+  margin-bottom: 10px;
+}
+
+.ruleConfigurations {
+  padding: 10px;
+  flex-grow: 1;
+  height: calc(100vh - 120px);
+  overflow: scroll
+}
+
+.myReactCrop {
+  border: 1px solid #000;
+}

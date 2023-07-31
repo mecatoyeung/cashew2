@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import sys
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,16 +26,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+DEBUG = os.environ.get('DEBUG', 'false') == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', "cashew.catoyeung.com"]
 ALLOWED_HOSTS.extend(
     filter(
         None,
         os.environ.get('ALLOWED_HOSTS', '').split(','),
     )
 )
-
 
 # Application definition
 
@@ -44,11 +45,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'corsheaders',
+    'allauth',
+    'allauth.account',
+    'rest_auth',
+    'rest_auth.registration',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
     'core',
-    'user',
+    'parsers'
 ]
 
 MIDDLEWARE = [
@@ -59,6 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -66,7 +74,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'backend/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,11 +95,27 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'Cashew'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'CASHEW'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
+AUTHENTICATION_BACKENDS = (
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
+}
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    'rest_framework.authentication.TokenAuthentication',
+),
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -127,16 +151,63 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "/static/static/"
-STATIC_ROOT = "/vol/static/static"
+STATIC_URL = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "vol/static/")
 
-MEDIA_URL = "/static/media/"
-STATIC_ROOT = "/vol/static/media"
+MEDIA_URL = os.path.join(BASE_DIR, "media/")
+STATIC_ROOT = os.path.join(BASE_DIR, "vol/media/")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'core.User'
-
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
+    'COERCE_DECIMAL_TO_STRING': False,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': (
+        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
+        'djangorestframework_camel_case.render.CamelCaseBrowsableAPIRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'djangorestframework_camel_case.parser.CamelCaseFormParser',
+        'djangorestframework_camel_case.parser.CamelCaseMultiPartParser',
+        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
+    ),
+    'JSON_UNDERSCOREIZE': {
+        'no_underscore_before_number': True,
+    },
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://cashew.catoyeung.com"
+]
+
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER': 'user.serializers.MyRegisterSerializer',
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = "587"
+EMAIL_HOST_USER = "me@catoyeung.com"
+EMAIL_HOST_PASSWORD = "ihkynmbldngejuko"
+DEFAULT_FROM_EMAIL = "noreply@sonikglobal.com"
+
+REGISTER_EMAIL_VERIFICATION_URL = "https://cashew.catoyeung.com/account/verify-email"
+
+URL_FRONT = 'https://cashew.catoyeung.com'
+
+REST_REGISTRATION = {
+    'REGISTER_VERIFICATION_EMAIL_TEMPLATES': {
+        'subject': 'backend/templates/register/email_confirmation_signup_subject.txt',
+        'text_body': 'backend/templates/register/email_confirmation_signup_message.txt',
+        'html_body': 'backend/templates/register/email_confirmation_signup_message.html',
+    },
+}
+
+SITE_ID = 1

@@ -7,16 +7,18 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+    #os.environ.setdefault('DB_HOST', 'localhost')
+    #os.environ.setdefault('DB_PORT', '5432')
+    #os.environ.setdefault('DB_NAME', 'Cashew')
+    #os.environ.setdefault('DB_USER', 'postgres')
+    #os.environ.setdefault('DB_PASS', 'CASHEW')
 
     if use_ptvsd():
-        if (os.environ.get('RUN_MAIN') or
-            os.environ.get('WERKZEUG_RUN_MAIN')) or \
-            os.environ.get('SHELL_WITH_PTVSD'):
-            import ptvsd
-            print('Waiting debugger to attach...')
-            ptvsd.enable_attach(address = ('0.0.0.0', 5000))
-            ptvsd.wait_for_attach()
-            print('Attached debugger!')
+        import ptvsd
+        print('Waiting debugger to attach (port: 5000)...')
+        ptvsd.enable_attach(address = ('0.0.0.0', 5000))
+        ptvsd.wait_for_attach()
+        print('Attached debugger!')
 
     try:
         from django.core.management import execute_from_command_line

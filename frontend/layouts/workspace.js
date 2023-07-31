@@ -1,13 +1,32 @@
 import Head from 'next/head'
 import Image from "next/image"
+import Link from 'next/link'
 
+import { useRouter } from 'next/router'
+
+import { Nav } from 'react-bootstrap'
 import { Button } from 'react-bootstrap'
 
-import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.scss"
+import service from '../service'
+
+import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css"
 
 export default function WorkspaceLayout({
     children
   }) {
+
+  const router = useRouter()
+
+  let { parserId } = router.query
+
+  const logoutBtnClickHandler = () => {
+    service.post("rest-auth/logout/", {}
+      , () => {
+        localStorage.removeItem("token")
+      router.push("/")
+    })
+  }
+
   return (
     <>
       <Head>
@@ -18,20 +37,22 @@ export default function WorkspaceLayout({
       </Head>
       <div className={workspaceLayoutStyles.wrapper}>
         <header className={workspaceLayoutStyles.header}>
-          <div className="container">
-            <div className="row">
-              <div className="col-sm-4">
+          <div>
+            <div className="row" style={{ padding: 0, margin: 0 }}>
+              <div className="col-6 col-md-6" style={{paddingLeft: 20, paddingRight: 0}}>
                 <div className={workspaceLayoutStyles.logoDiv}>
-                  <Image src="/img/logo.png" width="40" height="36" alt="Cashew Docparser" />
+                  <Image src="/static/img/logo.png" width="40" height="36" alt="Cashew Docparser" />
                 </div>
-                <h1 className={workspaceLayoutStyles.h1}>Cashew Docparser</h1>
+                <h1 className={workspaceLayoutStyles.h1}>Cashew</h1>
+                <Nav.Link href="/parsers" style={{display: "inline-block", verticalAlign: "top"}}>
+                  <i className={workspaceLayoutStyles.parsersIcon + " bi bi-grid"}></i>
+                </Nav.Link>
               </div>
-              <div className="col-sm-8">
+              <div className="col-6 col-md-6" style={{paddingLeft: 0, paddingRight: 20}}>
                 <nav className={workspaceLayoutStyles.nav}>
                   <ul>
-                    <li>Welcome, Cato Yeung!</li>
                     <li>
-                      <Button className="btn">Logout</Button>
+                      <Button className="btn" onClick={logoutBtnClickHandler}>Logout</Button>
                     </li>
                   </ul>
                 </nav>
@@ -41,34 +62,36 @@ export default function WorkspaceLayout({
         </header>
         <hr className={workspaceLayoutStyles.headerHr}/>
         <main className={workspaceLayoutStyles.main + " d-flex flex-column"}>
-          <div className="container d-flex flex-grow-1">
-            <div className="row d-flex flex-grow-1">
-              <div className="col-sm-2 d-flex flex-grow-1">
+          <div className={workspaceLayoutStyles.sideNavContainerDiv + " d-flex flex-grow-1"}>
+            <div className="row d-flex flex-grow-1" style={{ padding: 0, margin: 0, flexDirection: "row" }}>
+              <div className="col-12 col-md-2 d-flex" style={{paddingLeft: 0, paddingRight: 0, width: 200}}>
                 <div className={workspaceLayoutStyles.sideNavDiv + " d-flex flex-grow-1"}>
                   <ul className={workspaceLayoutStyles.sideNavUl}>
-                    <li>Parsers</li>
                     <li>Sources</li>
+                    <Link href={"/workspace/parsers/" + parserId + "/queues"}>
+                      <li>Queues</li>
+                    </Link>
                     <li>Spliting</li>
                     <li>Layouts</li>
                     <li>Integration</li>
                   </ul>
                 </div>
               </div>
-              <div className="col-sm-10" style={{paddingLeft: 0}}>
+              <div className="col-12 col-md-10 flex-grow-1" style={{paddingLeft: 0, paddingRight: 0, paddingBottom: 10, minHeight: "480px", display: "flex", width: "calc(100% - 200px)"}}>
                 {children}
               </div>
             </div>
           </div>
         </main>
         <footer className={workspaceLayoutStyles.footer}>
-          <div className="container">
-            <div className="row">
-              <div className="col-sm col-lg-8">
+          <div style={{width: "100%", padding: "0 10px"}}>
+            <div className="row" style={{ padding: "0 10px" }}>
+              <div className="col-sm col-lg-8" style={{ padding: "10px" }}>
                 <div className={workspaceLayoutStyles.copyright}>
                   2023 @ Sonik Global Limited. All rights reserved.
                 </div>
               </div>
-              <div className="col-sm col-lg-4">
+              <div className="col-sm col-lg-4" style={{ padding: "10px"}}>
                 <div className="social-media">
                   <i className="fa fa-instagram" aria-hidden="true"></i>
                 </div>

@@ -19,15 +19,21 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.decorators.csrf import csrf_exempt
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^api/rest-auth/', include('rest_auth.urls')),
+    re_path(r'^api/rest-auth/registration/', include('rest_auth.registration.urls')),
+    re_path(r'^api/', include('user_countries.urls')),
+    re_path(r'^api/', include('parsers.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name="api-schema"),
     path(
         'api/docs',
          SpectacularSwaggerView.as_view(url_name='api-schema'),
          name='api-docs',
     ),
-    path('api/user/', include('user.urls')),
+    #path('api/user/', include('user.urls')),
 ]

@@ -4,6 +4,7 @@ LABEL maintainer="Cato Yeung"
 WORKDIR /app
 
 COPY ./package.json ./
+RUN npm -g install next
 RUN npm install
 
 COPY ./ ./

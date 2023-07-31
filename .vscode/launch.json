@@ -22,6 +22,25 @@
         },
         "port": 5000,
         "host": "0.0.0.0",
-      }
+      },
+      {
+        "name": "Windows Debug Django",
+        "type": "python",
+        "request": "launch",
+        "stopOnEntry": false,
+        "python": "${workspaceRoot}/backend/.venv/Scripts/python.exe",
+        "program": "${workspaceRoot}/backend/manage.py",
+        "args": [
+            "runserver",
+            "--no-color",
+            "--noreload"
+        ],
+        "debugOptions": [
+            "WaitOnAbnormalExit",
+            "WaitOnNormalExit",
+            "RedirectOutput",
+            "DjangoDebugging"
+        ]
+    }
     ]
   }
