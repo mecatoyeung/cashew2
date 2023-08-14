@@ -36,6 +36,27 @@ button.btn {
   /*margin-bottom: 10px;*/
 }
 
+.table-bordered > :not(caption) > * {
+  border-width: 1px 1px;
+}
+
+.table-bordered > :not(caption) > * > *.form-control {
+  border-width: 1px 1px;
+}
+
+.table > tr > th,
+.table > tr > td {
+  padding: 10px;
+}
+
+.table > :not(caption) > * > *.btn-primary {
+  background-color: #0d6efd;
+}
+
+.table > :not(caption) > * > *.btn-danger {
+  background-color: #dc3545;
+}
+
 .hamburger-menu {
   line-height: 88px;
   font-size: 150%;

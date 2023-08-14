@@ -98,6 +98,13 @@ const RegionSelector = () => {
   const getParserDocuments = () => {
     service.get("documents/?parserId=" + parserId, response => {
       setParserDocuments(response.data)
+      if (response.data.length > 0) {
+        selectedDocumentChangeHandler({
+          target: {
+            value: response.data[0].id
+          }
+        })
+      }
     })
   }
 
@@ -220,34 +227,15 @@ const RegionSelector = () => {
 
   const addSeparatorBtnClickHandler = (e) => {
     let updatedRule = { ...rule }
-    let updatedTableColumnXs
-    if (updatedRule.tableColumnXs == "") {
-      updatedTableColumnXs = []
-    } else {
-      updatedTableColumnXs = updatedRule.tableColumnXs.split(",").map(value => parseFloat(value))
-    }
-    if (updatedTableColumnXs.length > 0) {
-      updatedTableColumnXs.push(Number(updatedTableColumnXs.slice(-1)) + 10.0)
-    } else {
-      updatedTableColumnXs.push(0)
-    }
-    updatedTableColumnXs.sort()
-    updatedRule.tableColumnXs = updatedTableColumnXs.join(",")
+    let tableColumnSeparators = updatedRule.tableColumnSeparators
+    tableColumnSeparators.push({ x: tableColumnSeparators.slice(-1) + 10.0 })
     updateRule(updatedRule)
     setRule(updatedRule)
   }
 
   const removeSeparatorBtnClickHandler = (e) => {
     let updatedRule = { ...rule }
-    let updatedTableColumnXs
-    if (updatedRule.tableColumnXs == "") {
-      updatedTableColumnXs = []
-    } else {
-      updatedTableColumnXs = updatedRule.tableColumnXs.split(",").map(value => parseFloat(value))
-    }
-    updatedTableColumnXs.pop()
-    updatedTableColumnXs.sort()
-    updatedRule.tableColumnXs = updatedTableColumnXs.join(",")
+    updatedRule.tableColumnSeparators.pop()
     updateRule(updatedRule)
     setRule(updatedRule)
   }
@@ -261,23 +249,19 @@ const RegionSelector = () => {
   }
 
   const separatorStopHandler = (e, el, xIndex) => {
-    let selectedDocument = parserDocuments.find(d => d.id == documentId)
     let width = imageRef.current.offsetWidth
 
     let updatedRule = { ...rule }
-    let updatedTableColumnXs = updatedRule.tableColumnXs.split(",").map(value => Number(value))
-    updatedTableColumnXs[xIndex] = Number(el.x) / width * 100
-    updatedTableColumnXs.sort((a, b) => {
-      return a - b;
-    })
-    updatedRule.tableColumnXs = updatedTableColumnXs.map(x => x.toFixed(2)).join(",")
+    let tableColumnSeparators = updatedRule.tableColumnSeparators
+    tableColumnSeparators[xIndex] = Number(el.x) / width * 100
+    tableColumnSeparators.sort()
     setRule(updatedRule)
     updateRule(updatedRule)
     e.stopPropagation()
   }
 
   const proceedToStreamEditorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/layouts/" + layoutId + "/rules/" + ruleId + "?editorType=streamEditor&documentId=" + documentId)
+    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId)
   }
 
   return (
@@ -340,9 +324,9 @@ const RegionSelector = () => {
                 </div>
                 {rule.ruleType == "TABLE" && (
                   <div className="col-6">
-                    <Form.Group className="mb-3" controlId="formPages">
+                    <Form.Group className="mb-3" controlId="formPages" style={{ padding: "0 10px" }}>
                       <Form.Label>Separators: </Form.Label>
-                      <div className={styles.regionSelectActions} style={{display: "block", padding: "3px"}}>
+                      <div className={styles.regionSelectActions} style={{display: "block", padding: "0"}}>
                         <Button variant="primary" className={styles.addSeparatorBtn} onClick={addSeparatorBtnClickHandler}>Add</Button>
                         <Button variant="primary" className={styles.removeSeparatorBtn} onClick={removeSeparatorBtnClickHandler}>Remove</Button>
                       </div>
@@ -393,15 +377,10 @@ const RegionSelector = () => {
                 )}
                 {rule.ruleType == "TABLE" && (
                   <div style={{position: "relative"}}>
-                    <ReactCrop className={styles.myReactCrop}
-                               crop={textfieldRegion}
-                               onChange={(c, p) => {
-                                 setTextfieldRegion(p)
-                               }}>
-
-                      <img src={process.env.NEXT_PUBLIC_API_BASE_URL + "documents/" + documentId + "/page/" + pageNum + "/image"}
-                          ref={imageRef}
-                          style={{position: "relative", zIndex: 999}}/>
+                    <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
+                      textfieldRegionChangeHandler(p)
+                    }}>
+                      <img src={imageUri} />
                     </ReactCrop>
                     {rule && imageRef.current && imageRef.current.offsetWidth != 0 && rule.tableColumnXs && rule.tableColumnXs.split(",").map(
                       (columnX, xIndex) => {
@@ -439,7 +418,7 @@ const RegionSelector = () => {
         )}
         <div className={styles.workbenchFooter}>
           <div className={styles.backBtnWrapper}>
-            <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/layouts/" + layoutId + "/rules/" + ruleId + "?editorType=ruleProperties&documentId=" + documentId)}>Back to Rule Properties</Button>
+            <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId)}>Back to Rule Properties</Button>
           </div>
           <div className={styles.copyrightWrapper}>
             Copyright @ 2022

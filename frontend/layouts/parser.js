@@ -66,14 +66,9 @@ export default function ParserLayout({
         <footer className={workspaceLayoutStyles.footer}>
           <div className="container">
             <div className="row">
-              <div className="col-sm col-lg-8">
+              <div className="col-sm">
                 <div className={workspaceLayoutStyles.copyright}>
                   2023 @ Sonik Global Limited. All rights reserved.
-                </div>
-              </div>
-              <div className="col-sm col-lg-4">
-                <div className="social-media">
-                  <i className="fa fa-instagram" aria-hidden="true"></i>
                 </div>
               </div>
             </div>

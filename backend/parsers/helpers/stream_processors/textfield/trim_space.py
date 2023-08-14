@@ -2,7 +2,7 @@ from ..base import StreamBase
 
 class TrimSpaceStreamProcessor(StreamBase):
 
-    def __init__(self):
+    def __init__(self, stream):
         pass
 
     def process(self, input):

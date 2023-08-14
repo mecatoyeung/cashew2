@@ -5,6 +5,7 @@ import EditorLayout from '../../../../../../layouts/editor'
 
 import RuleProperties from '../../../../../../components/ruleEditor/ruleProperties'
 import RegionSelector from '../../../../../../components/ruleEditor/regionSelector'
+import StreamEditor from '../../../../../../components/ruleEditor/streamEditor'
 
 const RuleEditor = () => {
 

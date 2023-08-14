@@ -4,8 +4,8 @@ from ..base import StreamBase
 
 class RemoveTextBeforeStartOfTextStreamProcessor(StreamBase):
 
-    def __init__(self, removeText):
-        self.removeText = removeText
+    def __init__(self, stream):
+        self.removeText = stream.text
 
     def process(self, streamed_data):
 

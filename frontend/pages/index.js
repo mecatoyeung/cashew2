@@ -112,8 +112,8 @@ export default function Home() {
                       </div>
                     </div>
                     <div className={homeStyles.actions}>
-                      <Button className={homeStyles.btn + " signupBtn"} onClick={() => router.push("/signup")}>Try now!</Button>
-                      <Button className={homeStyles.btn + " signinBtn"} onClick={() => router.push("/signin")}>Sign in.</Button>
+                      <Button className={homeStyles.btn + " signupBtn"} style={{marginTop: "10px"}} onClick={() => router.push("/signup")}>Try now!</Button>
+                      <Button className={homeStyles.btn + " signinBtn"} style={{marginTop: "10px"}} onClick={() => router.push("/signin")}>Sign in.</Button>
                     </div>
                   </div>
                 </div>
@@ -133,14 +133,9 @@ export default function Home() {
           <footer className={homeStyles.footer}>
             <div className="container">
               <div className="row">
-                <div className="col-sm col-lg-8">
+                <div className="col-sm">
                   <div className={homeStyles.copyright}>
                     2023 @ Sonik Global Limited. All rights reserved.
-                  </div>
-                </div>
-                <div className="col-sm col-lg-4">
-                  <div className="social-media">
-                    <i className="fa fa-instagram" aria-hidden="true"></i>
                   </div>
                 </div>
               </div>

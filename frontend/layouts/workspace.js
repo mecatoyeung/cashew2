@@ -86,14 +86,9 @@ export default function WorkspaceLayout({
         <footer className={workspaceLayoutStyles.footer}>
           <div style={{width: "100%", padding: "0 10px"}}>
             <div className="row" style={{ padding: "0 10px" }}>
-              <div className="col-sm col-lg-8" style={{ padding: "10px" }}>
+              <div className="col-sm" style={{ padding: "10px" }}>
                 <div className={workspaceLayoutStyles.copyright}>
                   2023 @ Sonik Global Limited. All rights reserved.
-                </div>
-              </div>
-              <div className="col-sm col-lg-4" style={{ padding: "10px"}}>
-                <div className="social-media">
-                  <i className="fa fa-instagram" aria-hidden="true"></i>
                 </div>
               </div>
             </div>

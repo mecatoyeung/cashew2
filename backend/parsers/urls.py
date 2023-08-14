@@ -11,6 +11,7 @@ from rest_framework.routers import DefaultRouter
 from .views.parser import ParserViewSet
 from .views.rule import RuleViewSet
 from .views.routing_rule import RoutingRuleViewSet
+from .views.stream import StreamViewSet
 from .views.queue import QueueViewSet
 from .views.document import DocumentViewSet
 
@@ -21,6 +22,8 @@ rules_router = DefaultRouter()
 rules_router.register('', RuleViewSet, basename="rules")
 routing_rules_router = DefaultRouter()
 routing_rules_router.register('', RoutingRuleViewSet, basename="routingRules")
+streams_router = DefaultRouter()
+streams_router.register('', StreamViewSet, basename="streams")
 queues_router = DefaultRouter()
 queues_router.register('', QueueViewSet, basename="queues")
 documents_router = DefaultRouter()
@@ -32,6 +35,7 @@ urlpatterns = [
     path('parsers/', include(parsers_router.urls), name="parsers"),
     path('routingRules/', include(routing_rules_router.urls), name="routingRules"),
     path('rules/', include(rules_router.urls), name="rules"),
+    path('streams/', include(streams_router.urls), name="streams"),
     path('queues/', include(queues_router.urls), name="queues"),
     path('documents/', include(documents_router.urls), name="documents"),
 ]

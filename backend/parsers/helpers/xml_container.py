@@ -5,13 +5,14 @@ import functools
 import math
 import copy
 import json
+import statistics
 from decimal import Decimal
 
 from ..models.rule_type import RuleType
 from .get_document_nos_from_range import get_document_nos_from_range
 
-SAME_LINE_ACCEPTANCE_RANGE = 3
-ASSUMED_TEXT_WIDTH = Decimal(3.8)
+SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
+ASSUMED_TEXT_WIDTH = Decimal(5.0)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
 class XMLContainer:
@@ -58,118 +59,62 @@ class XMLContainer:
 
         page_nums = get_document_nos_from_range(rule.pages, 1, self.document.total_page_num)
 
-        result = []
+        textlines_in_all_pages = []
 
-        # Since this is a textfield, we only get the first page text
         for page_num in page_nums:
 
-            xml_rule = XMLRule(rule)
-            xml_rule.region.x1 = rule.x1 / Decimal(100.00) * self.xml_pages[0].region.x2
-            xml_rule.region.x2 = rule.x2 / Decimal(100.00) * self.xml_pages[0].region.x2
-            xml_rule.region.y1 = rule.y1 / Decimal(100.00) * self.xml_pages[0].region.y2
-            xml_rule.region.y2 = rule.y2 / Decimal(100.00) * self.xml_pages[0].region.y2
+            xml_page = [x for x in self.xml_pages if x.page_num == page_num ][0]
 
-            xml_page = [xml_page for xml_page in self.xml_pages if xml_page.page_num == page_num ][0]
+            xml_rule = XMLRule(xml_page, rule)
 
             textlines_in_rows = []
-            textlines_within_area = []
 
+            # Get All Textlines within Area
+            textlines_within_area = []
             for textline in xml_page.textlines:
                 if xml_rule.region.overlaps(textline.region) and textline.text != "":
                     textlines_within_area.append(textline)
 
-            last_textline = None
-            for textline in textlines_within_area:
-                is_new_textline = True
-                for existing_textlines_in_row_index, existing_textlines_in_row in enumerate(textlines_in_rows):
+            text_in_current_row = ""
+            while len(textlines_within_area) > 0:
+                current_textline = textlines_within_area.pop(0)
+                # if it is a new line, just prepend space append to the row array
+                if len(text_in_current_row) == 0:
 
+                    # if it is the first line, add empty lines
                     if len(textlines_in_rows) == 0:
-                        is_new_textline = True
-                        break
-
-                    if len(existing_textlines_in_row) == 0:
-                        continue
-
-                    if existing_textlines_in_row[0].page.page_num == textline.page.page_num and \
-                        existing_textlines_in_row[0].region.is_in_same_line(textline.region):
-                        is_new_textline = False
-                        textline_belongs_to_index = existing_textlines_in_row_index
-                        break
+                        num_of_empty_lines_to_be_prepend = math.floor((xml_page.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend): textlines_in_rows.append("")
+                    # if it is not the first line
                     else:
-                        is_new_textline = True
+                        num_of_empty_lines_to_be_prepend = math.floor((previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend): textlines_in_rows.append("")
 
-                # if current textline is not a new text line and it is overlapping the last textline
-                if not is_new_textline:
-
-                    textline_inserted = False
-                    for existing_textline_row_index, existing_textline_in_row in enumerate(textlines_in_rows[textline_belongs_to_index]):
-                        if textline.region.x2 <= existing_textline_in_row.region.x1:
-                            textlines_in_rows[textline_belongs_to_index].insert(existing_textline_row_index, textline)
-                            textline_inserted = True
-                            break
-                        elif textline.region.x1 <= existing_textline_in_row.region.x1:
-                            textlines_in_rows[textline_belongs_to_index].insert(existing_textline_row_index, textline)
-                            textline_inserted = True
-                            break
-
-                    if not textline_inserted:
-                        textlines_in_rows[textline_belongs_to_index].append(textline)
-
+                    num_of_spaces_to_be_prepend = math.floor((current_textline.region.x1 - xml_page.region.x1) / xml_page.median_text_width)
+                    spaces = " " * num_of_spaces_to_be_prepend
+                    text_in_current_row = text_in_current_row + spaces + current_textline.text
+                # else, calculate spaces to prepend from previous textline
                 else:
+                    num_of_spaces_to_be_prepend = math.floor((current_textline.region.x1 - xml_page.region.x1) / xml_page.median_text_width) - \
+                        len(text_in_current_row)
+                    spaces = " " * num_of_spaces_to_be_prepend
+                    text_in_current_row = text_in_current_row + spaces + current_textline.text
 
-                    # if this is the first line
-                    if last_textline == None:
+                # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
+                if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
+                    num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - xml_rule.region.x1)  / xml_page.median_text_width) - \
+                        len(text_in_current_row)
+                    spaces = " " * num_of_spaces_to_be_append
+                    text_in_current_row = text_in_current_row + spaces
+                    textlines_in_rows.append(text_in_current_row)
+                    text_in_current_row = ""
 
-                        y_difference = math.floor((xml_rule.region.y2 - textline.region.y1) / ASSUMED_TEXT_HEIGHT) - 1
-                        if y_difference > 0:
-                            for i in range(y_difference):
-                                textlines_in_rows.append([])
 
-                        textlines_in_rows.append([textline])
+                previous_textline = current_textline
 
-                    else:
+            textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows
 
-                        y_difference = math.floor((last_textline.region.y1 - textline.region.y2) / ASSUMED_TEXT_HEIGHT) - 1
-                        if y_difference > 0:
-                            for i in range(y_difference):
-                                textlines_in_rows.append([])
-
-                        textlines_in_rows.append([textline])
-
-                last_textline = textline
-
-            last_textline = None
-            for textlines_in_row in textlines_in_rows:
-                result_in_row = ""
-                col_index = 0
-                if len(textlines_in_row) == 0:
-                    result.append("")
-                    continue
-                if len(textlines_in_row) == 0:
-                    result_in_row = ""
-                for col_index, textline_in_row in enumerate(textlines_in_row):
-                    if re.match("[.]+", textline_in_row.text):
-                        continue
-                    if col_index == 0:
-                        x_difference = math.floor((textline_in_row.region.x1 - xml_rule.region.x1) / ASSUMED_TEXT_WIDTH)
-                        spaces = " " * x_difference
-                        result_in_row = spaces + textline_in_row.text
-                    else:
-                        x_difference = math.floor((textline_in_row.region.x1 - xml_rule.region.x1) / ASSUMED_TEXT_WIDTH) - len(result_in_row)
-
-                        spaces = " " * x_difference
-                        result_in_row = result_in_row + spaces + textline_in_row.text
-                    if col_index == (len(textlines_in_row) - 1):
-                        x_difference = math.floor(((xml_rule.region.x2 - xml_rule.region.x1) / ASSUMED_TEXT_WIDTH) - len(result_in_row))
-                        spaces = " " * x_difference
-                        result_in_row = result_in_row + spaces
-
-                    last_textline = textline_in_row
-
-                result.append(result_in_row)
-
-        return result
-
+        return textlines_in_all_pages
 
 class XMLPage:
 
@@ -180,6 +125,10 @@ class XMLPage:
         self.xml = self.xml_container.document.document_pages.all()[page_num-1].xml
         self.width = self.xml_container.document.document_pages.all()[page_num-1].width
         self.height = self.xml_container.document.document_pages.all()[page_num-1].height
+        self.text_widths = []
+        self.text_heights = []
+        self.median_text_width = ASSUMED_TEXT_WIDTH
+        self.median_text_height = ASSUMED_TEXT_HEIGHT
         self.textlines = []
         self.load_all_textlines()
 
@@ -235,6 +184,7 @@ class XMLPage:
             prev_text = None
             for text_el in textline.textline_el:
                 if text_el.text != '\n' and 'bbox' in text_el.attrib:
+
                     text = XMLText()
                     text_bbox_str = text_el.attrib['bbox']
                     text_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
@@ -246,9 +196,15 @@ class XMLPage:
                     text.region.x2 = Decimal(text_bbox_search.group(3))
                     text.region.y2 = Decimal(text_bbox_search.group(4))
 
+                    text_width = text.region.x2 - text.region.x1
+                    self.text_widths.append(text_width)
+
+                    text_height = text.region.y2 - text.region.y1
+                    self.text_heights.append(text_height)
+
                     # Add space if previous character is too far away from current one
-                    if prev_text != None and (text.region.x1 - prev_text.region.x2) > ASSUMED_TEXT_WIDTH:
-                        num_of_spaces_to_be_added = math.floor((text.region.x1 - prev_text.region.x2) / ASSUMED_TEXT_WIDTH) + 1
+                    if prev_text != None and (text.region.x1 - prev_text.region.x2) > text_width:
+                        num_of_spaces_to_be_added = math.floor((text.region.x1 - prev_text.region.x2) / text_width) + 1
                         spaces_to_be_added = " " * num_of_spaces_to_be_added
 
                         text_el.text = spaces_to_be_added + text_el.text
@@ -281,8 +237,6 @@ class XMLPage:
                         elif text.region.y2 > actual_textline_y2:
                             actual_textline_y2 = text.region.y2
 
-                    #if self.rule.region.contains(text.region):
-                        #result_text = result_text + text.text
                     result_text = result_text + text.text
 
                     prev_text = text
@@ -294,6 +248,9 @@ class XMLPage:
             textline.region.y2 = actual_textline_y2
 
         self.sort_textlines()
+
+        self.median_text_width = statistics.mean(self.text_widths)
+        self.median_text_height = statistics.mean(self.text_heights)
 
     def sort_textlines(self):
         def compare(a, b):
@@ -351,13 +308,7 @@ class XMLRegion:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
             return False
-        if ((self.y1 + SAME_LINE_ACCEPTANCE_RANGE) <= another_region.y1 or (self.y1 - SAME_LINE_ACCEPTANCE_RANGE) <= another_region.y1) and self.y2 >= another_region.y2:
-            return True
-        elif self.y1 <= another_region.y1 and (self.y2 >= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE) or self.y2 >= (another_region.y1 - SAME_LINE_ACCEPTANCE_RANGE)):
-            return True
-        elif self.y1 >= another_region.y1 and self.y2 <= another_region.y2:
-            return True
-        elif self.y1 <= another_region.y1 and self.y2 >= another_region.y2:
+        if (((self.y2 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1 and self.y1 <= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE)) or (self.y1 <= (another_region.y2 + SAME_LINE_ACCEPTANCE_RANGE) and (self.y1  + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1)):
             return True
         else:
             return False
@@ -375,6 +326,7 @@ class TextLine:
         self.textline_element = None
         self.text_elements = []
         self.text = ""
+        self.text_width = Decimal(0.00)
 
 
 class XMLText:
@@ -390,7 +342,7 @@ class XMLText:
 
 class XMLRule:
 
-    def __init__(self, rule):
+    def __init__(self, xml_page, rule):
         self.rule = rule
         self.region = XMLRegion()
         self.region.x1 = Decimal(0.00)
@@ -398,3 +350,7 @@ class XMLRule:
         self.region.x2 = Decimal(0.00)
         self.region.y2 = Decimal(0.00)
 
+        self.region.x1 = rule.x1 / Decimal(100.00) * xml_page.region.x2
+        self.region.x2 = rule.x2 / Decimal(100.00) * xml_page.region.x2
+        self.region.y1 = rule.y1 / Decimal(100.00) * xml_page.region.y2
+        self.region.y2 = rule.y2 / Decimal(100.00) * xml_page.region.y2

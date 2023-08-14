@@ -1,5 +1,4 @@
 import os
-
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
@@ -13,6 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.core import serializers
 
 from ..helpers.stream_processor import StreamProcessor
 
@@ -22,36 +22,12 @@ from ..models.document import Document
 from ..serializers.rule import RuleSerializer, RuleDetailSerializer
 
 
-@extend_schema_view(
-    list=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                'parserId',
-                OpenApiTypes.INT,
-                description="Filter by parser id."
-            )
-        ]
-    ),
-    processed_streams=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                'documentId',
-                OpenApiTypes.INT,
-                description="Filter by document id."
-            )
-        ]
-    )
-)
 class RuleViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = RuleDetailSerializer
     queryset = Rule.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-    def _params_to_ints(self, qs):
-         """ Convert a list of strings to integers. """
-         return [int(str_id) for str_id in qs.split(',')]
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
@@ -78,11 +54,11 @@ class RuleViewSet(viewsets.ModelViewSet):
         """ Create a new rule. """
         serializer.save()
 
-    @action(detail=True, methods=['GET'], name='Get Processed Streams')
-    def processed_streams(self, request, *args, **kwargs):
-
-        pk = self.kwargs['pk']
-        document_id = self.request.query_params.get('documentId', 0)
+    @action(detail=True,
+            methods=['GET'],
+            name='Get Processed Streams',
+            url_path='document/(?P<document_id>[^/.]+)/processed_streams')
+    def processed_streams(self, request, pk, document_id, *args, **kwargs):
 
         rule = Rule.objects.get(id=pk)
         document = Document.objects.get(id=document_id)

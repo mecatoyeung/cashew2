@@ -2,6 +2,8 @@ import re
 
 def get_line_nos_from_range(range_str, first='1', last='1'):
 
+    range_str = range_str.replace(" ", "")
+
     re_exp = re.compile(r'^(?:%FIRST(?:[-+]\d+)*%|%LAST(?:[-+]\d+)*%|\d+)(?:-(?:%FIRST(?:[-+]\d+)*%|%LAST(?:[-+]\d+)*%|\d+))?(?:,*(?:%FIRST(?:[-+]\d+)*%|%LAST(?:[-+]\d+)*%|\d+)(?:-(?:%FIRST(?:[-+]\d+)*%|%LAST(?:[-+]\d+)*%|\d+))?)*$')
     re_check = re_exp.match(range_str)
 

@@ -2,8 +2,8 @@ from ..base import StreamBase
 
 class ExtractFirstNLinesStreamProcessor(StreamBase):
 
-    def __init__(self, n):
-        self.n = n
+    def __init__(self, stream):
+        self.n = stream.extract_first_n_lines
 
     def process(self, streamed_data):
 

@@ -3,8 +3,8 @@ from ....helpers.get_line_nos_from_range import get_line_nos_from_range
 
 class ExtractNthLinesStreamProcessor(StreamBase):
 
-    def __init__(self, n):
-        self.n = n
+    def __init__(self, stream):
+        self.n = stream.extract_nth_lines
 
     def process(self, streamed_data):
 

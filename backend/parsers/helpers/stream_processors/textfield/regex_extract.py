@@ -4,8 +4,8 @@ from ..base import StreamBase
 
 class RegexExtractStreamProcessor(StreamBase):
 
-    def __init__(self, regex):
-        self.regex = regex
+    def __init__(self, stream):
+        self.regex = stream.regex
 
     def process(self, streamed_data):
 

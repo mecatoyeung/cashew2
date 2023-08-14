@@ -4,9 +4,9 @@ from ..base import StreamBase
 
 class RegexReplaceStreamProcessor(StreamBase):
 
-    def __init__(self, regex, replace_text):
-        self.regex = regex
-        self.replace_text = replace_text
+    def __init__(self, stream):
+        self.regex = stream.regex
+        self.text = stream.text
 
     def process(self, streamed_data):
 
@@ -16,6 +16,6 @@ class RegexReplaceStreamProcessor(StreamBase):
             output = [""]
         else:
             for line in streamed_data:
-                output.append(re.sub(self.regex, self.replace_text, line))
+                output.append(re.sub(self.regex, self.text, line))
 
         return output

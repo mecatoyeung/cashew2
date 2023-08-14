@@ -1,5 +1,8 @@
 import copy
 
+from django.db.models import Prefetch
+from django.core import serializers
+
 from ..models.rule_type import RuleType
 from ..models.rule import Rule
 from ..models.stream import Stream
@@ -27,6 +30,25 @@ from .stream_processors.table.remove_rows_after_row_with_conditions import Remov
 from .stream_processors.table.unpivot_column import UnpivotColumnStreamProcessor
 from .stream_processors.table.make_first_row_to_be_header import MakeFirstRowToBeHeaderStreamProcessor
 
+STREAM_PROCESSOR_MAPPING = {
+    "EXTRACT_FIRST_N_LINES": ExtractFirstNLinesStreamProcessor,
+    "EXTRACT_NTH_LINES": ExtractNthLinesStreamProcessor,
+    "REGEX_EXTRACT": RegexExtractStreamProcessor,
+    "REGEX_REPLACE": RegexReplaceStreamProcessor,
+    "JOIN_ALL_ROWS": JoinAllRowsStreamProcessor,
+    "TRIM_SPACE": TrimSpaceStreamProcessor,
+    "REMOVE_EMPTY_LINES": RemoveEmptyLinesStreamProcessor,
+    "REMOVE_TEXT_BEFORE_START_OF_TEXT": RemoveTextBeforeStartOfTextStreamProcessor,
+    "REMOVE_TEXT_BEFORE_END_OF_TEXT": RemoveTextBeforeEndOfTextStreamProcessor,
+    "REMOVE_TEXT_AFTER_START_OF_TEXT": RemoveTextAfterStartOfTextStreamProcessor,
+    "REMOVE_TEXT_AFTER_END_OF_TEXT": RemoveTextAfterEndOfTextStreamProcessor,
+    "COMBINE_FIRST_N_LINES": RemoveTextAfterEndOfTextStreamProcessor,
+    "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS": ConvertToTableBySpecifyHeaderStreamProcessor
+}
+
+def convert_to_table_by_specify_headers_map(object):
+    return object.header.header
+
 class StreamProcessor:
 
     def __init__(self, rule):
@@ -36,7 +58,11 @@ class StreamProcessor:
 
         rule_extractor = RuleExtractor(self.rule, document)
 
-        streams = Stream.objects.filter(rule_id=self.rule.id).order_by('step')
+        streams = Stream.objects.filter(rule_id=self.rule.id).select_related(
+            'convert_to_table_by_specify_headers',
+        ).prefetch_related(
+            'convert_to_table_by_specify_headers__headers',
+        ).order_by('step')
 
         rule_raw_result = rule_extractor.extract()
         inputStream = rule_raw_result
@@ -49,67 +75,14 @@ class StreamProcessor:
         })
 
         for streamIndex in range(len(streams)):
-            if streams[streamIndex].stream_class == "REGEX_EXTRACT":
-                sp = RegexExtractStreamProcessor(streams[streamIndex].regex)
-            elif streams[streamIndex].stream_class == "REGEX_REPLACE":
-                sp = RegexReplaceStreamProcessor(
-                    streams[streamIndex].regex, streams[streamIndex].replace_text)
-            elif streams[streamIndex].stream_class == "EXTRACT_FIRST_N_LINE":
-                sp = ExtractFirstNLinesStreamProcessor(streams[streamIndex].extract_first_n_lines)
-            elif streams[streamIndex].stream_class == "EXTRACT_NTH_LINE":
-                sp = ExtractNthLinesStreamProcessor(streams[streamIndex].extract_nth_line)
-            elif streams[streamIndex].stream_class == "JOIN_ALL_ROWS":
-                sp = JoinAllRowsStreamProcessor(streams[streamIndex].join_string)
-            elif streams[streamIndex].stream_class == "TRIM_SPACE":
-                sp = TrimSpaceStreamProcessor()
-            elif streams[streamIndex].stream_class == "REMOVE_TEXT_BEFORE_START_OF_TEXT":
-                sp = RemoveTextBeforeStartOfTextStreamProcessor(
-                    streams[streamIndex].remove_text)
-            elif streams[streamIndex].stream_class == "REMOVE_TEXT_BEFORE_END_OF_TEXT":
-                sp = RemoveTextBeforeEndOfTextStreamProcessor(
-                    streams[streamIndex].remove_text)
-            elif streams[streamIndex].stream_class == "REMOVE_TEXT_AFTER_START_OF_TEXT":
-                sp = RemoveTextAfterStartOfTextStreamProcessor(
-                    streams[streamIndex].remove_text)
-            elif streams[streamIndex].stream_class == "REMOVE_TEXT_AFTER_END_OF_TEXT":
-                sp = RemoveTextAfterEndOfTextStreamProcessor(
-                    streams[streamIndex].remove_text)
-            elif streams[streamIndex].stream_class == "COMBINE_FIRST_N_LINES":
-                sp = CombineFirstNLinesStreamProcessor(
-                    streams[streamIndex].combine_first_n_lines)
-            elif streams[streamIndex].stream_class == "GET_CHARS_FROM_NEXT_COL_WHEN_REGEX_NOT_MATCH":
-                sp = GetCharsFromNextColWhenRegexNotMatchStreamProcessor(
-                    streams[streamIndex].get_chars_from_next_col_when_regex_not_match)
-            elif streams[streamIndex].stream_class == "TRIM_SPACE_TABLE":
-                sp = TrimSpaceTableStreamProcessor()
-            elif streams[streamIndex].stream_class == "REMOVE_ROWS_WITH_CONDITIONS":
-                sp = RemoveRowsWithConditionsStreamProcessor(
-                    streams[streamIndex].remove_rows_with_conditions)
-            elif streams[streamIndex].stream_class == "MERGE_ROWS_WITH_CONDITIONS":
-                sp = MergeRowsWithConditionsStreamProcessor(
-                    streams[streamIndex].merge_rows_with_conditions)
-            elif streams[streamIndex].stream_class == "MERGE_ROWS_WITH_SAME_COLUMNS":
-                sp = MergeRowsWithSameColumnsStreamProcessor(
-                    streams[streamIndex].merge_rows_with_same_columns)
-            elif streams[streamIndex].stream_class == "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS":
-                sp = RemoveRowsBeforeRowWithConditionsStreamProcessor(
-                    streams[streamIndex].remove_rows_before_row_with_conditions)
-            elif streams[streamIndex].stream_class == "REMOVE_EMPTY_LINES":
-                sp = RemoveEmptyLinesStreamProcessor()
-            elif streams[streamIndex].stream_class == "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS":
-                sp = RemoveRowsAfterRowWithConditionsStreamProcessor(
-                    streams[streamIndex].remove_rows_after_row_with_conditions)
-            elif streams[streamIndex].stream_class == "UNPIVOT_TABLE":
-                sp = UnpivotColumnStreamProcessor(
-                    streams[streamIndex].unpivot_table, streams[streamIndex].unpivot_table_conditions)
-            elif streams[streamIndex].stream_class == "MAKE_FIRST_ROW_TO_BE_HEADER":
-                sp = MakeFirstRowToBeHeaderStreamProcessor()
-            elif streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
-                sp = ConvertToTableBySpecifyHeaderStreamProcessor(
-                    streams[streamIndex].convert_to_table_by_specify_headers
-                )
+
+            if streams[streamIndex].stream_class in STREAM_PROCESSOR_MAPPING:
+                sp = STREAM_PROCESSOR_MAPPING[streams[streamIndex].stream_class](streams[streamIndex])
             else:
                 raise Exception("No such stream")
+
+            if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
+                streams[streamIndex].type = "TABLE"
 
             if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
                 processedStreams.append({
@@ -117,23 +90,15 @@ class StreamProcessor:
                     "error_message": "Please correct the error in the above step first.",
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].stream_type,
+                    "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
+                    "text": streams[streamIndex].text,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
-                    "extract_nth_line": streams[streamIndex].extract_nth_line,
-                    "replace_text": streams[streamIndex].replace_text,
-                    "remove_text": streams[streamIndex].remove_text,
+                    "extract_nth_lines": streams[streamIndex].extract_nth_lines,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "get_chars_from_next_col_when_regex_not_match": streams[streamIndex].get_chars_from_next_col_when_regex_not_match,
-                    "remove_rows_with_conditions": streams[streamIndex].remove_rows_with_conditions,
-                    "merge_rows_with_conditions": streams[streamIndex].merge_rows_with_conditions,
-                    "remove_rows_before_row_with_conditions": streams[streamIndex].remove_rows_before_row_with_conditions,
-                    "remove_rows_after_row_with_conditions": streams[streamIndex].remove_rows_after_row_with_conditions,
-                    "unpivot_table": streams[streamIndex].unpivot_table,
-                    "unpivot_table_conditions": streams[streamIndex].unpivot_table_conditions,
-                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers
+                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) }
                 })
                 continue
 
@@ -143,23 +108,15 @@ class StreamProcessor:
                     "status": "success",
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].stream_type,
+                    "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
+                    "text": streams[streamIndex].text,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
-                    "extract_nth_line": streams[streamIndex].extract_nth_line,
-                    "replace_text": streams[streamIndex].replace_text,
-                    "remove_text": streams[streamIndex].remove_text,
+                    "extract_nth_lines": streams[streamIndex].extract_nth_lines,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "get_chars_from_next_col_when_regex_not_match": streams[streamIndex].get_chars_from_next_col_when_regex_not_match,
-                    "remove_rows_with_conditions": streams[streamIndex].remove_rows_with_conditions,
-                    "merge_rows_with_conditions": streams[streamIndex].merge_rows_with_conditions,
-                    "remove_rows_before_row_with_conditions": streams[streamIndex].remove_rows_before_row_with_conditions,
-                    "remove_rows_after_row_with_conditions": streams[streamIndex].remove_rows_after_row_with_conditions,
-                    "unpivot_table": streams[streamIndex].unpivot_table,
-                    "unpivot_table_conditions": streams[streamIndex].unpivot_table_conditions,
-                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
+                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) },
                     "data": result
                 })
                 inputStream = result
@@ -169,23 +126,15 @@ class StreamProcessor:
                     "error_message": str(e),
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].stream_type,
+                    "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
-                    "extract_nth_line": streams[streamIndex].extract_nth_line,
-                    "replace_text": streams[streamIndex].replace_text,
-                    "remove_text": streams[streamIndex].remove_text,
+                    "extract_nth_lines": streams[streamIndex].extract_nth_lines,
+                    "text": streams[streamIndex].text,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "get_chars_from_next_col_when_regex_not_match": streams[streamIndex].get_chars_from_next_col_when_regex_not_match,
-                    "remove_rows_with_conditions": streams[streamIndex].remove_rows_with_conditions,
-                    "merge_rows_with_conditions": streams[streamIndex].merge_rows_with_conditions,
-                    "remove_rows_before_row_with_conditions": streams[streamIndex].remove_rows_before_row_with_conditions,
-                    "remove_rows_after_row_with_conditions": streams[streamIndex].remove_rows_after_row_with_conditions,
-                    "unpivot_table": streams[streamIndex].unpivot_table,
-                    "unpivot_table_conditions": streams[streamIndex].unpivot_table_conditions,
-                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers
+                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) }
                 })
 
         return processedStreams

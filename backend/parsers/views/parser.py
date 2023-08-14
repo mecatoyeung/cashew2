@@ -3,11 +3,14 @@ from rest_framework import (
 )
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from ..models.parser import Parser
+from ..models.rule import Rule
 
 from ..serializers.parser import ParserSerializer, ParserDetailSerializer
+from ..serializers.rule import RuleSerializer
 
 class ParserViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
@@ -39,3 +42,13 @@ class ParserViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """ Create a new parser. """
         serializer.save(user=self.request.user)
+
+    @action(detail=False,
+            methods=['GET'],
+            name='Get Rules for this parser',
+            url_path='(?P<pk>[^/.]+)/rules')
+    def get_rules(self, request, pk, *args, **kwargs):
+
+        rules = Rule.objects.filter(parser_id=pk)
+
+        return Response(RuleSerializer(rules, many=True).data, status=200)

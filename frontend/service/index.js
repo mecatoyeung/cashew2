@@ -37,11 +37,11 @@ class Service {
         break;
       case 404:
         console.error(error)
-        //this.redirectTo(document, '/404')
+        this.redirectTo(document, '/404')
         break;
       default:
         console.error(error)
-        //this.redirectTo(document, '/500')
+        this.redirectTo(document, '/500')
         break;
     }
     return Promise.reject(error)

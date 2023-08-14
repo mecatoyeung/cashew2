@@ -76,8 +76,8 @@ const RuleProperties = () => {
     })
   }
 
-  const proceedToStreamEditorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?editorType=regionSelector&documentId=" + documentId)
+  const proceedToRegionSelectorBtnClickHandler = () => {
+    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId)
   }
 
   return (
@@ -126,7 +126,7 @@ const RuleProperties = () => {
           </div>
           {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && (
             <div className={styles.confirmBtnWrapper}>
-              <Button variant="success" className={styles.confirmBtn} onClick={proceedToStreamEditorBtnClickHandler}>Proceed to Region Selector</Button>
+              <Button variant="success" className={styles.confirmBtn} onClick={proceedToRegionSelectorBtnClickHandler}>Proceed to Region Selector</Button>
             </div>
           )}
         </div>

@@ -2,8 +2,8 @@ from ..base import StreamBase
 
 class JoinAllRowsStreamProcessor(StreamBase):
 
-    def __init__(self, join_string):
-        self.join_string = join_string
+    def __init__(self, stream):
+        self.join_string = stream.join_string
 
     def process(self, streamed_data):
 

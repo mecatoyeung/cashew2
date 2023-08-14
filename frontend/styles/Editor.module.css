@@ -155,6 +155,8 @@
 }
 
 .streamTable {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 125%;
   box-shadow: 4px 4px 14px -8px rgb(0 0 0 / 75%);
   border: 1px solid #0d2434;
   width: 100%;
@@ -194,9 +196,8 @@
   font-size: 24px;
 }
 
-.separatorBefore,
-.addFilterDropDownWrapper {
-  margin-left: auto;
+.separatorBefore {
+  padding-right: 10px;
 }
 
 .workbenchFooter {
@@ -244,10 +245,6 @@
 
 .tableSeparator {
   position: absolute;
-}
-
-.addFilterDropDownWrapper {
-  width: 400px;
 }
 
 .addFilterDropDownWrapper>* {
