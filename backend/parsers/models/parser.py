@@ -16,3 +16,6 @@ class Parser(models.Model):
   type = models.CharField(max_length=255, choices=ParserType.choices())
   name = models.CharField(max_length=255, null=False)
   last_modified_at = models.DateTimeField(null=False, default=timezone.now)
+
+  class Meta:
+    db_table = 'parsers'

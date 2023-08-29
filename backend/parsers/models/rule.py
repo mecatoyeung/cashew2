@@ -22,3 +22,6 @@ class Rule(models.Model):
   anchor_x2 = models.DecimalField(max_digits=10, decimal_places=2, null=True)
   anchor_y2 = models.DecimalField(max_digits=10, decimal_places=2, null=True)
   last_modified_at = models.DateTimeField(default=timezone.now)
+
+  class Meta:
+    db_table = 'rules'

@@ -13,3 +13,5 @@ class RoutingCondition(models.Model):
   value = models.CharField(max_length=255, null=True)
   sort_order = models.IntegerField(null=False)
 
+  class Meta:
+    db_table = 'routing_conditions'

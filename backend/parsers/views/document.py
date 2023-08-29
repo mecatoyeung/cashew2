@@ -37,40 +37,6 @@ class PNGRenderer(renderers.BaseRenderer):
     def render(self, data, media_type=None, renderer_context=None):
         return data
 
-@extend_schema_view(
-    list=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                'parserId',
-                OpenApiTypes.INT,
-                description="Filter by parser id."
-            )
-        ]
-    ),
-    create=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                'parserId',
-                OpenApiTypes.INT,
-                description="Filter by parser id."
-            )
-        ]
-    ),
-    image=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                'parserId',
-                OpenApiTypes.INT,
-                description="Filter by parser id."
-            ),
-            OpenApiParameter(
-                'pageNum',
-                OpenApiTypes.INT,
-                description="Specify page num."
-            )
-        ]
-    ),
-)
 class DocumentViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = DocumentDetailSerializer
@@ -85,16 +51,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
-        parser_id = int(self.request.query_params.get('parserId', 0))
 
-        if parser_id == 0:
-            return queryset.order_by('id').distinct()
-        else:
-            return queryset.filter(
-                parser_id=parser_id
-            ).filter(
-                parser__user=self.request.user
-            ).order_by('id').distinct()
+        return queryset.filter(
+            parser__user=self.request.user
+        ).order_by('-last_modified_at').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
@@ -119,19 +79,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """ Create a new rule. """
         if serializer.is_valid():
-            document = serializer.save()
+            serializer.save()
 
-            """ Generate images """
-            generate_images_from_pdf(document)
-            """ Parse pdf to xml """
-            parse_pdf_to_xml(document)
-
-    @action(detail=True, methods=['GET'], name='Get Document Image',
+    @action(detail=True,
+            methods=['GET'],
+            name='Document Image',
+            url_path='pages/(?P<page_num>[^/.]+)',
             renderer_classes=[PNGRenderer])
-    def image(self, request, *args, **kwargs):
-
-        pk = self.kwargs['pk']
-        page_num = self.request.query_params.get('pageNum', 1)
+    def image(self, request, pk, page_num, *args, **kwargs):
 
         document = Document.objects.get(id=pk)
 

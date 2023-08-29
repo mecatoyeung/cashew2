@@ -21,6 +21,8 @@ from drf_spectacular.views import (
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
+from django.conf.urls.static import static
+from .settings import STATIC_URL, STATIC_ROOT
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -36,4 +38,4 @@ urlpatterns = [
          name='api-docs',
     ),
     #path('api/user/', include('user.urls')),
-]
+] + static(STATIC_URL, document_root=STATIC_ROOT)

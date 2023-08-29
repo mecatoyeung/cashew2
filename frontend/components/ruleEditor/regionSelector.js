@@ -109,7 +109,7 @@ const RegionSelector = () => {
   }
 
   const getDocumentPageImage = () => {
-    service.getFile("documents/" + documentId + "/image/?parserId=" + parserId + "&pageNum=" + pageNum,
+    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/",
       (response) => {
         let data = `data:${
           response.headers["content-type"]
@@ -222,7 +222,10 @@ const RegionSelector = () => {
       rule.anchorText = anchorText
     }
     setRule(updatedRule)
-    updateRule(updatedRule)
+  }
+
+  const textfieldRegionDragEndHandler = (p) => {
+    updateRule(rule)
   }
 
   const addSeparatorBtnClickHandler = (e) => {
@@ -362,14 +365,14 @@ const RegionSelector = () => {
                   (rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "textfield")) && (
                   <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
                     textfieldRegionChangeHandler(p)
-                  }}>
+                  }} onDragEnd={textfieldRegionDragEndHandler}>
                     <img src={imageUri} />
                   </ReactCrop>
                 )}
                 {rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "anchor" && (
                   <ReactCrop className={styles.myReactCrop} crop={anchorRegion} onChange={(c, p) => {
                     setAnchorRegion(p)
-                  }}>
+                  }} onDragEnd={textfieldRegionDragEndHandler}>
 
                     <img src={process.env.NEXT_PUBLIC_API_BASE_URL + "documents/" + documentId + "/page/" + pageNum + "/image"} />
 
@@ -379,7 +382,7 @@ const RegionSelector = () => {
                   <div style={{position: "relative"}}>
                     <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
                       textfieldRegionChangeHandler(p)
-                    }}>
+                    }} onDragEnd={textfieldRegionDragEndHandler}>
                       <img src={imageUri} />
                     </ReactCrop>
                     {rule && imageRef.current && imageRef.current.offsetWidth != 0 && rule.tableColumnXs && rule.tableColumnXs.split(",").map(

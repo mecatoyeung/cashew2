@@ -48,7 +48,7 @@ const IntegrationQueue = (props) => {
     let documentIds = queues
       .filter(d => d.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queue_class: "SPLIT"
     })
@@ -58,7 +58,7 @@ const IntegrationQueue = (props) => {
     let documentIds = queues
       .filter(d => d.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queue_class: "PARSING"
     })
@@ -72,7 +72,7 @@ const IntegrationQueue = (props) => {
 
   const getParser = () => {
     if (!props.parserId) return
-    service.get("parsers/" + props.parserId, response => {
+    service.get("parsers/" + props.parserId + "/", response => {
       setParser(response.data)
     })
   }

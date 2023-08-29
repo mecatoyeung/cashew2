@@ -29,19 +29,19 @@ class Service {
         break;
       case 401:
         callbackUrl = document.location
-        this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
+        //this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
         break;
       case 403:
         callbackUrl = document.location
-        this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
+        //this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
         break;
       case 404:
         console.error(error)
-        this.redirectTo(document, '/404')
+        //this.redirectTo(document, '/404')
         break;
       default:
         console.error(error)
-        this.redirectTo(document, '/500')
+        //this.redirectTo(document, '/500')
         break;
     }
     return Promise.reject(error)
@@ -84,12 +84,13 @@ class Service {
     }).then((response) => callback(response));
   }
 
-  post(path, payload, callback, errorCallback = null) {
+  post(path, payload, callback, errorCallback = null, headers = {}) {
     return this.service.request({
       method: 'POST',
       url: path,
       responseType: 'json',
-      data: payload
+      data: payload,
+      headers
     }).then((response) => {
       callback(response)
     }).catch((error) => {

@@ -1,8 +1,7 @@
 from rest_framework import serializers
 
 from ..models.parser import Parser
-
-from .routing_rule import RoutingRuleSerializer
+from .rule import RuleSerializer
 
 class ParserSerializer(serializers.ModelSerializer):
 
@@ -10,6 +9,8 @@ class ParserSerializer(serializers.ModelSerializer):
         model = Parser
         fields = ['id', 'type', 'name', 'rules', 'last_modified_at']
         read_only_fields = ['id']
+
+    rules = RuleSerializer(many=True, required=False, allow_null=True)
 
     def create(self, validated_data):
         """ Create a parser. """
@@ -24,12 +25,3 @@ class ParserSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-
-
-class ParserDetailSerializer(ParserSerializer):
-    """ Serializer for parser detail view. """
-    routing_rules = RoutingRuleSerializer(many=True, read_only=True)
-
-    class Meta(ParserSerializer.Meta):
-        fields = ParserSerializer.Meta.fields + ["routing_rules"]
-

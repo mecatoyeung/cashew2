@@ -19,12 +19,12 @@ from ..helpers.stream_processor import StreamProcessor
 from ..models.rule import Rule
 from ..models.document import Document
 
-from ..serializers.rule import RuleSerializer, RuleDetailSerializer
+from ..serializers.rule import RuleSerializer, RuleCreateSerializer
 
 
 class RuleViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
-    serializer_class = RuleDetailSerializer
+    serializer_class = RuleSerializer
     queryset = Rule.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -45,7 +45,9 @@ class RuleViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
-        if self.action == 'list':
+        if self.action == 'create':
+            return RuleCreateSerializer
+        elif self.action == 'list':
             return RuleSerializer
 
         return self.serializer_class

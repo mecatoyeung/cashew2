@@ -10,3 +10,6 @@ class RoutingRule(models.Model):
   parser = models.ForeignKey("Parser", on_delete=models.CASCADE, related_name="parser")
   route_to_parser = models.ForeignKey("Parser", on_delete=models.CASCADE, related_name="route_to_parser")
   sort_order = models.IntegerField(null=False)
+
+  class Meta:
+    db_table = 'routing_rules'

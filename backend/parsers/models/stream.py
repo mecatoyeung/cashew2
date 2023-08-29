@@ -30,3 +30,6 @@ class Stream(models.Model):
   #    null=True, default="{'include_matched_row': True, 'conditions': [] }")
   #unpivot_table = models.TextField(null=True, default="{'col_index': '', 'assignment_separator': ':', 'new_line_separator': '\n' }")
   #convert_to_table_by_specify_headers = models.TextField(null=True, default="")
+
+  class Meta:
+    db_table = 'streams'

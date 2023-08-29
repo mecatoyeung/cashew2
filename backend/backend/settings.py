@@ -18,6 +18,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -96,9 +98,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'Cashew'),
+        'NAME': os.environ.get('DB_NAME', 'docparser'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'CASHEW'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Aa123456'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
@@ -151,11 +153,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = os.path.join(BASE_DIR, "static/")
-STATIC_ROOT = os.path.join(BASE_DIR, "vol/static/")
-
+STATIC_URL = os.path.join("static/")
 MEDIA_URL = os.path.join(BASE_DIR, "media/")
-STATIC_ROOT = os.path.join(BASE_DIR, "vol/media/")
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -181,7 +181,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CORS_ALLOWED_ORIGINS = [
+CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
     "https://cashew.catoyeung.com"
 ]

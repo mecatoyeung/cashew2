@@ -24,7 +24,7 @@ const ProcessedQueue = (props) => {
 
   const getParser = () => {
     if (!props.parserId) return
-    service.get("parsers/" + props.parserId, response => {
+    service.get("parsers/" + props.parserId +"/", response => {
       setParser(response.data)
     })
   }
@@ -42,7 +42,7 @@ const ProcessedQueue = (props) => {
     let documentIds = queues
       .filter(q => q.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queueClass: "SPLIT"
     })
@@ -52,7 +52,7 @@ const ProcessedQueue = (props) => {
     let documentIds = queues
       .filter(q => q.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queueClass: "PARSING"
     })

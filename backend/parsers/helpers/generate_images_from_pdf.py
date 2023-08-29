@@ -26,7 +26,6 @@ from .convert_pdf import convert_pdf
 
 from django.db import transaction
 
-@transaction.atomic
 def generate_images_from_pdf(document):
     try:
         folder_path = os.path.join(MEDIA_URL, 'documents/%s/' % (document.guid))

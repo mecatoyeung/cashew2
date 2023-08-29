@@ -21,3 +21,6 @@ class Document(models.Model):
   extension = models.CharField(max_length=255, null=False)
   total_page_num = models.IntegerField()
   last_modified_at = models.DateTimeField(null=False, default=timezone.now)
+
+  class Meta:
+    db_table = 'documents'

@@ -46,7 +46,7 @@ const ImportQueue = (props) => {
     let documentIds = queues
       .filter(d => d.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queue_class: "SPLIT"
     })
@@ -56,7 +56,7 @@ const ImportQueue = (props) => {
     let documentIds = queues
       .filter(d => d.selected == true)
       .map(d => d.document.id)
-    service.put("documents/change-queue-class", {
+    service.put("documents/change-queue-class/", {
       documents: documentIds,
       queue_class: "PARSING"
     })
@@ -73,12 +73,12 @@ const ImportQueue = (props) => {
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i]
       let formData = new FormData();
-      formData.set("parserId", props.parserId)
-      formData.set("name", droppedFile.name)
-      formData.set("inputData", JSON.stringify(inputData))
-      formData.append("sourceFile", droppedFile)
+      formData.set("parser", props.parserId)
+      //formData.set("name", droppedFile.name)
+      //formData.set("inputData", JSON.stringify(inputData))
+      formData.append("file", droppedFile)
 
-      const response = service.post("documents/?parserId=" + props.parserId, formData, {
+      const response = service.post("documents/?parserId=" + props.parserId, formData, headers = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -87,6 +87,7 @@ const ImportQueue = (props) => {
           let updatedFiles = [...droppedFiles]
           updatedFiles[i].progress = progress
           setDroppedFiles(updatedFiles)
+          console.log("updatedFiles", updatedFiles)
           if (every(updatedFiles, { 'progress': 100 })) {
             getParser()
             closeUploadDocumentsModalHandler()
@@ -119,7 +120,7 @@ const ImportQueue = (props) => {
 
   const getParser = () => {
     if (!props.parserId) return
-    service.get("parsers/" + props.parserId, response => {
+    service.get("parsers/" + props.parserId + "/", response => {
       setParser(response.data)
     })
   }

@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
+from ..models.parser import Parser
 from ..models.rule import Rule
 from ..models.table_column_separator import TableColumnSeparator
 
-from ..serializers.table_column_separator import TableColumnSeparatorSerializer, TableColumnSeparatorDetailSerializer
+from .table_column_separator import TableColumnSeparatorSerializer
 
 class RuleSerializer(serializers.ModelSerializer):
 
@@ -25,13 +26,13 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_x2',
                   'anchor_y2',
                   'last_modified_at']
-        read_only_fields = ['id', 'parser']
-
-    table_column_separators = TableColumnSeparatorSerializer(many=True)
+        read_only_fields = ['id']
+        
+    table_column_separators = TableColumnSeparatorSerializer(many=True, required=False, allow_null=True)
 
     def create(self, validated_data):
         """ Create a rule. """
-        table_column_separators = validated_data.pop("table_column_separators", None)
+        table_column_separators = validated_data.pop("table_column_separators", [])
 
         rule = Rule.objects.create(**validated_data)
 
@@ -61,10 +62,6 @@ class RuleSerializer(serializers.ModelSerializer):
             instance.table_column_separators.add(table_column_separator_obj)
 
         return instance
-
-class RuleDetailSerializer(RuleSerializer):
-    """ Serializer for rule detail view. """
-
-    class Meta(RuleSerializer.Meta):
-        fields = RuleSerializer.Meta.fields
-
+    
+class RuleCreateSerializer(RuleSerializer):
+    pass

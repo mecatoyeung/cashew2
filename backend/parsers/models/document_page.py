@@ -8,3 +8,6 @@ class DocumentPage(models.Model):
   width = models.IntegerField()
   height = models.IntegerField()
   xml = models.TextField()
+
+  class Meta:
+    db_table = 'document_pages'

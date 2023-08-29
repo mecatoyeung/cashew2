@@ -14,3 +14,5 @@ class Queue(models.Model):
   input_result = models.TextField(null=True, default="{}")
   parsed_result = models.TextField(null=True, default="{}")
 
+  class Meta:
+    db_table = 'queues'

@@ -52,49 +52,51 @@ export default function EditorLayout({ children }) {
   }
 
   return (
-    <div className={styles.container}>
+    <>
       <Head>
-        <title>Cashew - Editor</title>
-        <meta name="description" content="Cashew - Editor" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"></link>
+        <title>Cashew Docparser</title>
+        <meta name="description" content="Written by Cato Yeung" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"></meta>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className={styles.editorWrapper}>
-        <div xs="2" className={styles.sidebarWrapper}>
-          <div className={styles.parsingRulesHeader}>
-            Data Parsing Rules
-          </div>
-          <div className={styles.parsingRules}>
-            <ul>
-              {rules && rules.map((rule, ruleIndex) => (
-                <li key={ruleIndex} onClick={(e) => liRuleClickHandler(e, rule)}>
-                  <div className={styles.parsingRuleWrapper}>
-                    <div className={styles.parsingRuleTxtWrapper}>
-                      <div className={styles.parsingRuleName}>
-                      {rule.id == ruleId && (
-                        <strong>{rule.name}</strong>
-                      )}
-                      {rule.id != ruleId && (
-                        <span>{rule.name}</span>
-                      )}
+      <div className={styles.container}>
+        <div className={styles.editorWrapper}>
+          <div xs="2" className={styles.sidebarWrapper}>
+            <div className={styles.parsingRulesHeader}>
+              Data Parsing Rules
+            </div>
+            <div className={styles.parsingRules}>
+              <ul>
+                {rules && rules.map((rule, ruleIndex) => (
+                  <li key={ruleIndex} onClick={(e) => liRuleClickHandler(e, rule)}>
+                    <div className={styles.parsingRuleWrapper}>
+                      <div className={styles.parsingRuleTxtWrapper}>
+                        <div className={styles.parsingRuleName}>
+                        {rule.id == ruleId && (
+                          <strong>{rule.name}</strong>
+                        )}
+                        {rule.id != ruleId && (
+                          <span>{rule.name}</span>
+                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className={styles.parsingRulesFooter}>
+              <Link href={"/workspace/parsers/" + parserId + "/rules"}>&#60; Exit Parsing Rules Editor</Link>
+            </div>
           </div>
-          <div className={styles.parsingRulesFooter}>
-            <Link href={"/workspace/parsers/" + parserId + "/rules"}>&#60; Exit Parsing Rules Editor</Link>
-          </div>
+          {children}
         </div>
-        {children}
+        <ToastContainer position="bottom-center" className="p-3">
+          <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
+            <Toast.Body>{toastMessage}</Toast.Body>
+          </Toast>
+        </ToastContainer>
       </div>
-      <ToastContainer position="bottom-center" className="p-3">
-        <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
-          <Toast.Body>{toastMessage}</Toast.Body>
-        </Toast>
-      </ToastContainer>
-    </div>
+    </>
   )
 }

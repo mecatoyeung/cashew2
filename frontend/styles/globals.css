@@ -119,3 +119,7 @@ button.btn {
 .dropdown-item {
   padding: 10px;
 }
+
+.ReactCrop__child-wrapper {
+  cursor: unset;
+}

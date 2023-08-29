@@ -67,7 +67,9 @@ export default function WorkspaceLayout({
               <div className="col-12 col-md-2 d-flex" style={{paddingLeft: 0, paddingRight: 0, width: 200}}>
                 <div className={workspaceLayoutStyles.sideNavDiv + " d-flex flex-grow-1"}>
                   <ul className={workspaceLayoutStyles.sideNavUl}>
-                    <li>Sources</li>
+                    <Link href={"/workspace/parsers/" + parserId + "/sources"}>
+                      <li>Sources</li>
+                    </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/queues"}>
                       <li>Queues</li>
                     </Link>

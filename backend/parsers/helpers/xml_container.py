@@ -83,7 +83,7 @@ class XMLContainer:
 
                     # if it is the first line, add empty lines
                     if len(textlines_in_rows) == 0:
-                        num_of_empty_lines_to_be_prepend = math.floor((xml_page.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                        num_of_empty_lines_to_be_prepend = math.floor((xml_rule.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
                         for i in range(num_of_empty_lines_to_be_prepend): textlines_in_rows.append("")
                     # if it is not the first line
                     else:
