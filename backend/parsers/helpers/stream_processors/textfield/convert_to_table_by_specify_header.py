@@ -8,18 +8,17 @@ def convert_to_table_by_specify_headers_map(object):
 class ConvertToTableBySpecifyHeaderStreamProcessor(StreamBase):
 
     def __init__(self, stream):
-        self.convert_to_table_by_specify_headers = stream.convert_to_table_by_specify_headers.headers.all()
+        self.convert_to_table_by_specify_headers = stream.convert_to_table_by_specify_headers
 
     def process(self, streamed_data):
 
         output_body = []
 
-        headers = self.convert_to_table_by_specify_headers
+        headers = self.convert_to_table_by_specify_headers.split("|")
 
         headers_row = streamed_data[0]
         headers_xs_ranges = []
-        for header_index, header_obj in enumerate(headers):
-            header = header_obj.header
+        for header_index, header in enumerate(headers):
             if header_index == 0:
                 res = re.search(rf'{header}', headers_row)
                 if res == None:

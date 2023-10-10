@@ -55,7 +55,7 @@ const RegionSelector = () => {
   const [showChangeDocumentModal, setShowChangeDocumentModal] = useState(false)
 
   const [imageUri, setImageUri] = useState(null)
-  const imageRef = useRef(null)
+  const [imageRef, setImageRef] = useState()
 
   useEffect(() => {
     if (layoutId == undefined) return
@@ -83,6 +83,9 @@ const RegionSelector = () => {
     getDocumentPageImage()
   }, [router.isReady, ,documentId, pageNum])
 
+  useEffect(() => {
+  }, [imageRef])
+
   const getLayout = () => {
     service.get("layouts/" + layoutId, response => {
       setLayout(response.data)
@@ -91,6 +94,7 @@ const RegionSelector = () => {
 
   const getRule = () => {
     service.get("rules/" + ruleId + "/", response => {
+      console.log(response.data)
       setRule(response.data)
     })
   }
@@ -125,6 +129,9 @@ const RegionSelector = () => {
   const openChangeDocumentModalHandler = () => setShowChangeDocumentModal(true)
 
   const updateRule = (updatedRule) => {
+    for (let i=0; i<updatedRule.tableColumnSeparators.length; i++) {
+      updatedRule.tableColumnSeparators[i].rule = updatedRule.id
+    }
     service.put("rules/" + ruleId + "/",
       updatedRule,
       response => {
@@ -230,15 +237,24 @@ const RegionSelector = () => {
 
   const addSeparatorBtnClickHandler = (e) => {
     let updatedRule = { ...rule }
-    let tableColumnSeparators = updatedRule.tableColumnSeparators
-    tableColumnSeparators.push({ x: tableColumnSeparators.slice(-1) + 10.0 })
+    let tableColumnSeparators = [...updatedRule.tableColumnSeparators]
+    let x;
+    if (tableColumnSeparators.length > 0) {
+      x = tableColumnSeparators.slice(-1)[0].x  + 10.0
+    } else {
+      x = 10.0
+    }
+    tableColumnSeparators.push({ x })
+    updatedRule.tableColumnSeparators = tableColumnSeparators
     updateRule(updatedRule)
     setRule(updatedRule)
   }
 
   const removeSeparatorBtnClickHandler = (e) => {
     let updatedRule = { ...rule }
-    updatedRule.tableColumnSeparators.pop()
+    let tableColumnSeparators = [...updatedRule.tableColumnSeparators]
+    tableColumnSeparators.pop()
+    updatedRule.tableColumnSeparators = tableColumnSeparators
     updateRule(updatedRule)
     setRule(updatedRule)
   }
@@ -252,13 +268,14 @@ const RegionSelector = () => {
   }
 
   const separatorStopHandler = (e, el, xIndex) => {
-    let width = imageRef.current.offsetWidth
+    let width = imageRef.width
 
     let updatedRule = { ...rule }
     let tableColumnSeparators = updatedRule.tableColumnSeparators
-    tableColumnSeparators[xIndex] = Number(el.x) / width * 100
-    tableColumnSeparators.sort()
+    tableColumnSeparators[xIndex] = { x: (el.x / width * 100).toFixed(2) }
+    tableColumnSeparators.sort((a, b) => (a.x > b.x) ? 1 : -1)
     setRule(updatedRule)
+    console.log(updatedRule)
     updateRule(updatedRule)
     e.stopPropagation()
   }
@@ -366,7 +383,7 @@ const RegionSelector = () => {
                   <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
                     textfieldRegionChangeHandler(p)
                   }} onDragEnd={textfieldRegionDragEndHandler}>
-                    <img src={imageUri} />
+                    <img src={imageUri} ref={imageRef}/>
                   </ReactCrop>
                 )}
                 {rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "anchor" && (
@@ -378,26 +395,26 @@ const RegionSelector = () => {
 
                   </ReactCrop>
                 )}
-                {rule.ruleType == "TABLE" && (
+                {rule.ruleType == "TABLE"  && (
                   <div style={{position: "relative"}}>
                     <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
                       textfieldRegionChangeHandler(p)
                     }} onDragEnd={textfieldRegionDragEndHandler}>
-                      <img src={imageUri} />
+                      <img src={imageUri} ref={newImageRef => setImageRef(newImageRef)}/>
                     </ReactCrop>
-                    {rule && imageRef.current && imageRef.current.offsetWidth != 0 && rule.tableColumnXs && rule.tableColumnXs.split(",").map(
-                      (columnX, xIndex) => {
+                    {rule && rule.tableColumnSeparators && imageRef && rule.tableColumnSeparators.map(
+                      (separator, sIndex) => {
                         return (
                         <Draggable
                           axis="x"
                           defaultPosition={{x: 0, y: 0}}
                           grid={[1, 1]}
                           scale={1}
-                          position={{ x: columnX * imageRef.current.offsetWidth / 100, y: 0 }}
+                          position={{ x: separator.x / 100 * imageRef.width, y: 0 }}
                           onStart={separatorStartHandler}
                           onDrag={separatorDragHandler}
-                          onStop={(e, el) => separatorStopHandler(e, el, xIndex)}
-                          key={columnX}>
+                          onStop={(e, el) => separatorStopHandler(e, el, sIndex)}
+                          key={sIndex}>
                           <div>
                             <div className="handle"></div>
                             <div className="line"></div>

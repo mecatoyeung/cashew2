@@ -121,5 +121,41 @@ button.btn {
 }
 
 .ReactCrop__child-wrapper {
-  cursor: unset;
+  cursor: auto;
+}
+
+.form-label {
+  padding: 10px 10px 10px 0;
+  margin-bottom: 0;
+}
+
+.form-control {
+  padding: 10px;
+}
+
+.form-check {
+  padding: 10px 10px 10px 0;
+}
+
+.form-check .form-check-input {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.errorMessage {
+  color: #E31A2F;
+}
+
+.react-draggable {
+  transform: translate(0.1px, 0px);
+  height: 100%;
+  background: yellow;
+  width: 10px;
+  position: absolute;
+  top: 0;
+  cursor: pointer;
+}
+
+.react-select__control {
+  height: 46px;
 }

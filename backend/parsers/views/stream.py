@@ -12,8 +12,7 @@ from ..helpers.stream_processor import StreamProcessor
 
 from ..models.rule import Rule
 from ..models.stream import Stream
-from ..models.streams.convert_to_table_by_specify_headers import ConvertToTableBySpecifyHeaders
-from ..models.streams.header import Header
+from ..models.stream_condition import StreamCondition
 
 from ..serializers.stream import StreamSerializer, StreamDetailSerializer, StreamPostSerializer
 
@@ -38,6 +37,8 @@ class StreamViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return StreamSerializer
         elif self.action == "create":
+            return StreamPostSerializer
+        elif self.action == 'update':
             return StreamPostSerializer
 
         return self.serializer_class

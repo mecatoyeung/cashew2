@@ -14,12 +14,13 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 
+from ..helpers.document_parser import DocumentParser
 from ..helpers.stream_processor import StreamProcessor
 
 from ..models.rule import Rule
 from ..models.document import Document
 
-from ..serializers.rule import RuleSerializer, RuleCreateSerializer
+from ..serializers.rule import RuleSerializer, RuleCreateSerializer, RuleUpdateSerializer
 
 
 class RuleViewSet(viewsets.ModelViewSet):
@@ -31,7 +32,7 @@ class RuleViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
-        queryset = self.queryset
+        queryset = self.queryset.prefetch_related('table_column_separators')
         parser_id = self.request.query_params.get('parserId', 0)
 
         if parser_id == 0:
@@ -47,6 +48,8 @@ class RuleViewSet(viewsets.ModelViewSet):
         """ Return the serializer class for request """
         if self.action == 'create':
             return RuleCreateSerializer
+        if self.action == 'update':
+            return RuleUpdateSerializer
         elif self.action == 'list':
             return RuleSerializer
 
@@ -62,11 +65,16 @@ class RuleViewSet(viewsets.ModelViewSet):
             url_path='document/(?P<document_id>[^/.]+)/processed_streams')
     def processed_streams(self, request, pk, document_id, *args, **kwargs):
 
-        rule = Rule.objects.get(id=pk)
+        rule = Rule.objects.select_related('parser').prefetch_related("table_column_separators").get(id=pk)
+
         document = Document.objects.get(id=document_id)
+
+        document_parser = DocumentParser(rule.parser, document)
+
+        rule_raw_result = document_parser.parse(rule)
 
         stream_processor = StreamProcessor(rule)
 
-        response = stream_processor.process(document)
+        response = stream_processor.process(rule_raw_result)
 
         return Response(response, status=200)

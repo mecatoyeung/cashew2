@@ -1,7 +1,9 @@
 import copy
+import traceback
 
 from django.db.models import Prefetch
 from django.core import serializers
+from django.forms.models import model_to_dict
 
 from ..models.rule_type import RuleType
 from ..models.rule import Rule
@@ -20,7 +22,7 @@ from .stream_processors.textfield.remove_text_after_end_of_text import RemoveTex
 from .stream_processors.textfield.convert_to_table_by_specify_header import ConvertToTableBySpecifyHeaderStreamProcessor
 from .stream_processors.textfield.remove_empty_lines import RemoveEmptyLinesStreamProcessor
 from .stream_processors.table.combine_first_n_lines import CombineFirstNLinesStreamProcessor
-from .stream_processors.table.get_chars_from_next_col_when_regex_not_match import GetCharsFromNextColWhenRegexNotMatchStreamProcessor
+from .stream_processors.table.get_chars_from_next_col_if_regex_not_match import GetCharsFromNextColIfRegexNotMatchStreamProcessor
 from .stream_processors.table.trim_space import TrimSpaceTableStreamProcessor
 from .stream_processors.table.remove_rows_with_conditions import RemoveRowsWithConditionsStreamProcessor
 from .stream_processors.table.merge_rows_with_conditions import MergeRowsWithConditionsStreamProcessor
@@ -37,13 +39,21 @@ STREAM_PROCESSOR_MAPPING = {
     "REGEX_REPLACE": RegexReplaceStreamProcessor,
     "JOIN_ALL_ROWS": JoinAllRowsStreamProcessor,
     "TRIM_SPACE": TrimSpaceStreamProcessor,
+    "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS": TrimSpaceTableStreamProcessor,
     "REMOVE_EMPTY_LINES": RemoveEmptyLinesStreamProcessor,
     "REMOVE_TEXT_BEFORE_START_OF_TEXT": RemoveTextBeforeStartOfTextStreamProcessor,
     "REMOVE_TEXT_BEFORE_END_OF_TEXT": RemoveTextBeforeEndOfTextStreamProcessor,
     "REMOVE_TEXT_AFTER_START_OF_TEXT": RemoveTextAfterStartOfTextStreamProcessor,
     "REMOVE_TEXT_AFTER_END_OF_TEXT": RemoveTextAfterEndOfTextStreamProcessor,
-    "COMBINE_FIRST_N_LINES": RemoveTextAfterEndOfTextStreamProcessor,
-    "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS": ConvertToTableBySpecifyHeaderStreamProcessor
+    "COMBINE_FIRST_N_LINES": CombineFirstNLinesStreamProcessor,
+    "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS": ConvertToTableBySpecifyHeaderStreamProcessor,
+    "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH": GetCharsFromNextColIfRegexNotMatchStreamProcessor,
+    "MERGE_ROWS_WITH_SAME_COLUMNS": MergeRowsWithSameColumnsStreamProcessor,
+    "REMOVE_ROWS_WITH_CONDITIONS": RemoveRowsWithConditionsStreamProcessor,
+    "MERGE_ROWS_WITH_CONDITIONS": MergeRowsWithConditionsStreamProcessor,
+    "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS": RemoveRowsBeforeRowWithConditionsStreamProcessor,
+    "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS": RemoveRowsAfterRowWithConditionsStreamProcessor,
+    "UNPIVOT_TABLE": UnpivotColumnStreamProcessor
 }
 
 def convert_to_table_by_specify_headers_map(object):
@@ -54,17 +64,12 @@ class StreamProcessor:
     def __init__(self, rule):
         self.rule = rule
 
-    def process(self, document):
+    def process(self, rule_raw_result):
 
-        rule_extractor = RuleExtractor(self.rule, document)
+        streams = Stream.objects.filter(rule_id=self.rule.id) \
+            .prefetch_related('streamcondition_set') \
+            .order_by('step')
 
-        streams = Stream.objects.filter(rule_id=self.rule.id).select_related(
-            'convert_to_table_by_specify_headers',
-        ).prefetch_related(
-            'convert_to_table_by_specify_headers__headers',
-        ).order_by('step')
-
-        rule_raw_result = rule_extractor.extract()
         inputStream = rule_raw_result
 
         processedStreams = []
@@ -92,13 +97,20 @@ class StreamProcessor:
                     "step": streams[streamIndex].step,
                     "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
+                    "col_index": streams[streamIndex].col_index,
+                    "col_indexes": streams[streamIndex].col_indexes,
+                    "remove_matched_row_also": streams[streamIndex].remove_matched_row_also,
                     "text": streams[streamIndex].text,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) }
+                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
+                    "unpivot_column_index": streams[streamIndex].unpivot_column_index,
+                    "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
+                    "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
+                    "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                 })
                 continue
 
@@ -110,31 +122,46 @@ class StreamProcessor:
                     "step": streams[streamIndex].step,
                     "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
+                    "col_index": streams[streamIndex].col_index,
+                    "col_indexes": streams[streamIndex].col_indexes,
+                    "remove_matched_row_also": streams[streamIndex].remove_matched_row_also,
                     "text": streams[streamIndex].text,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) },
+                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
+                    "unpivot_column_index": streams[streamIndex].unpivot_column_index,
+                    "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
+                    "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
+                    "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                     "data": result
                 })
                 inputStream = result
             except Exception as e:
+                tb = traceback.format_exc()
                 processedStreams.append({
                     "status": "error",
-                    "error_message": str(e),
+                    "error_message": tb,
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
                     "type": streams[streamIndex].type,
                     "class": streams[streamIndex].stream_class,
+                    "col_index": streams[streamIndex].col_index,
+                    "col_indexes": streams[streamIndex].col_indexes,
+                    "remove_matched_row_also": streams[streamIndex].remove_matched_row_also,
                     "regex": streams[streamIndex].regex,
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
                     "text": streams[streamIndex].text,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "convert_to_table_by_specify_headers": { "headers": [] if streams[streamIndex].convert_to_table_by_specify_headers == None else serializers.serialize("json", streams[streamIndex].convert_to_table_by_specify_headers.headers.all()) }
+                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
+                    "unpivot_column_index": streams[streamIndex].unpivot_column_index,
+                    "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
+                    "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
+                    "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                 })
 
         return processedStreams

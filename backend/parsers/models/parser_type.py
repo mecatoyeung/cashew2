@@ -2,6 +2,7 @@ from django.db import models
 
 from datetime import datetime
 from django.utils import timezone
+import uuid
 
 from enum import Enum
 

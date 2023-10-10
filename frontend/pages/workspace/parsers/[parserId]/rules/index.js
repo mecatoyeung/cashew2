@@ -24,6 +24,7 @@ export default function Parsers() {
   const router = useRouter()
 
   const { parserId } = router.query
+  console.log("parserId: ", parserId)
 
   const ruleTypes = [
     { label: "Textfield", value: "TEXTFIELD"},
@@ -47,13 +48,13 @@ export default function Parsers() {
             Edit
           </Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item href="#/action-1" onClick={() => rulePropertiesClickHandler(rule)}>Rule Properties</Dropdown.Item>
+            <Dropdown.Item onClick={() => rulePropertiesClickHandler(parserId, rule)}>Rule Properties</Dropdown.Item>
             {(rule.ruleType == 'TEXTFIELD' ||
               rule.ruleTYpe == 'ANCHORED_TEXTFIELD' ||
               rule.ruleType == 'TABLE') && (
               <>
-                <Dropdown.Item href="#/action-2" onClick={() => regionSelectorClickHandler(rule)}>Region Selector</Dropdown.Item>
-                <Dropdown.Item href="#/action-3" onClick={() => streamEditorClickHandler(rule)}>Stream Editor</Dropdown.Item>
+                <Dropdown.Item onClick={() => regionSelectorClickHandler(parserId, rule)}>Region Selector</Dropdown.Item>
+                <Dropdown.Item onClick={() => streamEditorClickHandler(parserId, rule)}>Stream Editor</Dropdown.Item>
               </>
             )}
           </Dropdown.Menu>
@@ -94,25 +95,22 @@ export default function Parsers() {
     console.log(id)
   }
 
-  const rulePropertiesClickHandler = (rule) => {
+  const rulePropertiesClickHandler = (parserId, rule) => {
     router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=ruleProperties")
   }
 
-  const regionSelectorClickHandler = (rule) => {
+  const regionSelectorClickHandler = (parserId, rule) => {
     router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=regionSelector")
   }
 
-  const streamEditorClickHandler = (rule) => {
+  const streamEditorClickHandler = (parserId, rule) => {
     router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=streamEditor")
   }
 
   const deleteBtnClickHandler = async (rule) => {
-    console.log("delete")
     await service.delete("rules/" + rule.id + "/", () => {
       getRules()
-      console.log("getRules")
     })
-    getRules()
   }
 
   const closeRuleBtnClickHandler = () => {

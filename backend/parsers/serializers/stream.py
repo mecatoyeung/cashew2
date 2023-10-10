@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
 from ..models.stream import Stream
+from ..models.stream_condition import StreamCondition
 from ..models.rule import RuleType
-from ..models.streams.convert_to_table_by_specify_headers import ConvertToTableBySpecifyHeaders
-from ..models.streams.header import Header
 
-from ..serializers.streams.convert_to_table_by_specify_headers import ConvertToTableBySpecifyHeadersDetailSerializer
-from ..serializers.streams.header import HeaderDetailSerializer
+from ..serializers.stream_condition import StreamConditionSerializer
 
 class StreamSerializer(serializers.ModelSerializer):
+
+    stream_conditions = StreamConditionSerializer(many=True, required=False)
 
     class Meta:
         model = Stream
@@ -25,12 +25,10 @@ class StreamSerializer(serializers.ModelSerializer):
                   'extract_nth_lines',
                   'combine_first_n_lines',
                   'convert_to_table_by_specify_headers',
-                  #'get_chars_from_next_col_if_regex_not_match',
-                  #'remove_rows_with_conditions',
-                  #'merge_rows_with_conditions',
-                  #'merge_rows_with_same_columns',
-                  #'remove_rows_before_row_with_conditions',
-                  #'remove_rows_after_row_with_conditions',
+                  'col_index',
+                  'col_indexes',
+                  'stream_conditions',
+                  'remove_matched_row_also',
                   #'unpivot_table'
                   ]
         read_only_fields = ['id']
@@ -53,28 +51,51 @@ class StreamDetailSerializer(StreamSerializer):
     """ Serializer for stream detail view. """
 
     class Meta(StreamSerializer.Meta):
+        model = Stream
         fields = StreamSerializer.Meta.fields
+        read_only_fields = StreamSerializer.Meta.read_only_fields
 
 
 class StreamPostSerializer(StreamSerializer):
 
     class Meta(StreamSerializer.Meta):
+        model = Stream
         fields = StreamSerializer.Meta.fields
-
-    convert_to_table_by_specify_headers = ConvertToTableBySpecifyHeadersDetailSerializer(many=False)
+        read_only_fields = StreamSerializer.Meta.read_only_fields
+    
+    def _get_or_create_stream_conditions(self, stream_conditions, stream):
+        """ Handle getting or creating tags as needed. """
+        for stream_condition_index in range(len(stream_conditions)):
+            stream_condition = stream_conditions[stream_condition_index]
+            stream_condition['stream_id'] = stream.id
+            stream_condition['sort_order'] = stream_condition_index * 10
+            stream_condition_obj, created = StreamCondition.objects.get_or_create(
+                **stream_condition,
+            )
+            stream.streamcondition_set.add(stream_condition_obj)
 
     def create(self, validated_data):
 
-        convert_to_table_by_specify_headers = validated_data.pop("convert_to_table_by_specify_headers", None)
-        #headers = convert_to_table_by_specify_headers.pop("headers")
+        stream_conditions = validated_data.pop('stream_conditions', [])
 
-        stream_instance = Stream.objects.create(**validated_data)
-        if convert_to_table_by_specify_headers is not None:
-            convert_to_table_by_specify_headers_serializer = ConvertToTableBySpecifyHeadersDetailSerializer(data=convert_to_table_by_specify_headers)
-            if convert_to_table_by_specify_headers_serializer.is_valid():
-                convert_to_table_by_specify_headers_obj = convert_to_table_by_specify_headers_serializer.save()
+        instance = Stream.objects.create(**validated_data)
 
-        stream_instance.convert_to_table_by_specify_headers = convert_to_table_by_specify_headers_obj
-        stream_instance.save()
+        self._get_or_create_stream_conditions(stream_conditions, instance)
 
-        return stream_instance
+        instance.save()
+
+        return instance
+    
+    def update(self, instance, validated_data):
+        """ Update Stream. """
+        stream_conditions = validated_data.pop("stream_conditions", None)
+
+        if stream_conditions is not None:
+            instance.stream_conditions.clear()
+            self._get_or_create_stream_conditions(stream_conditions, instance)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance

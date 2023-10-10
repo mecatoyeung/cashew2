@@ -15,6 +15,7 @@ from .views.stream import StreamViewSet
 from .views.queue import QueueViewSet
 from .views.document import DocumentViewSet
 from .views.source import SourceViewSet
+from .views.integration import IntegrationViewSet
 
 
 parsers_router = DefaultRouter()
@@ -31,8 +32,10 @@ documents_router = DefaultRouter()
 documents_router.register('', DocumentViewSet, basename="documents")
 sources_router = DefaultRouter()
 sources_router.register('', SourceViewSet, basename="sources")
+integrations_router = DefaultRouter()
+integrations_router.register('', IntegrationViewSet, basename="integrations")
 
-app_name = ""
+app_name = "parsers"
 
 urlpatterns = [
     path('parsers/', include(parsers_router.urls), name="parsers"),
@@ -42,4 +45,5 @@ urlpatterns = [
     path('queues/', include(queues_router.urls), name="queues"),
     path('documents/', include(documents_router.urls), name="documents"),
     path('sources/', include(sources_router.urls), name="sources"),
+    path('integrations/', include(integrations_router.urls), name="integrations"),
 ]

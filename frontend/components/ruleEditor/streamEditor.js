@@ -17,6 +17,8 @@ import service from "../../service"
 
 import styles from '../../styles/Editor.module.css'
 
+import streamConditionOperators from '../../helpers/streamConditionOperators'
+
 const StreamEditor = () => {
   const router = useRouter()
   const { pathname, parserId, layoutId, ruleId, documentId = 0 } = router.query
@@ -125,21 +127,15 @@ const StreamEditor = () => {
         </div>
         <div className={styles.streamEditorWrapper}>
           {processedStreams && processedStreams.map(processedStream => (
-            <>
+            <div key={processedStream.step}>
               {processedStream.step == 0 && (
-                <div key={processedStream.step}>
+                <div>
                   <div className={styles.streamDescription}>Original Extracted Data</div>
-                    <StreamTable stream={processedStream} />
-                  {/*<div className={styles.streamSeparatorWrapper}>
-                    <div className={styles.separatorBefore}>
-                      <AddStreamWrapper rule={rule} stream={processedStream} streamAddHandler={streamAddHandler}/>
-                    </div>
-                    <StreamSeparator />
-                  </div>*/}
+                  <StreamTable stream={processedStream} />
                 </div>
               )}
               {processedStream.step != 0 && (
-              <div key={processedStream.step}>
+              <div>
                 {(processedStream.type == "TEXTFIELD" || processedStream.type == "ANCHORED_TEXTFIELD") &&
                   (
                     <>
@@ -182,7 +178,6 @@ const StreamEditor = () => {
                       {processedStream.data && (
                         <table className={styles.streamTable}>
                           <tbody>
-                            {console.log(processedStream)}
                             {processedStream.data.map((row, rowIndex) => {
                               return (
                                 <tr key={rowIndex}>
@@ -211,11 +206,11 @@ const StreamEditor = () => {
                         </div>
                       </>
                     )}
-                    {processedStream.class == "GET_CHARS_FROM_NEXT_COL_WHEN_REGEX_NOT_MATCH" && (
+                    {processedStream.class == "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH" && (
                       <>
-                        <div className={styles.streamDescription}>Get chars from next col when regex not match:</div>
-                        <div className={styles.streamDescription}>Col Index: {JSON.parse(stream.getCharsFromNextColWhenRegexNotMatch).col_index}</div>
-                        <div className={styles.streamDescription}>Regex: {JSON.parse(stream.getCharsFromNextColWhenRegexNotMatch).regex}</div>
+                        <div className={styles.streamDescription}>Get chars from next col if regex not match:</div>
+                        <div className={styles.streamDescription}>Col Index: {processedStream.colIndex}</div>
+                        <div className={styles.streamDescription}>Regex: {processedStream.regex}</div>
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
@@ -227,7 +222,8 @@ const StreamEditor = () => {
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
-                        {JSON.parse(processedStream.removeRowsWithConditions).length > 0 && (
+                        {console.log(processedStream)}
+                        {processedStream.streamConditions.length > 0 && (
                           <Table>
                             <thead>
                               <tr>
@@ -239,14 +235,14 @@ const StreamEditor = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {JSON.parse(processedStream.removeRowsWithConditions).map((condition, conditionIndex) => (
+                              {processedStream.streamConditions.map((condition, conditionIndex) => (
                                 <tr key={conditionIndex}>
                                   <td>{conditionIndex + 1}</td>
                                   <td>
                                     {condition.column}
                                   </td>
                                   <td>
-                                    {condition.operator}
+                                    {streamConditionOperators.find(o => o.value == condition.operator).label}
                                   </td>
                                   <td>
                                     {condition.value}
@@ -264,7 +260,7 @@ const StreamEditor = () => {
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
-                        {JSON.parse(processedStream.mergeRowsWithConditions).length > 0 && (
+                        {processedStream.streamConditions.length > 0 && (
                           <Table>
                             <thead>
                               <tr>
@@ -276,14 +272,14 @@ const StreamEditor = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {JSON.parse(processedStream.mergeRowsWithConditions).map((condition, conditionIndex) => (
+                              {processedStream.streamConditions.map((condition, conditionIndex) => (
                                 <tr key={conditionIndex}>
                                   <td>{conditionIndex + 1}</td>
                                   <td>
                                     {condition.column}
                                   </td>
                                   <td>
-                                    {condition.operator}
+                                    {streamConditionOperators.find(o => o.value == condition.operator).label}
                                   </td>
                                   <td>
                                     {condition.value}
@@ -309,7 +305,7 @@ const StreamEditor = () => {
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
-                        {JSON.parse(processedStream.removeRowsBeforeRowWithConditions).length > 0 && (
+                        {processedStream.streamConditions.length > 0 && (
                           <Table>
                             <thead>
                               <tr>
@@ -321,14 +317,14 @@ const StreamEditor = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {JSON.parse(processedStream.removeRowsBeforeRowWithConditions).map((condition, conditionIndex) => (
+                              {processedStream.streamConditions.map((condition, conditionIndex) => (
                                 <tr key={conditionIndex}>
                                   <td>{conditionIndex + 1}</td>
                                   <td>
                                     {condition.column}
                                   </td>
                                   <td>
-                                    {condition.operator}
+                                    {streamConditionOperators.find(o => o.value == condition.operator).label}
                                   </td>
                                   <td>
                                     {condition.value}
@@ -338,6 +334,13 @@ const StreamEditor = () => {
                             </tbody>
                           </Table>
                         )}
+                        <Form.Group className="mb-3" controlId="formRemoveMatchedRowAlso">
+                          <Form.Check
+                            type="checkbox"
+                            label="Remove matched row also"
+                            checked={processedStream.removeMatchedRowAlso}
+                          />
+                        </Form.Group>
                       </>
                     )}
                     {processedStream.class == "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS" && (
@@ -346,7 +349,7 @@ const StreamEditor = () => {
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
-                        {JSON.parse(processedStream.removeRowsAfterRowWithConditions).length > 0 && (
+                        {processedStream.streamConditions.length > 0 && (
                           <Table>
                             <thead>
                               <tr>
@@ -358,14 +361,14 @@ const StreamEditor = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {JSON.parse(processedStream.removeRowsAfterRowWithConditions).map((condition, conditionIndex) => (
+                              {processedStream.streamConditions.map((condition, conditionIndex) => (
                                 <tr key={conditionIndex}>
                                   <td>{conditionIndex + 1}</td>
                                   <td>
                                     {condition.column}
                                   </td>
                                   <td>
-                                    {condition.operator}
+                                    {streamConditionOperators.find(o => o.value == condition.operator).label}
                                   </td>
                                   <td>
                                     {condition.value}
@@ -375,6 +378,13 @@ const StreamEditor = () => {
                             </tbody>
                           </Table>
                         )}
+                        <Form.Group className="mb-3" controlId="formRemoveMatchedRowAlso">
+                          <Form.Check
+                            type="checkbox"
+                            label="Remove matched row also"
+                            checked={processedStream.removeMatchedRowAlso}
+                          />
+                        </Form.Group>
                       </>
                     )}
                     {processedStream.class == "UNPIVOT_TABLE" && (
@@ -386,7 +396,7 @@ const StreamEditor = () => {
                         <div className={styles.streamDeleteBtn}>
                           <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                         </div>
-                        {JSON.parse(processedStream.unpivotTableConditions).length > 0 && (
+                        {processedStream.unpivotTableConditions.length > 0 && (
                           <Table>
                             <thead>
                               <tr>
@@ -398,7 +408,7 @@ const StreamEditor = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {JSON.parse(processedStream.unpivoTableConditions).map((condition, conditionIndex) => (
+                              {processedStream.unpivoTableConditions.map((condition, conditionIndex) => (
                                 <tr key={conditionIndex}>
                                   <td>{conditionIndex + 1}</td>
                                   <td>
@@ -417,7 +427,7 @@ const StreamEditor = () => {
                         )}
                       </>
                     )}
-                    {processedStream.class == "TRIM_SPACE_TABLE" && (
+                    {processedStream.class == "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS" && (
                       <>
                         <div className={styles.streamDescription}>Trim Space for All Rows and Columns:</div>
                         <div className={styles.streamDeleteBtn}>
@@ -478,7 +488,7 @@ const StreamEditor = () => {
                 </div>
                 <StreamSeparator />
               </div>
-            </>
+            </div>
           ))}
         </div>
         <div className={styles.workbenchFooter}>

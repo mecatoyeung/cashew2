@@ -8,77 +8,49 @@ import Table from 'react-bootstrap/Table'
 import Select from 'react-select'
 import { useState } from 'react'
 
-
-
-const conditionOptions = [
-    {
-      label: "equals",
-      value: "equals"
-    },
-    {
-        label: "regex",
-        value: "regex"
-    },
-    {
-        label: "contains",
-        value: "contains"
-    },
-    {
-      label: "is empty",
-      value: "isEmpty"
-    },
-    {
-      label: "is not empty",
-      value: "isNotEmpty"
-    }
-  ]
+import streamConditionOperators from '../../helpers/streamConditionOperators'
 
 const StreamConditions = (props) => {
 
     const [conditions, setConditions] = useState([])
 
     const txtConditionColumnChangeHandler = (index, value)=> {
-        let updatedConditions = JSON.parse(props.conditions)
+        let updatedConditions = props.conditions
         updatedConditions[index].column = value
-        let updatedConditionsInJSON = JSON.stringify(updatedConditions)
-        setConditions(updatedConditionsInJSON)
-        updateConditions(updatedConditionsInJSON)
+        setConditions(updatedConditions)
+        updateConditions(updatedConditions)
     }
 
     const selectOperatorChangeHandler = (index, operator)=> {
-        let updatedConditions = JSON.parse(props.conditions)
+        let updatedConditions = props.conditions
         updatedConditions[index].operator = operator.value
-        let updatedConditionsInJSON = JSON.stringify(updatedConditions)
-        setConditions(updatedConditionsInJSON)
-        updateConditions(updatedConditionsInJSON)
+        setConditions(updatedConditions)
+        updateConditions(updatedConditions)
     }
 
     const txtConditionValueChangeHandler = (index, value) => {
-        let updatedConditions = JSON.parse(props.conditions)
+        let updatedConditions = props.conditions
         updatedConditions[index].value = value
-        let updatedConditionsInJSON = JSON.stringify(updatedConditions)
-        setConditions(updatedConditionsInJSON)
-        updateConditions(updatedConditionsInJSON)
+        setConditions(updatedConditions)
+        updateConditions(updatedConditions)
     }
 
     const addConditionButtonClickHandler = () => {
-        let updatedConditions = JSON.parse(props.conditions)
+        let updatedConditions = props.conditions
         updatedConditions.push({
         column: "",
-        condition: "equals",
+        condition: "EQUALS",
         value: ""
         })
-        let updatedConditionsInJSON = JSON.stringify(updatedConditions)
-        setConditions(updatedConditionsInJSON)
-        updateConditions(updatedConditionsInJSON)
+        setConditions(updatedConditions)
+        updateConditions(updatedConditions)
     }
 
     const removeConditionButtonClickHandler = (conditionIndex) => {
-        let updatedConditions = JSON.parse(props.conditions)
+        let updatedConditions = props.conditions
         updatedConditions = updatedConditions.filter((c, index) => index != conditionIndex)
-        let updatedConditionsInJSON = JSON.stringify(updatedConditions)
-        setConditions(updatedConditionsInJSON)
-        updateConditions(updatedConditionsInJSON)
+        setConditions(updatedConditions)
+        updateConditions(updatedConditions)
     }
 
   const updateConditions = (conditions) => {
@@ -87,7 +59,7 @@ const StreamConditions = (props) => {
 
   return (
     <>
-    {JSON.parse(props.conditions).length > 0 && (
+    {props.conditions.length > 0 && (
         <Table striped bordered hover>
             <thead>
             <tr>
@@ -99,7 +71,7 @@ const StreamConditions = (props) => {
             </tr>
             </thead>
             <tbody>
-            {JSON.parse(props.conditions).map((condition, conditionIndex) => (
+            {props.conditions.map((condition, conditionIndex) => (
                 <tr key={conditionIndex}>
                 <td>{conditionIndex + 1}</td>
                 <td>
@@ -107,18 +79,21 @@ const StreamConditions = (props) => {
                 </td>
                 <td>
                     <Select
-                    options={conditionOptions}
-                    value={conditionOptions.find(o => o.value == condition.operator)}
-                    onChange={(e) => selectOperatorChangeHandler(conditionIndex, e)}
-                    menuPlacement="auto"
-                    menuPosition="fixed" />
+                        classNamePrefix="react-select"
+                        options={streamConditionOperators}
+                        value={streamConditionOperators.find(o => o.value == condition.operator)}
+                        onChange={(e) => selectOperatorChangeHandler(conditionIndex, e)}
+                        menuPlacement="auto"
+                        menuPosition="fixed" />
                 </td>
                 <td>
                     <Form.Control value={condition.value} onChange={(e) => txtConditionValueChangeHandler(conditionIndex, e.target.value)}/>
                 </td>
                 <td>
-                    <Button variant="danger" onClick={() => removeConditionButtonClickHandler(conditionIndex)}>
-                    Remove
+                    <Button variant="danger" 
+                        onClick={() => removeConditionButtonClickHandler(conditionIndex)}
+                        style={{ height: 46 }}>
+                        Remove
                     </Button>
                 </td>
                 </tr>

@@ -4,6 +4,7 @@ class RoutingOperatorType(Enum):
 
   EQUALS = "EQUALS"
   CONTAINS = "CONTAINS"
+  REGEX = "REGEX"
   IS_EMPTY = "IS_EMPTY"
   IS_NOT_EMPTY = "IS_NOT_EMPTY"
 

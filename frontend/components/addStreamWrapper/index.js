@@ -102,8 +102,8 @@ const tableStreamOptions = [
     label: "Column Operations",
     options: [
       {
-        label: "Get Chars from next column when regex not match",
-        value: "GET_CHARS_FROM_NEXT_COL_WHEN_REGEX_NOT_MATCH"
+        label: "Get characters from next column if regex not match",
+        value: "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH"
       },
       {
         label: "Merge rows with same columns",
@@ -116,7 +116,7 @@ const tableStreamOptions = [
     options: [
       {
         label: "Trim all rows and columns",
-        value: "TRIM_SPACE_TABLE"
+        value: "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS"
       },
     ]
   },

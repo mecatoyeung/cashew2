@@ -4,8 +4,8 @@ from ..base import StreamBase
 
 class MergeRowsWithSameColumnsStreamProcessor(StreamBase):
 
-    def __init__(self, columns):
-        self.columns = columns
+    def __init__(self, stream):
+        self.columns = stream.col_indexes
 
     def process(self, input):
         if len(input["body"]) == 0:

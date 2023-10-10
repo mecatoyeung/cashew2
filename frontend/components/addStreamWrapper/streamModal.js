@@ -102,8 +102,8 @@ const tableStreamOptions = [
     label: "Column Operations",
     options: [
       {
-        label: "Get Chars from next column when regex not match",
-        value: "GET_CHARS_FROM_NEXT_COL_WHEN_REGEX_NOT_MATCH"
+        label: "Get characters from next column if regex not match",
+        value: "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH"
       },
       {
         label: "Merge rows with same columns",
@@ -116,7 +116,7 @@ const tableStreamOptions = [
     options: [
       {
         label: "Trim all rows and columns",
-        value: "TRIM_SPACE_TABLE"
+        value: "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS"
       },
     ]
   },
@@ -174,27 +174,13 @@ const AddStreamModal = (props) => {
     text: "",
     regex: "",
     combineFirstNLines: 2,
-    getCharsFromNextColWhenRegexNotMatch: {
-      colIndex: "",
-      regex: ""
-    },
-    removeRowsWithConditions: [],
-    mergeRowsWithConditions: {
-      column_conditions: []
-    },
-    mergeRowsWithSameColumns: "",
-    removeRowsBeforeRowWithConditions: [],
-    removeRowsAfterRowWithConditions: [],
+    colIndxes: "",
+    streamConditions: [],
     removeMatchedRowAlso: false,
-    unpivotTable: {
-      unpivotColumnIndex: "",
-      newlineChar: "",
-      propertyAssignCharacter: "",
-      unpivotTableConditions: []
-    },
-    convertToTableBySpecifyHeaders: {
-      "headers": [{ header: "" }]
-    }
+    unpivotColumnIndex: "",
+    unpivotNewlineChar: "",
+    unpivotPropertyAssignCharacter: "",
+    convertToTableBySpecifyHeaders: ""
   })
 
   const selectedStreamClassChangeHandler = (e) => {
@@ -239,25 +225,21 @@ const AddStreamModal = (props) => {
     setStream(updatedStream)
   }
 
-  const txtGetCharsFromNextColWhenRegexNotMatchColIndexChangeHandler = (e) => {
+  const txtGetCharsFromNextColIfRegexNotMatchColIndexChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    let getCharsFromNextColWhenRegexNotMatchJSON = JSON.parse(updatedStream.getCharsFromNextColWhenRegexNotMatch)
-    getCharsFromNextColWhenRegexNotMatchJSON.col_index = e.target.value
-    updatedStream.getCharsFromNextColWhenRegexNotMatch = JSON.stringify(getCharsFromNextColWhenRegexNotMatchJSON)
+    updatedStream.colIndex = parseInt(e.target.value)
     setStream(updatedStream)
   }
 
-  const txtGetCharsFromNextColWhenRegexNotMatchRegexChangeHandler = (e) => {
+  const txtGetCharsFromNextColIfRegexNotMatchRegexChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    let getCharsFromNextColWhenRegexNotMatchJSON = JSON.parse(updatedStream.getCharsFromNextColWhenRegexNotMatch)
-    getCharsFromNextColWhenRegexNotMatchJSON.regex = e.target.value
-    updatedStream.getCharsFromNextColWhenRegexNotMatch = JSON.stringify(getCharsFromNextColWhenRegexNotMatchJSON)
+    updatedStream.regex = e.target.value
     setStream(updatedStream)
   }
 
   const txtMergeRowsWithSameColumnsChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    updatedStream.mergeRowsWithSameColumns = e.target.value
+    updatedStream.colIndexes = e.target.value
     setStream(updatedStream)
   }
 
@@ -287,15 +269,7 @@ const AddStreamModal = (props) => {
 
   const updateConditionsHandler = (conditions) => {
     let updatedStream = { ...stream }
-    if (stream.streamClass.value == "REMOVE_ROWS_WITH_CONDITIONS") {
-      updatedStream.removeRowsWithConditions = conditions
-    } else if (stream.streamClass.value == "MERGE_ROWS_WITH_CONDITIONS") {
-      updatedStream.mergeRowsWithConditions = conditions
-    } else if (stream.streamClass.value == "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS") {
-      updatedStream.removeRowsBeforeRowWithConditions = conditions
-    } else if (stream.streamClass.value == "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS") {
-      updatedStream.removeRowsAfterRowWithConditions = conditions
-    }
+    updatedStream.streamConditions = conditions
     setStream(updatedStream)
   }
 
@@ -305,22 +279,15 @@ const AddStreamModal = (props) => {
     setStream(updatedStream)
   }
 
-  const txtTableHeaderChangeHandler = (index, e) => {
+  const txtTableHeaderChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    updatedStream.convertToTableBySpecifyHeaders.headers[index]["header"] = e.target.value
+    updatedStream.convertToTableBySpecifyHeaders = e.target.value
     setStream(updatedStream)
   }
 
-  const addTableHeaderClickHandler = () => {
+  const chkRemoveMatchedRowAlsoChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    updatedStream.convertToTableBySpecifyHeaders.headers.push({ "header": "" })
-    setStream(updatedStream)
-  }
-
-  const removeTableHeaderClickHandler = (index) => {
-    if (stream.convertToTableBySpecifyHeaders <= 1) return
-    let updatedStream = { ...stream }
-    updatedStream.convertToTableBySpecifyHeaders.splice(index, 1)
+    updatedStream.removeMatchedRowAlso = e.target.checked
     setStream(updatedStream)
   }
 
@@ -386,11 +353,6 @@ const AddStreamModal = (props) => {
             </Form.Group>
           </>
         )}
-        {stream.streamClass.value == "TRIM_SPACE_TABLE" && (
-          <Form.Group className="mb-3" controlId="formRegex">
-            <Form.Label>Trim all rows and columns</Form.Label>
-          </Form.Group>
-        )}
         {stream.streamClass.value == "REGEX_EXTRACT" && (
           <Form.Group className="mb-3" controlId="formRegex">
             <Form.Label>Regex: </Form.Label>
@@ -428,37 +390,61 @@ const AddStreamModal = (props) => {
               </Form.Group>
             </>
           )}
-        {stream.streamClass.value == "GET_CHARS_FROM_NEXT_COL_WHEN_REGEX_NOT_MATCH" && (
+        {stream.streamClass.value == "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH" && (
           <>
-            <Form.Group className="mb-3" controlId="formGetCharsFromNextColWhenRegexNotMatch">
+            <Form.Group className="mb-3" controlId="formGetCharsFromNextColIfRegexNotMatch">
               <Form.Label>Col Index: </Form.Label>
-              <Form.Control value={stream.getCharsFromNextColWhenRegexNotMatch} onChange={txtGetCharsFromNextColWhenRegexNotMatchColIndexChangeHandler} />
+              <Form.Control value={stream.colIndex} onChange={txtGetCharsFromNextColIfRegexNotMatchColIndexChangeHandler} />
             </Form.Group>
-            <Form.Group className="mb-3" controlId="formGetCharsFromNextColWhenRegexNotMatch">
+            <Form.Group className="mb-3" controlId="formGetCharsFromNextColIfRegexNotMatch">
               <Form.Label>Regex: </Form.Label>
-              <Form.Control value={stream.getCharsFromNextColWhenRegexNotMatch} onChange={txtGetCharsFromNextColWhenRegexNotMatchRegexChangeHandler} />
+              <Form.Control value={stream.regex} onChange={txtGetCharsFromNextColIfRegexNotMatchRegexChangeHandler} />
             </Form.Group>
           </>
         )}
         {stream.streamClass.value == "REMOVE_ROWS_WITH_CONDITIONS" && (
-          <StreamConditions conditions={stream.removeRowsWithConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+          <StreamConditions conditions={stream.streamConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
         )}
         {stream.streamClass.value == "MERGE_ROWS_WITH_CONDITIONS" && (
-          <StreamConditions conditions={stream.mergeRowsWithConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+          <StreamConditions conditions={stream.streamConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
         )}
         {stream.streamClass.value == "MERGE_ROWS_WITH_SAME_COLUMNS" && (
           <>
             <Form.Group className="mb-3" controlId="formReplaceText">
               <Form.Label>Same columns: </Form.Label>
-              <Form.Control value={stream.mergeRowsWithSameColumns} onChange={txtMergeRowsWithSameColumnsChangeHandler} />
+              <Form.Control value={stream.colIndexes} 
+                onChange={txtMergeRowsWithSameColumnsChangeHandler} 
+                required
+                placeholder="1,2,9"/>
             </Form.Group>
           </>
         )}
         {stream.streamClass.value == "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS" && (
-          <StreamConditions conditions={stream.removeRowsBeforeRowWithConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+          <>
+            <StreamConditions conditions={stream.streamConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+            <Form.Group className="mb-3" controlId="formRemoveMatchedRowAlso">
+              <Form.Check
+                type="checkbox"
+                label="Remove matched row also"
+                onChange={chkRemoveMatchedRowAlsoChangeHandler}
+                value={stream.removeMatchedRowAlso}
+              />
+            </Form.Group>
+          </>
         )}
         {stream.streamClass.value == "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS" && (
-          <StreamConditions conditions={stream.removeRowsAfterRowWithConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+          <>
+            <StreamConditions conditions={stream.streamConditions} onUpdateConditions={(conditions) => updateConditionsHandler(conditions)} />
+            <Form.Group className="mb-3" controlId="formRemoveMatchedRowAlso">
+              <Form.Check
+                type="checkbox"
+                label="Remove matched row also"
+                onChange={chkRemoveMatchedRowAlsoChangeHandler}
+                value={stream.removeMatchedRowAlso}
+              />
+            </Form.Group>
+          </>
+          
         )}
         {stream.streamClass.value == "UNPIVOT_TABLE" && (
           <>
@@ -479,23 +465,10 @@ const AddStreamModal = (props) => {
         )}
         {stream.streamClass.value == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS" && (
           <>
-            <Table striped bordered hover>
-              <tr>
-                <th>Headers</th>
-                <th>Actions</th>
-              </tr>
-              {stream.convertToTableBySpecifyHeaders.headers.map((header, headerIndex) => (
-                <tr key={headerIndex}>
-                  <td>
-                    <Form.Control value={header.header} onChange={(e) => txtTableHeaderChangeHandler(headerIndex, e)} />
-                  </td>
-                  <td>
-                    <Button variant="danger" onClick={() => removeTableHeaderClickHandler(headerIndex)}>Remove</Button>
-                  </td>
-                </tr>
-              ))}
-            </Table>
-            <Button onClick={() => addTableHeaderClickHandler()}>Add</Button>
+            <Form.Control as="textarea" 
+              placeholder="Column 1|Column 2|[Cc]olumn 3"
+              value={stream.convertToTableBySpecifyHeaders} 
+              onChange={(e) => txtTableHeaderChangeHandler(e)} />
           </>
         )}
       </Modal.Body>

@@ -79,6 +79,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """ Create a new rule. """
         if serializer.is_valid():
+            table_column_separators = serializer.validated_data
             serializer.save()
 
     @action(detail=True,

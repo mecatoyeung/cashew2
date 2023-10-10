@@ -2,8 +2,8 @@ from ..base import StreamBase
 
 class CombineFirstNLinesStreamProcessor(StreamBase):
 
-    def __init__(self, n):
-        self.n = n
+    def __init__(self, stream):
+        self.n = stream.combine_first_n_lines
 
     def process(self, input):
         if len(input["body"]) == 0:
@@ -14,7 +14,7 @@ class CombineFirstNLinesStreamProcessor(StreamBase):
                 if (i == (int(self.n) - 1)):
                     combinedRow[j] += str(input["body"][i][j])
                 else:
-                    combinedRow[j] += str(input["body"][i][j]) + " "
+                    combinedRow[j] += str(input["body"][i][j])
 
         output_body = input["body"][int(self.n):]
         output_body.insert(0, combinedRow)

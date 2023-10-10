@@ -25,6 +25,13 @@ export default function Parsers() {
     name: ""
   })
 
+  const [trashConfirmForm, setTrashConfirmForm] = useState({
+    show: false,
+    isValid: true,
+    name: "",
+    errorMessage: ""
+  })
+
   const getParsers = () => {
     service.get("parsers/", (response)=> {
       setParsers(response.data)
@@ -51,7 +58,12 @@ export default function Parsers() {
   const confirmAddLayoutBtnClickHandler = () => {
     service.post("parsers/", {
       type: "LAYOUT",
-      name: addLayoutForm.name
+      name: addLayoutForm.name,
+      ocr: {
+        "ocr_type": "GOOGLE_VISION",
+        "google_vision_ocr_api_key": "",
+        "activated": false
+      }
     }, () => {
       getParsers()
       setAddLayoutForm(
@@ -62,8 +74,71 @@ export default function Parsers() {
     })
   }
 
+  const trashLayoutNameChangeHandler = (e) => {
+    setTrashConfirmForm(
+      produce((draft) => {
+        draft.name = e.target.value
+      })
+    )
+  }
+
   const closeLayoutBtnClickHandler = () => {
     setAddLayoutForm(
+      produce((draft) => {
+        draft.show = false
+      })
+    )
+  }
+
+  const trashClickHandler = () => {
+    console.log("ok")
+    setTrashConfirmForm(
+      produce((draft) => {
+        draft.show = true
+      })
+    )
+  }
+
+  const confirmTrashHandler = (parserId) => {
+    if (trashConfirmForm.name != parsers.find(p => p.id == parserId).name) {
+      setTrashConfirmForm(
+        produce((draft) => {
+          draft.isValid = false
+          draft.errorMessage = "Parser name does not match."
+        })
+      )
+      return
+    } else {
+      setTrashConfirmForm(
+        produce((draft) => {
+          draft.isValid = true
+          draft.errorMessage = ""
+        })
+      )
+    }
+    service.delete("parsers/" + parserId + "/", (response) => {
+      console.log(response)
+      if (response.status == 204) {
+        setTrashConfirmForm(
+          produce((draft) => {
+            draft.show = false
+          })
+        )
+        getParsers()
+      } else {
+        setTrashConfirmForm(
+          produce((draft) => {
+            draft.isValid = false
+            draft.errorMessage = "Delete parser failed. Please consult system administrator."
+          })
+        )
+        return
+      }
+    })
+  }
+
+  const closeTrashHandler = () => {
+    setTrashConfirmForm(
       produce((draft) => {
         draft.show = false
       })
@@ -118,7 +193,36 @@ export default function Parsers() {
           <li key={parser.id}>
             <div className={parserStyles.parserName} onClick={() => router.push("workspace/parsers/" + parser.id + "/rules")}>{parser.name}</div>
             <div className={parserStyles.parserActions}>
-              <i className="bi bi-trash"></i>
+              <i className="bi bi-trash" onClick={trashClickHandler}></i>
+              <Modal show={trashConfirmForm.show} onHide={closeTrashHandler} centered>
+                <Modal.Header closeButton>
+                  <Modal.Title>Delete Layout</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <Form>
+                    <Form.Group className="mb-3" controlId="layoutNameControlInput">
+                      <Form.Label>Name</Form.Label>
+                      <Form.Control type="text"
+                        placeholder="e.g. Water Supply"
+                        value={trashConfirmForm.name}
+                        onChange={trashLayoutNameChangeHandler}/>
+                    </Form.Group>
+                  </Form>
+                  {!trashConfirmForm.isValid && (
+                    <div className="formErrorMessage">
+                      {trashConfirmForm.errorMessage}
+                    </div>
+                  )}
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={closeTrashHandler}>
+                    Close
+                  </Button>
+                  <Button variant="danger" onClick={() => confirmTrashHandler(parser.id)}>
+                    Delete
+                  </Button>
+                </Modal.Footer>
+              </Modal>
             </div>
           </li>
         ))}

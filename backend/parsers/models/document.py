@@ -8,10 +8,11 @@ from django.db import models
 
 from backend.settings import MEDIA_URL
 from .document_type import DocumentType
+from .parser import Parser
 
 class Document(models.Model):
   id = models.AutoField(primary_key=True)
-  parser = models.ForeignKey("Parser", on_delete=models.CASCADE)
+  parser = models.ForeignKey(Parser, on_delete=models.CASCADE)
   guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
   def file_upload_to(instance, filename):
     return os.path.join(MEDIA_URL, 'documents/%s/%s.%s' % (instance.guid, 'original', instance.extension))

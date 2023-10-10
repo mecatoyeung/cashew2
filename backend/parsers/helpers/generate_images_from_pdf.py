@@ -31,15 +31,6 @@ def generate_images_from_pdf(document):
         folder_path = os.path.join(MEDIA_URL, 'documents/%s/' % (document.guid))
         abs_pdf_path = os.path.join(folder_path, 'original.' + document.extension)
 
-        parser = Parser.objects.get(id=document.parser_id)
-
-        # Create queue object in database
-        q = Queue()
-        q.parser = parser
-        q.document = document
-        q.queue_class = QueueClass.IMPORT.value
-        q.save()
-
         dpi = 300  # choose desired dpi here
         zoom = dpi / 72  # zoom factor, standard: 72 dpi
         magnify = fitz.Matrix(zoom, zoom)  # magnifies in x, resp. y direction

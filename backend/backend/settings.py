@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'core',
-    'parsers'
+    'parsers',
+    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,9 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Aa123456'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'TEST': {
+            'NAME': 'test_docparser',
+        },
     }
 }
 
