@@ -18,7 +18,7 @@ import WorkspaceLayout from "../../../../../layouts/workspace";
 
 import service from "../../../../../service";
 
-import PDFIntegrationForm from "./_formPDF";
+import PDFIntegrationForm from "./[integrationId]/_formPDF";
 
 import integrationStyles from "../../../../../styles/Integrations.module.css";
 
@@ -26,17 +26,6 @@ export default function Parsers() {
   const router = useRouter();
 
   const { parserId } = router.query;
-
-  const [form, setForm] = useState({
-    sourceName: "",
-    sourcePath: "",
-    intervalSeconds: 15,
-    activated: false,
-  });
-
-  const addSourceBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/sources/add/");
-  };
 
   useEffect(() => {}, [parserId]);
 

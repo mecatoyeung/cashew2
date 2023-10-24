@@ -1,0 +1,118 @@
+.splittingWrapper {
+    padding: 10px;
+    width: 100%;
+}
+
+.firstPageSplitting {
+
+}
+
+.firstPageSplittingConditions {
+    display: inline-block;
+}
+
+.firstPageSplittingCondition {
+    display: inline-block;
+    margin : 10px 0;
+}
+
+.firstPageSplittingIf {
+    padding: 5px 5px 5px 0;
+}
+
+.firstPageSplittingRuleName {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.firstPageSplittingOperator {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.firstPageSplittingValue {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.firstPageSplittingThen {
+    padding: 5px;
+}
+
+.firstPageSplittingRouter {
+    padding: 10px 0;
+}
+
+.firstPageSplittingRouteTo {
+    
+}
+
+.firstPageSplittingParser {
+    font-weight: bold;
+}
+
+.firstPageSplittingActions {
+    
+}
+
+.consecutivePageSplitting {
+
+}
+
+.consecutivePageSplittingConditions {
+    display: inline-block;
+}
+
+.consecutivePageSplittingCondition {
+    display: inline-block;
+    margin : 10px 0;
+}
+
+.consecutivePageSplittingIf {
+    padding: 5px 5px 5px 0;
+}
+
+.consecutivePageSplittingRuleName {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.consecutivePageSplittingOperator {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.consecutivePageSplittingValue {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.consecutivePageSplittingThen {
+    padding: 5px;
+}
+
+.consecutivePageSplittingRouter {
+    padding: 10px 0;
+}
+
+.consecutivePageSplittingRouteTo {
+    
+}
+
+.consecutivePageSplittingParser {
+    font-weight: bold;
+}
+
+.consecutivePageSplittingActions {
+    
+}
+
+.parserSelect {
+    margin-bottom: 10px;
+}

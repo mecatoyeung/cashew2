@@ -71,7 +71,7 @@ class RuleViewSet(viewsets.ModelViewSet):
 
         document_parser = DocumentParser(rule.parser, document)
 
-        rule_raw_result = document_parser.parse(rule)
+        rule_raw_result = document_parser.extract(rule)
 
         stream_processor = StreamProcessor(rule)
 

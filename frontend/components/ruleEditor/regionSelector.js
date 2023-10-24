@@ -129,9 +129,6 @@ const RegionSelector = () => {
   const openChangeDocumentModalHandler = () => setShowChangeDocumentModal(true)
 
   const updateRule = (updatedRule) => {
-    for (let i=0; i<updatedRule.tableColumnSeparators.length; i++) {
-      updatedRule.tableColumnSeparators[i].rule = updatedRule.id
-    }
     service.put("rules/" + ruleId + "/",
       updatedRule,
       response => {

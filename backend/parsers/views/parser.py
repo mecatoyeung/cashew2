@@ -18,7 +18,7 @@ from ..models.rule import Rule
 from ..models.source import Source
 from ..models.integration import Integration
 
-from ..serializers.parser import ParserSerializer
+from ..serializers.parser import ParserSerializer, ParserUpdateSerializer
 from ..serializers.rule import RuleSerializer
 from ..serializers.source import SourceSerializer
 from ..serializers.integration import IntegrationSerializer
@@ -58,6 +58,8 @@ class ParserViewSet(viewsets.ModelViewSet):
         """ Return the serializer class for request """
         if self.action == 'list':
             return ParserSerializer
+        elif self.action == 'update':
+            return ParserUpdateSerializer
 
         return self.serializer_class
 
@@ -91,8 +93,6 @@ class ParserViewSet(viewsets.ModelViewSet):
             url_path='(?P<pk>[^/.]+)/integrations')
     def get_integrations(self, request, pk, *args, **kwargs):
 
-        integration_type = self.request.query_params.get('integrationType', None)
-
-        integrations = Integration.objects.filter(parser_id=pk).filter(integration_type=integration_type)
+        integrations = Integration.objects.filter(parser_id=pk)
 
         return Response(IntegrationSerializer(integrations, many=True).data, status=200)

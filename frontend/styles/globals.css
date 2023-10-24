@@ -20,7 +20,16 @@ a {
 h1 {
   font-family: Oswald, sans;
   font-weight: bold;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-family: Oswald, sans;
+  font-weight: bold;
+  margin-left: 10px;
   margin-bottom: 0;
+  line-height: 52px;
+  display: inline-block;
 }
 
 div, p {
@@ -158,4 +167,23 @@ button.btn {
 
 .react-select__control {
   height: 46px;
+}
+
+.modal-dialog {
+    width: 80%;
+    max-width: unset;
+}
+
+h2.accordion-header {
+  width: 100%;
+  margin-left: 0;
+  font-family: Merriweather Sans, sans;
+  line-height: 28px;
+}
+
+.w-tc-editor-text {
+}
+
+.w-tc-editor-text::placeholder {
+  color: #fff;
 }

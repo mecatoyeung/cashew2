@@ -6,16 +6,22 @@ import copy
 import json
 import statistics
 from decimal import Decimal
+from pathlib import Path
+
+from .path_helper import xml_path
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
 ASSUMED_TEXT_WIDTH = Decimal(5.0)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
+
 def isEnglish(s):
     return s.isascii() and s.isalpha()
 
+
 def isChinese(s):
     return re.search(u'[\u4e00-\u9fff]', s)
+
 
 class XMLPage:
 
@@ -23,9 +29,11 @@ class XMLPage:
         self.document_parser = document_parser
         self.page_num = page_num
         self.region = XMLRegion()
-        self.xml = self.document_parser.document.document_pages.all()[page_num-1].xml
-        self.width = self.document_parser.document.document_pages.all()[page_num-1].width
-        self.height = self.document_parser.document.document_pages.all()[page_num-1].height
+        self.xml = document_parser.document.xml
+        self.width = self.document_parser.document.document_pages.all()[
+            page_num-1].width
+        self.height = self.document_parser.document.document_pages.all()[
+            page_num-1].height
         self.text_widths = []
         self.text_heights = []
         self.median_text_width = ASSUMED_TEXT_WIDTH
@@ -41,9 +49,9 @@ class XMLPage:
         page_el = root.find('.//page')
         page_bbox_str = page_el.attrib['bbox']
         page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                        page_bbox_str,
-                                        re.IGNORECASE
-                                        )
+                                     page_bbox_str,
+                                     re.IGNORECASE
+                                     )
 
         self.region.x1 = Decimal(page_bbox_search.group(1))
         self.region.y1 = Decimal(page_bbox_search.group(2))
@@ -54,9 +62,9 @@ class XMLPage:
         for textline_element in textline_elements:
             textline_bbox_str = textline_element.attrib['bbox']
             textline_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                                textline_bbox_str,
-                                                re.IGNORECASE
-                                                )
+                                             textline_bbox_str,
+                                             re.IGNORECASE
+                                             )
 
             textline = XMLTextLine(self)
 
@@ -87,21 +95,15 @@ class XMLPage:
                     text = XMLText()
                     text_bbox_str = text_el.attrib['bbox']
                     text_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                                    text_bbox_str,
-                                                    re.IGNORECASE
-                                                    )
+                                                 text_bbox_str,
+                                                 re.IGNORECASE
+                                                 )
                     text.region.x1 = Decimal(text_bbox_search.group(1))
                     text.region.y1 = Decimal(text_bbox_search.group(2))
                     text.region.x2 = Decimal(text_bbox_search.group(3))
                     text.region.y2 = Decimal(text_bbox_search.group(4))
 
                     prev_text_width = text.region.x2 - text.region.x1
-
-                    text_width = text.region.x2 - text.region.x1
-                    self.text_widths.append(text_width)
-
-                    text_height = text.region.y2 - text.region.y1
-                    self.text_heights.append(text_height)
 
                     text.text = text_el.text
 
@@ -141,7 +143,7 @@ class XMLPage:
                     textline.text_elements.append(text)
 
                     result_text = result_text + text.text
-                    
+
             textline.text = result_text
 
             textline.region.x1 = actual_textline_x1
@@ -150,9 +152,6 @@ class XMLPage:
             textline.region.y2 = actual_textline_y2
 
         self.sort_textlines()
-
-        self.median_text_width = statistics.mean(self.text_widths)
-        self.median_text_height = statistics.mean(self.text_heights)
 
     def sort_textlines(self):
         def compare(a, b):
@@ -214,7 +213,7 @@ class XMLRegion:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
             return False
-        if (((self.y2 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1 and self.y1 <= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE)) or (self.y1 <= (another_region.y2 + SAME_LINE_ACCEPTANCE_RANGE) and (self.y1  + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1)):
+        if (((self.y2 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1 and self.y1 <= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE)) or (self.y1 <= (another_region.y2 + SAME_LINE_ACCEPTANCE_RANGE) and (self.y1 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1)):
             return True
         else:
             return False

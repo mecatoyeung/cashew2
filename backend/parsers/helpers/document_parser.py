@@ -1,3 +1,4 @@
+from .xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
 from hmac import compare_digest
 import xml.etree.ElementTree as ET
 import re
@@ -19,10 +20,6 @@ SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
 ASSUMED_TEXT_WIDTH = Decimal(5.0)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
-from .xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
-
-def isChinese(s):
-    return re.search(u'[\u4e00-\u9fff]', s)
 
 class DocumentParser:
 
@@ -30,31 +27,35 @@ class DocumentParser:
         self.parser = parser
         self.document = document
         self.xml_pages = []
-        self.parsed_rules = {}
+        self.parsed_result = []
 
-    def parse(self, rule):
+    def extract(self, rule):
 
         # Add to xml page if not yet initialized
-        page_nums = get_document_nos_from_range(rule.pages, 1, self.document.total_page_num)
+        page_nums = get_document_nos_from_range(
+            rule.pages, 1, self.document.total_page_num)
         for page_num in page_nums:
-            xml_page_already_exists = sum(1 for x in self.xml_pages if xml_page.page_num == page_num) > 0
+            xml_page_already_exists = sum(
+                1 for x in self.xml_pages if xml_page.page_num == page_num) > 0
             if not xml_page_already_exists:
-                xml_page = XMLPage(self, page_num)
+                xml_page = XMLPage(self, self.document, page_num)
                 self.xml_pages.append(xml_page)
-        self.xml_pages.sort(key = lambda x:x.page_num)
-
+        self.xml_pages.sort(key=lambda x: x.page_num)
 
         if rule.rule_type == RuleType.TEXTFIELD.value:
 
-            result = self.extract_textfield(rule)
+            result = self.extract_textfield(rule, self.parsed_result)
+            self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value:
 
-            result = self.extract_anchored_textfield(rule)
+            result = self.extract_anchored_textfield(rule, self.parsed_result)
+            self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.TABLE.value:
 
             result = self.extract_table(rule)
+            self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
 
@@ -63,22 +64,18 @@ class DocumentParser:
         elif rule.rule_type == RuleType.INPUT_DROPDOWN.value:
 
             return ""
-        
-        self.parsed_rules[rule.id] = {
-            "parsed_result": result
-        }
 
         return result
 
-    def extract_textfield(self, rule):
+    def extract_textfield(self, rule, parsed_result=[]):
 
         rule_extractor = RuleExtractor(rule, self.document)
 
-        return rule_extractor.extract_textfield(self.xml_pages)
-    
-    def extract_table(self, rule):
+        return rule_extractor.extract_textfield(self.xml_pages, parsed_result=parsed_result)
 
-        rule_extractor = RuleExtractor(rule, self.document)
+    def extract_table(self, rule, parsed_result=[]):
+
+        rule_extractor = RuleExtractor(
+            rule, self.document, parsed_result=parsed_result)
 
         return rule_extractor.extract_table(self.xml_pages)
-

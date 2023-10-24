@@ -29,6 +29,17 @@ import sharedStyles from "../../styles/Queue.module.css";
 import styles from "../../styles/ImportQueue.module.css";
 import { LayoutCssClasses } from "ag-grid-community";
 
+const documentTypes = [
+  {
+    label: "Template",
+    value: "TEMPLATE"
+  },
+  {
+    label: "Import",
+    value: "IMPORT"
+  }
+]
+
 const ImportQueue = (props) => {
   const router = useRouter();
 
@@ -61,38 +72,56 @@ const ImportQueue = (props) => {
     service.put("documents/change-queue-class/", {
       documents: documentIds,
       queue_class: "PARSING",
-    });
-  };
+    })
+  }
 
   const chkQueueChangeHandler = (index, e) => {
     let updateQueues = [...queues];
     updateQueues[index].selected = e.target.checked;
     setQueues(updateQueues);
-  };
+  }
+
+  const convertBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file)
+      fileReader.onload = () => {
+        resolve(fileReader.result);
+      }
+      fileReader.onerror = (error) => {
+        reject(error);
+      }
+    })
+  }
 
   const confirmUploadDocumentsBtnClickHandler = async () => {
+    
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i];
       let formData = new FormData();
       formData.set("parser", props.parserId);
       //formData.set("name", droppedFile.name)
       //formData.set("inputData", JSON.stringify(inputData))
-      formData.append("file", droppedFile);
+      console.log(convertBase64(droppedFile))
+      formData.append("file", convertBase64(droppedFile));
 
       const response = service
         .post(
           "documents/?parserId=" + props.parserId,
           formData,
           () => {},
+          () => {},
           {
             "Content-Type": "multipart/form-data",
+          },
+          {
             onUploadProgress: (progressEvent) => {
               const progress =
                 (progressEvent.loaded / progressEvent.total) * 100;
+              console.log("progress", progress);
               let updatedFiles = [...droppedFiles];
               updatedFiles[i].progress = progress;
               setDroppedFiles(updatedFiles);
-              console.log("updatedFiles", updatedFiles);
               if (every(updatedFiles, { progress: 100 })) {
                 getParser();
                 closeUploadDocumentsModalHandler();
@@ -115,27 +144,32 @@ const ImportQueue = (props) => {
     }
     setDroppedFiles(result);
   }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
-  const [parser, setParser] = useState(null);
-  const [defaultLayout, setDefaultLayout] = useState(null);
-  const [documents, setDocuments] = useState([]);
-  const [queues, setQueues] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [inputData, setInputData] = useState({});
+  const [parser, setParser] = useState(null)
+  const [defaultLayout, setDefaultLayout] = useState(null)
+  const [documents, setDocuments] = useState([])
+  const [queues, setQueues] = useState([])
+  const [selectedIds, setSelectedIds] = useState([])
+  const [inputData, setInputData] = useState({})
+  const [documentType, setDocumentType] = useState("IMPORT")
 
   const getParser = () => {
     if (!props.parserId) return;
     service.get("parsers/" + props.parserId + "/", (response) => {
-      setParser(response.data);
-    });
-  };
+      setParser(response.data)
+    })
+  }
 
   const txtInputChangeHandler = (rule, value) => {
-    let updatedInputData = { ...inputData };
-    updatedInputData[rule.name] = value;
-    setInputData(updatedInputData);
-  };
+    let updatedInputData = { ...inputData }
+    updatedInputData[rule.name] = value
+    setInputData(updatedInputData)
+  }
+
+  const documentTypeChangeHandler = (e) => {
+    setDocumentType(e.value)
+  }
 
   const getQueues = () => {
     if (!props.parserId) return;
@@ -192,6 +226,10 @@ const ImportQueue = (props) => {
             <Modal.Title>Upload Documents</Modal.Title>
           </Modal.Header>
           <Modal.Body>
+            <Select instanceId="documentTypeSelectId" 
+            options={documentTypes} 
+            onChange={documentTypeChangeHandler}
+            value={documentTypes.find(d => d.value == documentType)}/>
             <ul className={styles.documentUploadUl}>
               {droppedFiles.map((droppedFile, droppedFileIndex) => {
                 return (
@@ -220,47 +258,46 @@ const ImportQueue = (props) => {
             </div>
             {parser && (
               <Form>
-                {console.log(parser) ||
-                  parser.rules.map((rule) => {
-                    if (rule.ruleType == "INPUT_TEXTFIELD") {
-                      return (
-                        <Form.Group
-                          className="mb-3"
-                          controlId={camelize(rule.name)}
-                          key={rule.id}
-                        >
-                          <Form.Label>{rule.name}</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder=""
-                            onChange={(e) =>
-                              txtInputChangeHandler(rule, e.target.value)
-                            }
-                          />
-                        </Form.Group>
-                      );
-                    } else if (rule.ruleType == "INPUT_DROPDOWN") {
-                      return (
-                        <Form.Group
-                          className="mb-3"
-                          controlId={camelize(rule.name)}
-                          key={rule.id}
-                        >
-                          <Form.Label>{rule.name}</Form.Label>
-                          <Select
-                            options={rule.inputDropdownList
-                              .split("\n")
-                              .map((o) => {
-                                return { value: o, label: o };
-                              })}
-                            onChange={(e) =>
-                              txtInputChangeHandler(rule, e.value)
-                            }
-                          />
-                        </Form.Group>
-                      );
-                    }
-                  })}
+                {parser.rules.map((rule) => {
+                  if (rule.ruleType == "INPUT_TEXTFIELD") {
+                    return (
+                      <Form.Group
+                        className="mb-3"
+                        controlId={camelize(rule.name)}
+                        key={rule.id}
+                      >
+                        <Form.Label>{rule.name}</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder=""
+                          onChange={(e) =>
+                            txtInputChangeHandler(rule, e.target.value)
+                          }
+                        />
+                      </Form.Group>
+                    );
+                  } else if (rule.ruleType == "INPUT_DROPDOWN") {
+                    return (
+                      <Form.Group
+                        className="mb-3"
+                        controlId={camelize(rule.name)}
+                        key={rule.id}
+                      >
+                        <Form.Label>{rule.name}</Form.Label>
+                        <Select
+                          options={rule.inputDropdownList
+                            .split("\n")
+                            .map((o) => {
+                              return { value: o, label: o };
+                            })}
+                          onChange={(e) =>
+                            txtInputChangeHandler(rule, e.value)
+                          }
+                        />
+                      </Form.Group>
+                    );
+                  }
+                })}
               </Form>
             )}
           </Modal.Body>

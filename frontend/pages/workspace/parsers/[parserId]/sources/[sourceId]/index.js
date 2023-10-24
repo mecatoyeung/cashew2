@@ -20,7 +20,7 @@ import SourceForm from '../_form'
 
 import sourcesStyles from "../../../../../../styles/Sources.module.css"
 
-export default function Parsers() {
+export default function Sources() {
 
   const router = useRouter()
 

@@ -1,3 +1,4 @@
+import React from "react" 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -18,6 +19,8 @@ import WorkspaceLayout from "../../../../../layouts/workspace";
 import service from "../../../../../service";
 
 import sourcesStyles from "../../../../../styles/Sources.module.css";
+
+React.useLayoutEffect = React.useEffect 
 
 export default function Parsers() {
   const router = useRouter();

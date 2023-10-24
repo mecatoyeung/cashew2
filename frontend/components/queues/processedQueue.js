@@ -33,7 +33,6 @@ const ProcessedQueue = (props) => {
     if (!props.parserId) return
     service.get("queues/?parserId=" + props.parserId + "&queueType=PROCESSED", response => {
       let qs = response.data
-      console.log(qs)
       setQueues(qs)
     })
   }

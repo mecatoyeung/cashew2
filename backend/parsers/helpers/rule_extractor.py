@@ -25,17 +25,16 @@ def isChinese(s):
 
 class RuleExtractor:
 
-    def __init__(self, rule, document, parsed_rules=None):
+    def __init__(self, rule, document):
         self.rule = rule
         self.document = document
         self.page_nums = get_document_nos_from_range(self.rule.pages, last=str(document.total_page_num))
-        self.parsed_rules = parsed_rules
 
-    def extract(self):
+    def extract(self, parsed_result=[]):
 
         if self.rule.rule_type == RuleType.TEXTFIELD.value:
 
-            result = self.extract_textfield()
+            result = self.extract_textfield(parsed_result=[])
 
         elif self.rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value:
 
@@ -55,7 +54,7 @@ class RuleExtractor:
 
         return result
 
-    def extract_textfield(self, xml_pages):
+    def extract_textfield(self, xml_pages, parsed_result=[]):
 
         page_nums = get_document_nos_from_range(self.rule.pages, 1, self.document.total_page_num)
 

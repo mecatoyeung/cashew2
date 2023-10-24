@@ -13,8 +13,9 @@ import ParserLayout from '../../../../../layouts/parser'
 
 import ProcessedQueue from '../../../../../components/queues/processedQueue'
 import ImportQueue from '../../../../../components/queues/importQueue'
+import OCRQueue from '../../../../../components/queues/ocrQueue'
 import ParsingQueue from '../../../../../components/queues/parsingQueue'
-import SplitQueue from '../../../../../components/queues/splitQueue'
+import SplittingQueue from '../../../../../components/queues/splittingQueue'
 import IntegrationQueue from '../../../../../components/queues/integrationQueue'
 
 import styles from '../../../../../styles/Parser.module.css'
@@ -39,10 +40,13 @@ const ParserDocuments = () => {
           <Tab id="importQueue" eventKey="importQueue" title="Import Queue">
             <ImportQueue parserId={parserId} />
           </Tab>
-          <Tab id="dataSplitQueue" eventKey="dataSplitQueue" title="Split Queue">
-            <SplitQueue parserId={parserId} />
+          <Tab id="dataSplitQueue" eventKey="dataOCRQueue" title="OCR Queue">
+            <OCRQueue parserId={parserId} />
           </Tab>
-          <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title="Data Parsing Queue">
+          <Tab id="dataSplitingQueue" eventKey="dataSplitQueue" title="Splitting Queue">
+            <SplittingQueue parserId={parserId} />
+          </Tab>
+          <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title="Parsing Queue">
             <ParsingQueue parserId={parserId} />
           </Tab>
           <Tab id="integrationQueue" eventKey="integrationQueue" title="Integration Queue">

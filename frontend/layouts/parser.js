@@ -38,7 +38,7 @@ export default function ParserLayout({
                 <div className={workspaceLayoutStyles.logoDiv}>
                   <Image src="/static/img/logo.png" width="40" height="36" alt="Cashew Docparser" />
                 </div>
-                <h1 className={workspaceLayoutStyles.h1}>Cashew</h1>
+                <h2>Cashew</h2>
               </div>
               <div className="col-8 col-md-8">
                 <nav className={workspaceLayoutStyles.nav}>

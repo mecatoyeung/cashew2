@@ -22,16 +22,19 @@ from ..models.queue import Queue
 from ..models.queue_class import QueueClass
 
 from backend.settings import MEDIA_URL
-from .convert_pdf import convert_pdf
+from .convert_pdf_to_xml import convert_pdf_to_xml
 
 from django.db import transaction
 
+
 def generate_images_from_pdf(document):
     try:
-        folder_path = os.path.join(MEDIA_URL, 'documents/%s/' % (document.guid))
-        abs_pdf_path = os.path.join(folder_path, 'original.' + document.extension)
+        folder_path = os.path.join(
+            MEDIA_URL, 'documents/%s/' % (document.guid))
+        abs_pdf_path = os.path.join(
+            folder_path, 'source_file.' + document.extension)
 
-        dpi = 300  # choose desired dpi here
+        dpi = 150  # choose desired dpi here
         zoom = dpi / 72  # zoom factor, standard: 72 dpi
         magnify = fitz.Matrix(zoom, zoom)  # magnifies in x, resp. y direction
         with fitz.open(abs_pdf_path) as doc:  # open document
@@ -39,18 +42,12 @@ def generate_images_from_pdf(document):
                 page_no = page_idx + 1
                 # render page to an image
                 pix = page.get_pixmap(matrix=magnify)
-                abs_png_path = os.path.join(folder_path, "original-" + str(page_no) + ".png")
+                abs_png_path = os.path.join(
+                    folder_path, "source_file-" + str(page_no) + ".png")
                 pix.save(abs_png_path)
 
                 image = PIL.Image.open(abs_png_path)
                 width, height = image.size
-
-                xml = convert_pdf(
-                    path=abs_pdf_path,
-                    pagenos=[page_idx]
-                )
-                # fix bug in library
-                xml = xml + "</pages>"
 
                 # Create document page object in database
                 dp = DocumentPage(

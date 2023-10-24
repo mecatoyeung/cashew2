@@ -8,7 +8,6 @@ from pdf2image import convert_from_path
 import PIL
 from ..helpers.generate_images_from_pdf import generate_images_from_pdf
 from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
-from ..helpers.convert_pdf import convert_pdf
 from ..helpers.upload_document import upload_document
 from ..helpers.create_queue_when_upload_document import create_queue_when_upload_document
 
@@ -20,6 +19,7 @@ from ..models.queue_class import QueueClass
 from ..models.queue import Queue
 
 from .document_page import DocumentPageSerializer, DocumentPageDetailSerializer
+
 
 class DocumentSerializer(serializers.ModelSerializer):
 
@@ -47,10 +47,12 @@ class DocumentSerializer(serializers.ModelSerializer):
 
         return document
 
+
 class DocumentUploadSerializer(DocumentSerializer):
     """ Serializer for document upload view. """
     document_type = serializers.CharField(required=False, allow_null=True)
-    filename_without_extension = serializers.CharField(required=False, allow_null=True)
+    filename_without_extension = serializers.CharField(
+        required=False, allow_null=True)
     extension = serializers.CharField(required=False, allow_null=True)
     total_page_num = serializers.IntegerField(required=False, allow_null=True)
 
@@ -58,7 +60,8 @@ class DocumentUploadSerializer(DocumentSerializer):
         fields = DocumentSerializer.Meta.fields
 
     def pre_save(self, instance):
-        folder_path = os.path.join(settings.MEDIA_ROOT, 'documents', instance.guid)
+        folder_path = os.path.join(
+            settings.MEDIA_ROOT, 'documents', instance.guid)
         Path(folder_path).mkdir(parents=True, exist_ok=True)
         filepath = os.path.join('documents', instance.guid, "source_file.pdf")
         instance.file = filepath
@@ -84,10 +87,10 @@ class DocumentUploadSerializer(DocumentSerializer):
 
         return document
 
+
 class DocumentDetailSerializer(DocumentSerializer):
     """ Serializer for document detail view. """
     document_pages = DocumentPageDetailSerializer(many=True, read_only=True)
 
     class Meta(DocumentSerializer.Meta):
         fields = DocumentSerializer.Meta.fields
-

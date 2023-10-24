@@ -57,6 +57,7 @@ export default function SignIn() {
     e.preventDefault();
     if (validateSignInForm()) {
       localStorage.removeItem("token");
+      setFormErrorSummaryMessages("")
       service.post(
         "/rest-auth/login/",
         {
@@ -70,14 +71,22 @@ export default function SignIn() {
             if (callbackUrl) {
               router.push(callbackUrl);
             } else {
-              router.push("/parsers");
+              router.push("/workspace/parsers");
             }
           } else {
-            setFormErrorSummaryMessage(response.message);
+            setFormErrorSummaryMessages("Cannot connect to the server. Please contact system administrator.");
           }
         },
         (error) => {
-          setFormErrorSummaryMessages(error.response.data);
+          if (error.response && error.response.data && error.response.data.nonFieldErrors) {
+            setFormErrorSummaryMessages(error.response.data.nonFieldErrors[0])
+          }
+          else if (error.response && error.response.data) {
+            setFormErrorSummaryMessages(error.response.data[0])
+          } else {
+            setFormErrorSummaryMessages("Cannot connect to the server. Please contact system administrator.");
+            console.error(error)
+          }
         }
       );
     }
@@ -173,21 +182,13 @@ export default function SignIn() {
                 </Row>
               )}
               <Row>
-                {console.log(formErrorSummaryMessages)}
                 {formErrorSummaryMessages &&
-                  Object.keys(formErrorSummaryMessages).length > 0 &&
-                  Object.keys(formErrorSummaryMessages).map(function (
-                    key,
-                    index
-                  ) {
-                    return formErrorSummaryMessages[key].map((message) => {
-                      return (
-                        <div className="formErrorMessage" key={message}>
-                          {message}
-                        </div>
-                      );
-                    });
-                  })}
+                   (
+                    <div className="formErrorMessage">
+                      {formErrorSummaryMessages}
+                    </div>
+                  )
+                }
               </Row>
               <Row>
                 <Form.Group

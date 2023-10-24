@@ -67,6 +67,7 @@ export default function Parsers() {
   const getIntegrations = () => {
     if (!parserId) return;
     service.get(`parsers/${parserId}/integrations/`, (response) => {
+      console.log(response.data)
       setRowData(response.data);
     });
   };
@@ -86,9 +87,8 @@ export default function Parsers() {
   };
 
   const deleteBtnClickHandler = async (integration) => {
-    await service.delete("integrations/" + integration.id + "/", () => {
-      getIntegrations();
-    });
+    await service.delete("integrations/" + integration.id + "/")
+    getIntegrations()
   };
 
   useEffect(() => {

@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const removeImports = require("next-remove-imports")();
+
+let nextConfig = removeImports({
+  experimental: { esmExternals: true }
+});
+
+nextConfig = {
+  ...nextConfig,
   webpackDevMiddleware: config => {
     config.watchOptions = {
       poll: 1000,
@@ -11,7 +18,10 @@ const nextConfig = {
   images: {
     loader: "custom",
     loaderFile: './imageLoader.js'
-  }
+  },
+  removeImports: removeImports({
+    experimental: { esmExternals: true }
+  })
 }
 
 module.exports = nextConfig

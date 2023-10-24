@@ -84,13 +84,15 @@ class Service {
     }).then((response) => callback(response));
   }
 
-  post(path, payload, callback, errorCallback = null, headers = {}) {
+  post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
+    console.log("headers: ", headers)
     return this.service.request({
       method: 'POST',
       url: path,
       responseType: 'json',
       data: payload,
-      headers
+      headers,
+      ...extraArgs
     }).then((response) => {
       callback(response)
     }).catch((error) => {

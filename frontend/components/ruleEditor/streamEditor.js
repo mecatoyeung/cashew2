@@ -126,6 +126,7 @@ const StreamEditor = () => {
           </div>
         </div>
         <div className={styles.streamEditorWrapper}>
+          {console.log(processedStreams)}
           {processedStreams && processedStreams.map(processedStream => (
             <div key={processedStream.step}>
               {processedStream.step == 0 && (

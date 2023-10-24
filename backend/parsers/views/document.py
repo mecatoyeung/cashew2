@@ -92,7 +92,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = Document.objects.get(id=pk)
 
         folder_path = os.path.join(MEDIA_URL, 'documents/%s/' % (document.guid))
-        abs_png_path = os.path.join(folder_path, "original-" + str(page_num) + ".png")
+        abs_png_path = os.path.join(folder_path, "source_file-" + str(page_num) + ".png")
         image_file  = open(abs_png_path, 'rb')
         return_filename = document.guid + str(page_num) + ".png"
 

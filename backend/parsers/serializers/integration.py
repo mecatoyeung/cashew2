@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from ..models.integration import Integration
 
+
 class IntegrationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -12,8 +13,13 @@ class IntegrationSerializer(serializers.ModelSerializer):
                   'parser',
                   'xml_path',
                   'template',
-                  'pdf_version',
-                  'pdf_path']
+                  'pdf_integration_type',
+                  'pre_processing',
+                  'post_processing',
+                  'pdf_path',
+                  'interval_seconds',
+                  'next_run_time',
+                  'activated']
         read_only_fields = ['id']
 
     def create(self, validated_data):
@@ -24,7 +30,6 @@ class IntegrationSerializer(serializers.ModelSerializer):
         return integration
 
     def update(self, instance, validated_data):
-
         """ Update rule. """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -32,4 +37,7 @@ class IntegrationSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
+
+
+class IntegrationCreateSerializer(IntegrationSerializer):
+    pass

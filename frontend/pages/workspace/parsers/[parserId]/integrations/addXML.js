@@ -18,7 +18,7 @@ import WorkspaceLayout from "../../../../../layouts/workspace";
 
 import service from "../../../../../service";
 
-import XMLIntegrationForm from "./_formXML";
+import XMLIntegrationForm from "./[integrationId]/_formXML";
 
 import integrationStyles from "../../../../../styles/Integrations.module.css";
 

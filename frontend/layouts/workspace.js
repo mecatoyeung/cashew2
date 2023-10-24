@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
 import { Nav } from "react-bootstrap";
 import { Button } from "react-bootstrap";
@@ -16,12 +17,25 @@ export default function WorkspaceLayout({ children }) {
 
   let { parserId } = router.query;
 
+  const [parser, setParser] = useState(null)
+
+  const getParser = () => {
+    if (!parserId) return;
+    service.get("parsers/" + parserId + "/", (response) => {
+      setParser(response.data);
+    });
+  };
+
   const logoutBtnClickHandler = () => {
     service.post("rest-auth/logout/", {}, () => {
       localStorage.removeItem("token");
       router.push("/");
     });
   };
+
+  useEffect(() => {
+    getParser()
+  }, [])
 
   return (
     <>
@@ -50,9 +64,10 @@ export default function WorkspaceLayout({ children }) {
                     alt="Cashew Docparser"
                   />
                 </div>
-                <h1 className={workspaceLayoutStyles.h1}>Cashew</h1>
+                <h2>Cashew</h2>
+                &nbsp;&nbsp;&nbsp;
                 <Nav.Link
-                  href="/parsers"
+                  href="/workspace/parsers"
                   style={{ display: "inline-block", verticalAlign: "top" }}
                 >
                   <i
@@ -100,17 +115,27 @@ export default function WorkspaceLayout({ children }) {
                   }
                 >
                   <ul className={workspaceLayoutStyles.sideNavUl}>
+                    {parser && (
+                      <li style={{ fontFamily: "Oswald, sans", fontSize: "130%" }}>{parser.name}</li>
+                    )}
                     <Link href={"/workspace/parsers/" + parserId + "/sources"}>
                       <li>Sources</li>
                     </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/queues"}>
                       <li>Queues</li>
                     </Link>
+                    <Link href={"/workspace/parsers/" + parserId + "/preprocessings"}>
+                      <li>Pre-Processings</li>
+                    </Link>
+                    <Link href={"/workspace/parsers/" + parserId + "/ocr"}>
+                      <li>OCR</li>
+                    </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/rules"}>
                       <li>Rules</li>
                     </Link>
-                    <li>Spliting</li>
-                    <li>Layouts</li>
+                    <Link href={"/workspace/parsers/" + parserId + "/splitting"}>
+                      <li>Splitting</li>
+                    </Link>
                     <Link
                       href={"/workspace/parsers/" + parserId + "/integrations"}
                     >
