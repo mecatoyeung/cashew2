@@ -108,6 +108,15 @@
   }
 }
 
+.sideNavContainerDiv { 
+  position: relative;
+}
+
+.sidebarSizeControlDiv {
+  right: 0;
+  bottom: 0;
+}
+
 .main {
   flex-grow: 1;
   display: flex;

@@ -70,7 +70,7 @@ class DocumentUploadSerializer(DocumentSerializer):
         """ Create a document. """
         guid = str(uuid.uuid4())
         file = validated_data.pop("file")
-        filename_without_extension = file.name.split(".")[0]
+        filename_without_extension = os.path.basename(file.name).split(".")[0]
         extension = file.name.split(".")[1].lower()
         validated_data["guid"] = guid
         validated_data["filename_without_extension"] = filename_without_extension
@@ -81,7 +81,7 @@ class DocumentUploadSerializer(DocumentSerializer):
         upload_document(document, file)
         create_queue_when_upload_document(document)
         generate_images_from_pdf(document)
-        parse_pdf_to_xml(document)
+        # parse_pdf_to_xml(document)
 
         document.save()
 

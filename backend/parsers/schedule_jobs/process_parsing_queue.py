@@ -17,8 +17,10 @@ from parsers.helpers.document_parser import DocumentParser
 import sys
 import os
 from pathlib import Path
+import json
 
 from ..helpers.rule_extractor import RuleExtractor
+from ..helpers.stream_processor import StreamProcessor
 
 
 def process_parsing_queue_job():
@@ -47,22 +49,27 @@ def process_parsing_queue_job():
         document_parser = DocumentParser(parser, document)
         for rule in rules:
             extracted = document_parser.extract(rule)
+            stream_processor = StreamProcessor(rule)
+            processed_streams = stream_processor.process(extracted)
+
             parsed_result.append({
                 "rule": {
                     "id": rule.id,
-                    "name": rule.name
+                    "name": rule.name,
+                    "type": processed_streams[-1]["type"]
                 },
-                "extracted": extracted
+                "extracted": extracted,
+                "streamed": processed_streams[-1]["data"]
             })
 
-        queue_job.parsed_result = parsed_result
+        queue_job.parsed_result = json.dumps(parsed_result)
 
         # Mark the job as completed
         queue_job.queue_status = QueueStatus.COMPLETED.value
         queue_job.save()
 
         # Mark the job as preprocessing in progress
-        queue_job.queue_class = QueueClass.INTEGRATION.value
+        queue_job.queue_class = QueueClass.POST_PROCESSING.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
 
@@ -76,4 +83,4 @@ def parsing_queue_scheduler_start():
                       seconds=5, name='process_parsing_queue', jobstore='default')
     register_events(scheduler)
     scheduler.start()
-    print("Processing PARSING queue", file=sys.stdout)
+    print("Processing Parsing Queue", file=sys.stdout)

@@ -14,10 +14,19 @@
 .firstPageSplittingCondition {
     display: inline-block;
     margin : 10px 0;
+    line-height: 24px;
 }
 
 .firstPageSplittingIf {
     padding: 5px 5px 5px 0;
+}
+
+.firstPageSplittingAnd {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+    clear: right;
+    display: inline-block;
 }
 
 .firstPageSplittingRuleName {

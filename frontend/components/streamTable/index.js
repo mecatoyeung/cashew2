@@ -34,6 +34,21 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
+      {props.stream.type == "BARCODE" && (
+        <div className={styles.streamTableDiv}>
+          <table className={styles.streamTable}>
+            <tbody>
+              {props.stream.data.map((row, rowIndex) => {
+                return (
+                  <tr key={rowIndex}>
+                    <td>{row.replace(/ /g, "\u00a0")}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {props.stream.type == "TABLE" && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>

@@ -20,6 +20,7 @@ from django.core.files import File
 
 from backend.settings import MEDIA_URL
 
+from ..models.pre_processing import PreProcessing
 from ..models.document import Document
 from ..models.document_page import DocumentPage
 
@@ -27,6 +28,7 @@ from ..serializers.document import DocumentSerializer, DocumentUploadSerializer,
 
 from ..helpers.generate_images_from_pdf import generate_images_from_pdf
 from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
+
 
 class PNGRenderer(renderers.BaseRenderer):
     media_type = 'image/png'
@@ -37,6 +39,7 @@ class PNGRenderer(renderers.BaseRenderer):
     def render(self, data, media_type=None, renderer_context=None):
         return data
 
+
 class DocumentViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = DocumentDetailSerializer
@@ -45,8 +48,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def _params_to_ints(self, qs):
-         """ Convert a list of strings to integers. """
-         return [int(str_id) for str_id in qs.split(',')]
+        """ Convert a list of strings to integers. """
+        return [int(str_id) for str_id in qs.split(',')]
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
@@ -90,13 +93,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def image(self, request, pk, page_num, *args, **kwargs):
 
         document = Document.objects.get(id=pk)
+        preprocessings = PreProcessing.objects.order_by(
+            "step").filter(parser_id=document.parser.id)
 
-        folder_path = os.path.join(MEDIA_URL, 'documents/%s/' % (document.guid))
-        abs_png_path = os.path.join(folder_path, "source_file-" + str(page_num) + ".png")
-        image_file  = open(abs_png_path, 'rb')
+        folder_path = os.path.join(
+            MEDIA_URL, 'documents/%s/' % (document.guid))
+        if len(preprocessings) == 0:
+            abs_png_path = os.path.join(folder_path, str(page_num) + ".png")
+        else:
+            last_preprocessing = preprocessings[0]
+            abs_png_path = os.path.join(
+                folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".png")
+
+        image_file = open(abs_png_path, 'rb')
         return_filename = document.guid + str(page_num) + ".png"
 
         response = Response(File(image_file), content_type='image/png')
         response['Content-Disposition'] = 'attachment; filename="%s"' % return_filename
         return response
-

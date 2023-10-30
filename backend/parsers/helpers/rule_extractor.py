@@ -7,6 +7,11 @@ import copy
 import json
 from decimal import Decimal
 import statistics
+import os
+import cv2
+from pyzbar import pyzbar
+
+from backend.settings import MEDIA_URL
 
 from .xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
 
@@ -14,21 +19,26 @@ from .get_document_nos_from_range import get_document_nos_from_range
 from .check_chinese_characters import check_chinese_characters
 from .calculate_separator_regions import calculate_separator_regions
 from ..models.rule_type import RuleType
+from ..models.pre_processing import PreProcessing
 from ..serializers.document import DocumentDetailSerializer
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
 ASSUMED_TEXT_WIDTH = Decimal(5.0)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
+
 def isChinese(s):
     return re.search(u'[\u4e00-\u9fff]', s)
 
+
 class RuleExtractor:
 
-    def __init__(self, rule, document):
+    def __init__(self, parser, rule, document):
+        self.parser = parser
         self.rule = rule
         self.document = document
-        self.page_nums = get_document_nos_from_range(self.rule.pages, last=str(document.total_page_num))
+        self.page_nums = get_document_nos_from_range(
+            self.rule.pages, last=str(document.total_page_num))
 
     def extract(self, parsed_result=[]):
 
@@ -56,13 +66,14 @@ class RuleExtractor:
 
     def extract_textfield(self, xml_pages, parsed_result=[]):
 
-        page_nums = get_document_nos_from_range(self.rule.pages, 1, self.document.total_page_num)
+        page_nums = get_document_nos_from_range(
+            self.rule.pages, 1, self.document.total_page_num)
 
         textlines_in_all_pages = []
 
         for page_num in page_nums:
 
-            xml_page = [x for x in xml_pages if x.page_num == page_num ][0]
+            xml_page = [x for x in xml_pages if x.page_num == page_num][0]
 
             xml_rule = XMLRule(xml_page, self.rule)
 
@@ -90,28 +101,32 @@ class RuleExtractor:
                 if len(text_in_current_row) == 0:
                     # if it is the first line, add empty lines
                     if len(textlines_in_rows) == 0:
-                        num_of_empty_lines_to_be_prepend = math.floor((xml_rule.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
-                        for i in range(num_of_empty_lines_to_be_prepend): textlines_in_rows.append("")
-                    # if it is not the first line
-                    else:
-                        num_of_empty_lines_to_be_prepend = math.floor((previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
-                        for i in range(num_of_empty_lines_to_be_prepend): textlines_in_rows.append("")
+                        num_of_empty_lines_to_be_prepend = math.floor(
+                            (xml_rule.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend):
+                            textlines_in_rows.append("")
+                    # if it is not the first line and there is a line difference between current line and previous line,
+                    # add empty lines between them
+                    elif not previous_textline.region.is_in_same_line(current_textline.region):
+                        num_of_empty_lines_to_be_prepend = math.floor(
+                            (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend):
+                            textlines_in_rows.append("")
 
-                    num_of_spaces_to_be_prepend = math.floor((current_textline.region.x1 - xml_rule.region.x1) / prev_text_width)
+                    num_of_spaces_to_be_prepend = math.floor(
+                        (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width)
                     spaces = " " * num_of_spaces_to_be_prepend
                     text_in_current_row = text_in_current_row + spaces + text_to_add
                 # else, calculate spaces to prepend from previous textline
                 else:
-                    # Commented by Cato Yeung on 03/10/2023
-                    #num_of_spaces_to_be_prepend = math.floor((current_textline.region.x1 - xml_page.region.x1) / prev_text_width) - \
-                        #len(text_in_current_row)
-                    num_of_spaces_to_be_prepend = math.floor((current_textline.region.x1 - previous_textline.region.x2) / prev_text_width)
+                    num_of_spaces_to_be_prepend = math.floor(
+                        (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
                     spaces = " " * num_of_spaces_to_be_prepend
                     text_in_current_row = text_in_current_row + spaces + text_to_add
 
                 # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
                 if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
-                    num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - xml_rule.region.x1)  / prev_text_width) - \
+                    num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - xml_rule.region.x1) / prev_text_width) - \
                         len(text_in_current_row)
                     spaces = " " * num_of_spaces_to_be_append
                     text_in_current_row = text_in_current_row + spaces
@@ -120,26 +135,30 @@ class RuleExtractor:
 
                 # append empty textlines in the end
                 if len(textlines_within_area) == 0:
-                    num_of_empty_lines_to_be_append = math.floor((current_textline.region.y1 - xml_rule.region.y1) / xml_page.median_text_height)
-                    for i in range(num_of_empty_lines_to_be_append): textlines_in_rows.append("")
+                    num_of_empty_lines_to_be_append = math.floor(
+                        (current_textline.region.y1 - xml_rule.region.y1) / xml_page.median_text_height)
+                    for i in range(num_of_empty_lines_to_be_append):
+                        textlines_in_rows.append("")
 
                 previous_textline = current_textline
 
             textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows
 
         return textlines_in_all_pages
-    
-    def extract_table(self, xml_pages):
 
-        page_nums = get_document_nos_from_range(self.rule.pages, 1, self.document.total_page_num)
+    def extract_table(self, xml_pages, parsed_result=[]):
+
+        page_nums = get_document_nos_from_range(
+            self.rule.pages, 1, self.document.total_page_num)
 
         textlines_organized_in_columns = []
 
         for page_num in page_nums:
 
-            xml_page = [x for x in xml_pages if x.page_num == page_num ][0]
+            xml_page = [x for x in xml_pages if x.page_num == page_num][0]
 
-            separator_regions = calculate_separator_regions(xml_page, self.rule)
+            separator_regions = calculate_separator_regions(
+                xml_page, self.rule)
 
             xml_rule = XMLRule(xml_page, self.rule)
 
@@ -172,15 +191,21 @@ class RuleExtractor:
                                 overlap_end_index = text_index + 1
                             num_of_text_overlaps += 1
 
-                        overlap_text_elements = textline.text_elements[overlap_start_index:overlap_end_index]
+                        overlap_text_elements = textline.text_elements[
+                            overlap_start_index:overlap_end_index]
                         if (len(overlap_text_elements) > 0):
                             new_textline = XMLTextLine(self)
-                            new_textline.region.x1 = Decimal(overlap_text_elements[0].region.x1)
-                            new_textline.region.y1 = Decimal(overlap_text_elements[0].region.y1)
-                            new_textline.region.x2 = Decimal(overlap_text_elements[-1].region.x2)
-                            new_textline.region.y2 = Decimal(overlap_text_elements[-1].region.y2)
+                            new_textline.region.x1 = Decimal(
+                                overlap_text_elements[0].region.x1)
+                            new_textline.region.y1 = Decimal(
+                                overlap_text_elements[0].region.y1)
+                            new_textline.region.x2 = Decimal(
+                                overlap_text_elements[-1].region.x2)
+                            new_textline.region.y2 = Decimal(
+                                overlap_text_elements[-1].region.y2)
                             new_textline.text = textline.text[overlap_start_index:overlap_end_index]
-                            new_textline.text_elements = textline.text_elements[overlap_start_index:overlap_end_index]
+                            new_textline.text_elements = textline.text_elements[
+                                overlap_start_index:overlap_end_index]
 
                             # Remove overlap text from original textline
                             textline.text = textline.text[overlap_end_index:]
@@ -197,7 +222,7 @@ class RuleExtractor:
         textlines_organized_in_rows = []
         toppest_textline = None
         toppest_textline_index = -1
-        textlines_in_row = [] 
+        textlines_in_row = []
         for i in textlines_organized_in_columns:
             textlines_in_row.append([])
         ranges_of_textlines_in_the_row = []
@@ -220,9 +245,11 @@ class RuleExtractor:
                         toppest_textline = textlines_in_column[0]
                         toppest_textline_index = textlines_in_column_index
                 textlines_organized_in_columns[toppest_textline_index].pop(0)
-                textlines_in_row[toppest_textline_index].append(toppest_textline)
+                textlines_in_row[toppest_textline_index].append(
+                    toppest_textline)
 
-                ranges_of_textlines_in_the_row.append({ "x1": toppest_textline.region.x1, "x2": toppest_textline.region.x2})
+                ranges_of_textlines_in_the_row.append(
+                    {"x1": toppest_textline.region.x1, "x2": toppest_textline.region.x2})
 
                 continue
 
@@ -241,13 +268,17 @@ class RuleExtractor:
                             is_textline_under_existing_textlines_in_row = True
 
                     if toppest_textline.region.is_in_same_line(textline_in_column.region) and \
-                        not is_textline_under_existing_textlines_in_row:
-                        textline_indexes_to_be_popped.append(textlines_in_column_index)
-                        textlines_in_row[textlines_in_column_index].append(textline_in_column)
-                        ranges_of_textlines_in_the_row.append({ "x1": textline_in_column.region.x1, "x2": textline_in_column.region.x2})
+                            not is_textline_under_existing_textlines_in_row:
+                        textline_indexes_to_be_popped.append(
+                            textlines_in_column_index)
+                        textlines_in_row[textlines_in_column_index].append(
+                            textline_in_column)
+                        ranges_of_textlines_in_the_row.append(
+                            {"x1": textline_in_column.region.x1, "x2": textline_in_column.region.x2})
 
             for textline_index_to_be_popped in textline_indexes_to_be_popped:
-                textlines_organized_in_columns[textline_index_to_be_popped].pop(0)
+                textlines_organized_in_columns[textline_index_to_be_popped].pop(
+                    0)
 
             # Add textlines_in_row to textlines_organized_in_rows
             textlines_organized_in_rows.append(textlines_in_row)
@@ -255,7 +286,7 @@ class RuleExtractor:
             # Reset toppest textline and loop again
             toppest_textline = None
             toppest_textline_index = -1
-            textlines_in_row = [] 
+            textlines_in_row = []
             for i in textlines_organized_in_columns:
                 textlines_in_row.append([])
             ranges_of_textlines_in_the_row = []
@@ -271,9 +302,12 @@ class RuleExtractor:
                 textlines_in_column = textlines_organized_in_row[column_index]
                 # if there is no textlines in the column, add white spaces
                 if len(textlines_in_column) == 0:
-                    x_difference = separator_regions[column_index].x2 - separator_regions[column_index].x1
-                    number_of_spaces_to_be_added_before = math.floor(x_difference / median_of_text_widths)
-                    text_in_column = text_in_column + (" " * number_of_spaces_to_be_added_before)
+                    x_difference = separator_regions[column_index].x2 - \
+                        separator_regions[column_index].x1
+                    number_of_spaces_to_be_added_before = math.floor(
+                        x_difference / median_of_text_widths)
+                    text_in_column = text_in_column + \
+                        (" " * number_of_spaces_to_be_added_before)
                 if not previous_textline == None and isChinese(previous_textline.text[-1]):
                     space_char = "　"
                 else:
@@ -283,34 +317,46 @@ class RuleExtractor:
                     # Add empty rows before data
                     if len(text_in_rows) == 0:
                         y_difference = xml_rule.region.y2 - textline.region.y2
-                        number_of_empty_lines_to_be_added = math.floor(y_difference / median_of_text_heights)
+                        number_of_empty_lines_to_be_added = math.floor(
+                            y_difference / median_of_text_heights)
                         for empty_line_index in range(number_of_empty_lines_to_be_added):
                             empty_line = []
                             for empty_line_column_index in range(len(textlines_organized_in_row)):
-                                x_difference = separator_regions[empty_line_column_index].x2 - separator_regions[empty_line_column_index].x1
-                                number_of_spaces_in_empty_line_column = math.floor(x_difference / median_of_text_widths)
-                                empty_line.append(space_char * number_of_spaces_in_empty_line_column)
+                                x_difference = separator_regions[empty_line_column_index].x2 - \
+                                    separator_regions[empty_line_column_index].x1
+                                number_of_spaces_in_empty_line_column = math.floor(
+                                    x_difference / median_of_text_widths)
+                                empty_line.append(
+                                    space_char * number_of_spaces_in_empty_line_column)
                             text_in_rows.append(empty_line)
                     # if it is the first textline in the first column, add white spaces before the text
                     if textline_index == 0:
-                        x_difference = textline.region.x1 - separator_regions[column_index].x1
-                        number_of_spaces_to_be_added_before = math.floor(x_difference / median_of_text_widths)
-                        text_in_column = text_in_column + (space_char * number_of_spaces_to_be_added_before)
+                        x_difference = textline.region.x1 - \
+                            separator_regions[column_index].x1
+                        number_of_spaces_to_be_added_before = math.floor(
+                            x_difference / median_of_text_widths)
+                        text_in_column = text_in_column + \
+                            (space_char * number_of_spaces_to_be_added_before)
                         # add the text after adding spaces
                         text_in_column = text_in_column + textline.text
                     # if it is the second or further textline in the column, add white spaces before the text
                     elif textline_index > 0:
                         previous_textline = textlines_in_column[textline_index - 1]
                         x_difference = textline.region.x1 - previous_textline.region.x2
-                        number_of_spaces_to_be_added_before = math.floor(x_difference / median_of_text_widths)
-                        text_in_column = text_in_column + (space_char * number_of_spaces_to_be_added_before)
+                        number_of_spaces_to_be_added_before = math.floor(
+                            x_difference / median_of_text_widths)
+                        text_in_column = text_in_column + \
+                            (space_char * number_of_spaces_to_be_added_before)
                         # add the text after adding spaces
                         text_in_column = text_in_column + textline.text
                     # if it is the last textline in the column, add shite spaces after the text
                     if textline_index == (len(textlines_in_column) - 1):
-                        x_difference = separator_regions[column_index].x2 - textline.region.x2
-                        number_of_spaces_to_be_added_after = math.floor(x_difference / median_of_text_widths)
-                        text_in_column = text_in_column + (space_char * number_of_spaces_to_be_added_after)
+                        x_difference = separator_regions[column_index].x2 - \
+                            textline.region.x2
+                        number_of_spaces_to_be_added_after = math.floor(
+                            x_difference / median_of_text_widths)
+                        text_in_column = text_in_column + \
+                            (space_char * number_of_spaces_to_be_added_after)
 
                     previous_textline = textline
 
@@ -318,13 +364,16 @@ class RuleExtractor:
             text_in_rows.append(text_in_current_row)
 
         # Add empty rows after data
-        y_difference =  textline.region.y1 - xml_rule.region.y1
-        number_of_empty_lines_to_be_added = math.floor(y_difference / median_of_text_heights)
+        y_difference = textline.region.y1 - xml_rule.region.y1
+        number_of_empty_lines_to_be_added = math.floor(
+            y_difference / median_of_text_heights)
         for empty_line_index in range(number_of_empty_lines_to_be_added):
             empty_line = []
             for empty_line_column_index in range(len(textlines_organized_in_row)):
-                x_difference = separator_regions[empty_line_column_index].x2 - separator_regions[empty_line_column_index].x1
-                number_of_spaces_in_empty_line_column = math.floor(x_difference / median_of_text_widths)
+                x_difference = separator_regions[empty_line_column_index].x2 - \
+                    separator_regions[empty_line_column_index].x1
+                number_of_spaces_in_empty_line_column = math.floor(
+                    x_difference / median_of_text_widths)
                 empty_line.append(" " * number_of_spaces_in_empty_line_column)
             text_in_rows.append(empty_line)
 
@@ -338,3 +387,52 @@ class RuleExtractor:
         }
 
         return response
+
+    def extract_barcode(self, xml_pages, parsed_result=[]):
+
+        preprocessings = PreProcessing.objects.filter(
+            parser_id=self.parser.id).all()
+
+        page_num = get_document_nos_from_range(
+            self.rule.pages, 1, self.document.total_page_num)[0]
+
+        xml_page = [x for x in xml_pages if x.page_num == page_num][0]
+
+        xml_rule = XMLRule(xml_page, self.rule)
+
+        if len(preprocessings) > 0:
+            last_preprocessing = preprocessings[len(preprocessings)-1]
+            last_preprocessing_id = last_preprocessing.id
+            png_path = os.path.join(
+                'documents', self.document.guid, "pre_processed-" + str(last_preprocessing_id), str(page_num) + ".png")
+        else:
+            png_path = os.path.join(
+                'documents', self.document.guid, str(page_num) + ".png")
+        full_png_path = os.path.join(MEDIA_URL, png_path)
+
+        im = cv2.imread(full_png_path)
+        ret, bw_im = cv2.threshold(im, 127, 255, cv2.THRESH_BINARY)
+        h, w, c = bw_im.shape
+
+        def decode(image):
+            decoded_objects = pyzbar.decode(image)
+            for obj in decoded_objects:
+
+                barcode_region = XMLRegion()
+                barcode_region.x1 = Decimal(
+                    obj.rect.left) / w * xml_page.region.x2
+                barcode_region.x2 = Decimal(
+                    obj.rect.left + obj.rect.width) / w * xml_page.region.x2
+                barcode_region.y1 = Decimal(
+                    h - obj.rect.top - obj.rect.height) / h * xml_page.region.y2
+                barcode_region.y2 = Decimal(
+                    h - obj.rect.top) / h * xml_page.region.y2
+
+                if xml_rule.region.overlaps(barcode_region):
+
+                    return obj.data.decode("utf-8")
+
+            return ""
+
+        decoded = decode(bw_im)
+        return [decoded]

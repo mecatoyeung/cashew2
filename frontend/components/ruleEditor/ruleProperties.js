@@ -82,54 +82,52 @@ const RuleProperties = () => {
 
   return (
     <EditorLayout>
-      <div className={styles.workbenchWrapper}>
-        <div className={styles.workbenchHeader}>
-          <div className={styles.guidelines}>
-            Rule Properties
-          </div>
+      <div className={styles.workbenchHeader}>
+        <div className={styles.guidelines}>
+          Rule Properties
         </div>
-        <div className={styles.rulePropertiesWrapper}>
-          {rule && (
-              <>
+      </div>
+      <div className={styles.rulePropertiesWrapper}>
+        {rule && (
+            <>
+              <Form.Group className="mb-3" controlId="formNewRuleInputDropdown">
+                <Form.Label>Name</Form.Label>
+                <Form.Control onChange={(e) => setRuleName(e)} value={rule.name}/>
+              </Form.Group>
+              {rule.ruleType == 'INPUT_DROPDOWN' && (
                 <Form.Group className="mb-3" controlId="formNewRuleInputDropdown">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control onChange={(e) => setRuleName(e)} value={rule.name}/>
+                  <Form.Label>Input Drop Down List {"("}separated by return character{")"}</Form.Label>
+                  <Form.Control as="textarea" rows={8} onChange={(e) => setRuleInputDropDown(e)} value={rule.inputDropdownList}/>
                 </Form.Group>
-                {rule.ruleType == 'INPUT_DROPDOWN' && (
-                  <Form.Group className="mb-3" controlId="formNewRuleInputDropdown">
-                    <Form.Label>Input Drop Down List {"("}separated by return character{")"}</Form.Label>
-                    <Form.Control as="textarea" rows={8} onChange={(e) => setRuleInputDropDown(e)} value={rule.inputDropdownList}/>
-                  </Form.Group>
-                )}
-                <Button variant="primary" onClick={saveBtnClickHandler}>
-                  Save
-                </Button>
-                <Button variant="secondary" onClick={backBtnClickHandler} style={{marginLeft: "10px"}}>
-                  Back
-                </Button>
-                <ToastContainer position="bottom-center" role={toast.type} className="p-3">
-                    <Toast onClose={() => setToast({...toast, show: false})} show={toast.show} delay={3000} autohide>
-                        <Toast.Body>{toast.message}</Toast.Body>
-                    </Toast>
-                </ToastContainer>
-              </>
+              )}
+              <Button variant="primary" onClick={saveBtnClickHandler}>
+                Save
+              </Button>
+              <Button variant="secondary" onClick={backBtnClickHandler} style={{marginLeft: "10px"}}>
+                Back
+              </Button>
+              <ToastContainer position="bottom-center" role={toast.type} className="p-3">
+                  <Toast onClose={() => setToast({...toast, show: false})} show={toast.show} delay={3000} autohide>
+                      <Toast.Body>{toast.message}</Toast.Body>
+                  </Toast>
+              </ToastContainer>
+            </>
 
-          )}
-        </div>
-        <div className={styles.workbenchFooter}>
-          <div className={styles.backBtnWrapper}>
-            <div className={styles.parsingRulesFooter}>
-            </div>
+        )}
+      </div>
+      <div className={styles.workbenchFooter}>
+        <div className={styles.backBtnWrapper}>
+          <div className={styles.parsingRulesFooter}>
           </div>
-          <div className={styles.copyrightWrapper}>
-            Copyright by Sonik Global @ 2022
-          </div>
-          {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && (
-            <div className={styles.confirmBtnWrapper}>
-              <Button variant="success" className={styles.confirmBtn} onClick={proceedToRegionSelectorBtnClickHandler}>Proceed to Region Selector</Button>
-            </div>
-          )}
         </div>
+        <div className={styles.copyrightWrapper}>
+          Copyright by Sonik Global @ 2022
+        </div>
+        {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && (
+          <div className={styles.confirmBtnWrapper}>
+            <Button variant="success" className={styles.confirmBtn} onClick={proceedToRegionSelectorBtnClickHandler}>Proceed to Region Selector</Button>
+          </div>
+        )}
       </div>
     </EditorLayout>
   )

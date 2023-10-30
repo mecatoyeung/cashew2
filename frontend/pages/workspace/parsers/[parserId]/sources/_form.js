@@ -77,16 +77,21 @@ export default function Parsers(props) {
     })
   }
 
+  const getSource = () => {
+    if (!sourceId) return
+    service.get("/sources/" + sourceId + "/", (response) => {
+      setForm(produce((draft) => {
+        draft.name = response.data.name
+        draft.sourcePath = response.data.sourcePath
+        draft.intervalSeconds = response.data.intervalSeconds
+        draft.activated = response.data.activated
+      }))
+    })
+  }
+
   useEffect(() => {
     if (props.type == "edit") {
-      service.get("/sources/" + sourceId + "/", (response) => {
-        setForm(produce((draft) => {
-          draft.name = response.data.name
-          draft.sourcePath = response.data.sourcePath
-          draft.intervalSeconds = response.data.intervalSeconds
-          draft.activated = response.data.activated
-        }))
-      })
+      getSource()
     }
   }, [parserId])
 

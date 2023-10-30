@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class RuleType(Enum):
 
     INPUT_TEXTFIELD = "INPUT_TEXTFIELD"
@@ -7,6 +8,9 @@ class RuleType(Enum):
     TEXTFIELD = "TEXTFIELD"
     ANCHORED_TEXTFIELD = "ANCHORED_TEXTFIELD"
     TABLE = "TABLE"
+    ACROBAT_FORM = "ACROBAT_FORM"
+    BARCODE = "BARCODE"
+    DEPENDENT_RULE = "DEPENDENT_RULE"
 
     @classmethod
     def choices(cls):

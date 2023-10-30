@@ -15,6 +15,8 @@ from .views.queue import QueueViewSet
 from .views.document import DocumentViewSet
 from .views.source import SourceViewSet
 from .views.pre_processing import PreProcessingViewSet
+from .views.splitting import SplittingViewSet
+from .views.splitting_rule import SplittingRuleViewSet
 from .views.post_processing import PostProcessingViewSet
 from .views.integration import IntegrationViewSet
 
@@ -34,6 +36,11 @@ sources_router.register('', SourceViewSet, basename="sources")
 preprocessings_router = DefaultRouter()
 preprocessings_router.register(
     '', PreProcessingViewSet, basename="preprocessings")
+splittings_router = DefaultRouter()
+splittings_router.register('', SplittingViewSet, basename="splittings")
+splitting_rules_router = DefaultRouter()
+splitting_rules_router.register(
+    '', SplittingRuleViewSet, basename="splitting_rules")
 postprocessings_router = DefaultRouter()
 postprocessings_router.register(
     '', PostProcessingViewSet, basename="postprocessings")
@@ -51,6 +58,10 @@ urlpatterns = [
     path('sources/', include(sources_router.urls), name="sources"),
     path('preprocessings/', include(preprocessings_router.urls),
          name="preprocessings"),
+    path('splittings/', include(splittings_router.urls),
+         name="splittings"),
+    path('splitting_rules/', include(splitting_rules_router.urls),
+         name="splitting_rules"),
     path('postprocessings/', include(postprocessings_router.urls),
          name="postprocessings"),
     path('integrations/', include(integrations_router.urls), name="integrations"),

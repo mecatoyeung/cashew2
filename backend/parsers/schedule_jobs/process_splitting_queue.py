@@ -15,9 +15,8 @@ from backend.settings import MEDIA_URL
 import sys
 import os
 from pathlib import Path
-from ..helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
-from ..helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
 from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
+
 
 def process_splitting_queue_job():
     all_ready_splitting_queue_jobs = Queue.objects \
@@ -33,7 +32,6 @@ def process_splitting_queue_job():
     for queue_job in all_ready_splitting_queue_jobs:
         parser = queue_job.parser
         document = queue_job.document
-        
 
         # Mark the job as completed
         queue_job.queue_status = QueueStatus.COMPLETED.value
@@ -49,7 +47,8 @@ def splitting_queue_scheduler_start():
     scheduler = BackgroundScheduler()
     scheduler.add_jobstore(DjangoJobStore(), "default")
     # run this job every 60 seconds
-    scheduler.add_job(process_splitting_queue_job, 'interval', seconds=5, name='process_splitting_queue', jobstore='default')
+    scheduler.add_job(process_splitting_queue_job, 'interval',
+                      seconds=5, name='process_splitting_queue', jobstore='default')
     register_events(scheduler)
     scheduler.start()
-    print("Processing Splitting queue", file=sys.stdout)
+    print("Processing Splitting Queue", file=sys.stdout)

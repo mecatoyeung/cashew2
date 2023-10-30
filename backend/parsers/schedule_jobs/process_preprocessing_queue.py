@@ -76,4 +76,4 @@ def preprocessing_queue_scheduler_start():
                       seconds=5, name='process_preprocessing_queue', jobstore='default')
     register_events(scheduler)
     scheduler.start()
-    print("Processing preprocessing queue", file=sys.stdout)
+    print("Processing Pre-processing Queue", file=sys.stdout)

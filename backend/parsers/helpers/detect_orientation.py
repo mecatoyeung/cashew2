@@ -29,7 +29,7 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 def convert_images_to_pdf(images, output_file_path):
     """Create a searchable PDF from a pile of HOCR + JPEG"""
     pdf = Canvas(output_file_path, pageCompression=1)
-    dpi = 144
+    dpi = 300
     for image in images:
         im = Image.open(image)
         w, h = im.size
@@ -92,7 +92,7 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
         new_preprocessed_image_path = os.path.join(working_path, png_path)
         if last_preprocessing == None:
             last_preprocessed_image_path = os.path.join(
-                documents_folder_path, "source_file-" + str(page_no) + ".png")
+                documents_folder_path, str(page_no) + ".png")
         else:
             last_preprocessed_image_path = os.path.join(
                 documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_no) + ".png")
@@ -105,11 +105,11 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
         if osd["orientation"] == 0:
             rotated_im = im
         elif osd["orientation"] == 90:
-            rotated_im = rotate_image(im, 270)
+            rotated_im = rotate_image(im, 90)
         elif osd["orientation"] == 180:
             rotated_im = rotate_image(im, 180)
         elif osd["orientation"] == 270:
-            rotated_im = rotate_image(im, 90)
+            rotated_im = rotate_image(im, 270)
 
         cv2.imwrite(new_preprocessed_image_path, rotated_im)
 

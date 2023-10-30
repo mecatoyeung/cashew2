@@ -137,6 +137,11 @@ export default function WorkspaceLayout({ children }) {
                       <li>Splitting</li>
                     </Link>
                     <Link
+                      href={"/workspace/parsers/" + parserId + "/postprocessings"}
+                    >
+                      <li>Post-Processing</li>
+                    </Link>
+                    <Link
                       href={"/workspace/parsers/" + parserId + "/integrations"}
                     >
                       <li>Integrations</li>

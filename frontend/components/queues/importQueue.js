@@ -99,11 +99,8 @@ const ImportQueue = (props) => {
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i];
       let formData = new FormData();
-      formData.set("parser", props.parserId);
-      //formData.set("name", droppedFile.name)
-      //formData.set("inputData", JSON.stringify(inputData))
-      console.log(convertBase64(droppedFile))
-      formData.append("file", convertBase64(droppedFile));
+      formData.set("parser", props.parserId)
+      formData.append("file", droppedFile, droppedFile.name);
 
       const response = service
         .post(

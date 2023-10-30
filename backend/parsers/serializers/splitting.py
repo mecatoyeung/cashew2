@@ -4,13 +4,17 @@ from ..serializers.splitting_rule import SplittingRuleSerializer
 from ..models.splitting import Splitting
 from ..models.splitting_rule import SplittingRule
 
+
 class SplittingSerializer(serializers.ModelSerializer):
     """ Serializer for splitting. """
-    spliting_rules = SplittingRuleSerializer(many=False, required=True, allow_null=False)
+    splitting_rules = SplittingRuleSerializer(
+        many=True, required=False, allow_null=False)
 
     class Meta:
         model = Splitting
-        fields = ['id', 'guid', 'parser', 'split_type', "spliting_rules"]
+        fields = ['id', 'guid', 'parser', 'split_type', "splitting_rules"]
         read_only_fields = ['id']
 
 
+class PostSplittingSerializer(SplittingSerializer):
+    pass

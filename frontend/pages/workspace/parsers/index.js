@@ -201,7 +201,7 @@ export default function Parsers() {
       <ul className={parserStyles.parsersUl}>
         <li className={parserStyles.addParserLi} onClick={() => addLayoutBtnClickHandler()}>
           <div className={parserStyles.parserName}>
-            <span>Add New Layout</span>
+            <span>Add New Parser</span>
           </div>
           <div className={parserStyles.parserActions}>
             <i className="bi bi-trash"></i>
@@ -209,7 +209,7 @@ export default function Parsers() {
         </li>
         <Modal show={addLayoutForm.show} onHide={closeLayoutBtnClickHandler} centered>
           <Modal.Header closeButton>
-            <Modal.Title>Add Layout</Modal.Title>
+            <Modal.Title>Add Parser</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form>

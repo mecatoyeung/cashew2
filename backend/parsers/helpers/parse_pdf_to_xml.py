@@ -37,23 +37,19 @@ def parse_pdf_to_xml(document):
         documents_folder_path = os.path.join(
             media_folder_path, "documents", document.guid)
 
-        if ocr.ocr_type != OCRType.NO_OCR.value:
-            source_file_folder_path = os.path.join(
-                documents_folder_path, "ocred.pdf")
-        else:
-            source_file_folder_path = os.path.join(
-                documents_folder_path, "source_file.pdf")
+        source_file_path = os.path.join(
+            documents_folder_path, "source_file.pdf")
 
-        with fitz.open(source_file_folder_path) as doc:  # open document
+        with fitz.open(source_file_path) as doc:  # open document
             for page_idx, page in enumerate(doc):
                 page_num = page_idx + 1
                 # generate xml
                 xml = convert_pdf_to_xml(
-                    path=source_file_folder_path,
+                    path=source_file_path,
                     pagenos=[page_idx]
                 )
                 # fix bug in library
-                xml = xml + "</pages>"
+                # xml = xml + "</pages>"
 
                 # Output .xml file
                 # xml_filename =os.path.join( working_path, str(page_num) + ".xml")

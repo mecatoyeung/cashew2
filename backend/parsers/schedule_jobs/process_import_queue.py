@@ -51,4 +51,4 @@ def import_queue_scheduler_start():
                       seconds=5, name='process_import_queue', jobstore='default')
     register_events(scheduler)
     scheduler.start()
-    print("Processing import queue", file=sys.stdout)
+    print("Processing Import Queue", file=sys.stdout)

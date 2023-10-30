@@ -8,15 +8,19 @@ from .ocr import OCRSerializer
 from .splitting import SplittingSerializer
 from .integration import IntegrationSerializer
 
+
 class ParserSerializer(serializers.ModelSerializer):
 
     ocr = OCRSerializer(many=False, required=True, allow_null=False)
-    splitting = SplittingSerializer(many=False, required=True, allow_null=False)
-    integrations = IntegrationSerializer(many=True, required=True, allow_null=False)
+    # splitting = SplittingSerializer(
+    # many=False, required=False, allow_null=False)
+    integrations = IntegrationSerializer(
+        many=True, required=False, allow_null=False)
 
     class Meta:
         model = Parser
-        fields = ['id', 'type', 'name', 'rules', 'ocr', 'splitting', 'integrations',    'last_modified_at']
+        fields = ['id', 'type', 'name', 'rules', 'ocr',
+                  'integrations',    'last_modified_at']
         read_only_fields = ['id']
 
     rules = RuleSerializer(many=True, required=False, allow_null=True)
@@ -30,6 +34,8 @@ class ParserSerializer(serializers.ModelSerializer):
 
     def _get_or_create_splitting(self, splitting, parser):
         """ Handle getting or creating splitting as needed. """
+        if splitting == None:
+            return
         splitting["parser"] = parser
         splitting_obj, created = Splitting.objects.get_or_create(
             **splitting,
@@ -68,6 +74,7 @@ class ParserSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
 
 class ParserUpdateSerializer(ParserSerializer):
 

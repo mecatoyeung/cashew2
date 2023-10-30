@@ -11,15 +11,16 @@ class PostProcessingSerializer(serializers.ModelSerializer):
                   'post_processing_type',
                   'name',
                   'parser',
+                  'redaction_regex',
                   'step']
         read_only_fields = ['id']
 
     def create(self, validated_data):
         """ Create a source. """
 
-        pre_processing = PostProcessing.objects.create(**validated_data)
+        post_processing = PostProcessing.objects.create(**validated_data)
 
-        return pre_processing
+        return post_processing
 
     def update(self, instance, validated_data):
         """ Update rule. """

@@ -10,16 +10,16 @@ from pathlib import Path
 
 from .path_helper import xml_path
 
-SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
+SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
 ASSUMED_TEXT_WIDTH = Decimal(5.0)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
 
-def isEnglish(s):
+def is_english(s):
     return s.isascii() and s.isalpha()
 
 
-def isChinese(s):
+def is_chinese(s):
     return re.search(u'[\u4e00-\u9fff]', s)
 
 
@@ -29,7 +29,8 @@ class XMLPage:
         self.document_parser = document_parser
         self.page_num = page_num
         self.region = XMLRegion()
-        self.xml = document_parser.document.xml
+        self.xml = document_parser.document.document_pages.get(
+            page_num=page_num).xml
         self.width = self.document_parser.document.document_pages.all()[
             page_num-1].width
         self.height = self.document_parser.document.document_pages.all()[
@@ -43,7 +44,7 @@ class XMLPage:
 
     def load_all_textlines(self):
 
-        root = ET.fromstring(self.xml)
+        root = ET.fromstring(self.xml.replace('\n', ''))
         textline_elements = root.findall('.//textline')
 
         page_el = root.find('.//page')
@@ -137,9 +138,16 @@ class XMLPage:
 
                     prev_text = text
 
-                if text_el.text == ' ' and isEnglish(prev_text.text):
+                elif text_el.text == ' ' and 'bbox' not in text_el.attrib and is_english(prev_text.text):
+
                     text = XMLText()
                     text.text = " "
+
+                    text.region.x1 = Decimal(text_bbox_search.group(1))
+                    text.region.y1 = Decimal(text_bbox_search.group(2))
+                    text.region.x2 = Decimal(text_bbox_search.group(3))
+                    text.region.y2 = Decimal(text_bbox_search.group(4))
+
                     textline.text_elements.append(text)
 
                     result_text = result_text + text.text

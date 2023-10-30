@@ -16,31 +16,34 @@ import WorkspaceLayout from '../../../../../../layouts/workspace'
 
 import service from '../../../../../../service'
 
-import PreProcessingForm from './_orientationDetectionForm'
+import RedactionForm from './_redactionForm'
 
 export default function PreProcessing() {
 
   const router = useRouter()
 
-  const { parserId, preprocessingId } = router.query
+  const { parserId, postprocessingId } = router.query
 
-  const [preProcessing, setPreProcessing] = useState(null)
+  const [postProcessing, setPostProcessing] = useState(null)
 
-  const getPreProcessing = () => {
-    if (!preprocessingId) return
-    service.get("/preprocessings/" + preprocessingId + "/", (response) => {
-      setPreProcessing(response.data)
+  const getPostProcessing = () => {
+    if (!postprocessingId) return
+    service.get("/postprocessings/" + postprocessingId + "/", (response) => {
+      setPostProcessing(response.data)
     })
   }
 
   useEffect(() => {
-    getPreProcessing()
-  }, [parserId, preprocessingId])
+    getPostProcessing()
+  }, [parserId, postprocessingId])
+
+  useEffect(() => {
+  }, [parserId])
 
   return (
     <>
-      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION" && (
-        <PreProcessingForm type="edit" />
+      {postProcessing && postProcessing.postProcessingType == "REDACTION" && (
+        <RedactionForm type="edit" />
       )}
     </>
   )

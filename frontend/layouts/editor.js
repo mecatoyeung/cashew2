@@ -23,12 +23,17 @@ export default function EditorLayout({ children }) {
   const [rules, setRules] = useState([])
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  const [openSidebar, setOpenSidebar] = useState(true)
 
   const getRulesByParserId = () => {
     if (parserId == undefined) return
     service.get("rules/?parserId=" + parserId, response => {
       setRules(response.data)
     })
+  }
+
+  const toggleSidebarHandler = () => {
+    setOpenSidebar(!openSidebar)
   }
 
   useEffect(() => {
@@ -61,7 +66,7 @@ export default function EditorLayout({ children }) {
       </Head>
       <div className={styles.container}>
         <div className={styles.editorWrapper}>
-          <div xs="2" className={styles.sidebarWrapper}>
+          <div xs="2" className={styles.sidebarWrapper} style={{width: openSidebar ? "279px": 0 }}>
             <div className={styles.parsingRulesHeader}>
               Data Parsing Rules
             </div>
@@ -89,7 +94,17 @@ export default function EditorLayout({ children }) {
               <Link href={"/workspace/parsers/" + parserId + "/rules"}>&#60; Exit Parsing Rules Editor</Link>
             </div>
           </div>
-          {children}
+          <div className={styles.workbenchWrapper} style={{width: openSidebar ? "calc(100% - 280px)": "99%" }}>
+            {children}
+          </div>
+        </div>
+        <div className={styles.sidebarSizeControlDiv} style={{ left: openSidebar ? "225px": "10px" }}>
+          {openSidebar && (
+            <Button onClick={toggleSidebarHandler}><i class="bi bi-arrow-left"></i></Button>
+          )}
+          {!openSidebar && (
+            <Button onClick={toggleSidebarHandler}><i class="bi bi-arrow-right"></i></Button>
+          )}
         </div>
         <ToastContainer position="bottom-center" className="p-3">
           <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>

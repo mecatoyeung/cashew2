@@ -36,25 +36,33 @@ class DocumentParser:
             rule.pages, 1, self.document.total_page_num)
         for page_num in page_nums:
             xml_page_already_exists = sum(
-                1 for x in self.xml_pages if xml_page.page_num == page_num) > 0
+                1 for x in self.xml_pages if x.page_num == page_num) > 0
             if not xml_page_already_exists:
-                xml_page = XMLPage(self, self.document, page_num)
+                xml_page = XMLPage(self, page_num)
                 self.xml_pages.append(xml_page)
         self.xml_pages.sort(key=lambda x: x.page_num)
 
         if rule.rule_type == RuleType.TEXTFIELD.value:
 
-            result = self.extract_textfield(rule, self.parsed_result)
+            result = self.extract_textfield(
+                self.parser, rule, self.parsed_result)
             self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value:
 
-            result = self.extract_anchored_textfield(rule, self.parsed_result)
+            result = self.extract_anchored_textfield(
+                self.parser, rule, self.parsed_result)
             self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.TABLE.value:
 
-            result = self.extract_table(rule)
+            result = self.extract_table(self.parser, rule, self.parsed_result)
+            self.parsed_result.append(result)
+
+        elif rule.rule_type == RuleType.BARCODE.value:
+
+            result = self.extract_barcode(
+                self.parser, rule, self.parsed_result)
             self.parsed_result.append(result)
 
         elif rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
@@ -67,15 +75,24 @@ class DocumentParser:
 
         return result
 
-    def extract_textfield(self, rule, parsed_result=[]):
+    def extract_textfield(self, parser, rule, parsed_result=[]):
 
-        rule_extractor = RuleExtractor(rule, self.document)
+        rule_extractor = RuleExtractor(parser, rule, self.document)
 
         return rule_extractor.extract_textfield(self.xml_pages, parsed_result=parsed_result)
 
-    def extract_table(self, rule, parsed_result=[]):
+    def extract_table(self, parser, rule, parsed_result=[]):
 
-        rule_extractor = RuleExtractor(
-            rule, self.document, parsed_result=parsed_result)
+        rule_extractor = RuleExtractor(parser,
+                                       rule, self.document, parsed_result=parsed_result)
 
         return rule_extractor.extract_table(self.xml_pages)
+
+    def extract_anchored_textfield(self, parser, rule, parsed_result=[]):
+        pass
+
+    def extract_barcode(self, parser, rule, parsed_result=[]):
+
+        rule_extractor = RuleExtractor(parser, rule, self.document)
+
+        return rule_extractor.extract_barcode(self.xml_pages, parsed_result=parsed_result)

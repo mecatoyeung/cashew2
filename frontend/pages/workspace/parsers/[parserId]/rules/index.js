@@ -32,6 +32,9 @@ export default function Parsers() {
     { label: "Input Dropdown", value: "INPUT_DROPDOWN"},
     { label: "Anchored Textfield", value: "ANCHORED_TEXTFIELD"},
     { label: "Table", value: "TABLE"},
+    { label: "Acrobat Form", value: "ACROBAT_FORM"},
+    { label: "Barcode", value: "BARCODE"},
+    { label: "Dependent Rule", value: "DEPENDENT_RULE"}
   ]
 
   const gridRef = useRef()
@@ -51,7 +54,8 @@ export default function Parsers() {
             <Dropdown.Item onClick={() => rulePropertiesClickHandler(parserId, rule)}>Rule Properties</Dropdown.Item>
             {(rule.ruleType == 'TEXTFIELD' ||
               rule.ruleTYpe == 'ANCHORED_TEXTFIELD' ||
-              rule.ruleType == 'TABLE') && (
+              rule.ruleType == 'TABLE' ||
+              rule.ruleType == 'BARCODE') && (
               <>
                 <Dropdown.Item onClick={() => regionSelectorClickHandler(parserId, rule)}>Region Selector</Dropdown.Item>
                 <Dropdown.Item onClick={() => streamEditorClickHandler(parserId, rule)}>Stream Editor</Dropdown.Item>

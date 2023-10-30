@@ -50,17 +50,32 @@ export default function Parsers(props) {
     parser: parserId,
     integrationType: "PDF_INTEGRATION",
     pdfIntegrationType: "SOURCE",
-    preProcessingId: null,
-    postProcessingId: null,
+    preProcessing: null,
+    postProcessing: null,
     pdfPath: "",
     intervalSeconds: 15,
     activated: true,
     errorMessage: "",
   })
 
+  const [preProcessings, setPreProcessings] = useState([])
+  const [postProcessings, setPostProcessings] = useState([])
+
   const selectPdfIntegrationTypeChangeHandler = (e) => {
     setForm(produce((draft) => {
       draft.pdfIntegrationType = e.value
+    }))
+  }
+
+  const selectPreProcessingChangeHandler = (e) => {
+    setForm(produce((draft) => {
+      draft.preProcessing = e.value
+    }))
+  }
+
+  const selectPostProcessingChangeHandler = (e) => {
+    setForm(produce((draft) => {
+      draft.postProcessing = e.value
     }))
   }
 
@@ -87,8 +102,8 @@ export default function Parsers(props) {
         parser: parserId,
         integrationType: form.integrationType,
         pdfIntegrationType: form.pdfIntegrationType,
-        preProcessingId: form.preProcessingId,
-        postProcessingId: form.postProcessingId,
+        preProcessing: form.preProcessing,
+        postProcessing: form.postProcessing,
         pdfPath: form.pdfPath,
         intervalSeconds: form.intervalSeconds,
         activated: form.activated,
@@ -111,8 +126,8 @@ export default function Parsers(props) {
         parser: parserId,
         integrationType: form.integrationType,
         pdfIntegrationType: form.pdfIntegrationType,
-        preProcessingId: form.preProcessingId,
-        postProcessingId: form.postProcessingId,
+        preProcessing: form.preProcessing,
+        postProcessing: form.postProcessing,
         pdfPath: form.pdfPath,
         intervalSeconds: form.intervalSeconds,
         activated: form.activated,
@@ -123,25 +138,45 @@ export default function Parsers(props) {
     )
   }
 
+  const getIntegration = () => {
+    if (!integrationId) return
+    service.get("/integrations/" + integrationId + "/", (response) => {
+      console.log(response)
+      setForm(
+        produce((draft) => {
+          draft.name = response.data.name
+          draft.parser = parserId
+          draft.integrationType = response.data.integrationType
+          draft.pdfIntegrationType = response.data.pdfIntegrationType
+          draft.preProcessing = response.data.preProcessing
+          draft.postProcessing = response.data.postProcessing
+          draft.pdfPath = response.data.pdfPath
+          draft.intervalSeconds = response.data.intervalSeconds
+          draft.activated = response.data.activated
+        })
+      )
+    })
+  }
+
+  const getPreProcessings = () => {
+    if (!parserId) return
+    service.get("/preprocessings?parserId=" + parserId , (response) => {
+      setPreProcessings(response.data)
+    })
+  }
+
+  const getPostProcessings = () => {
+    if (!parserId) return
+    service.get("/postprocessings?parserId=" + parserId , (response) => {
+      setPostProcessings(response.data)
+    })
+  }
+
   useEffect(() => {
     if (props.type == "edit") {
-      if (!integrationId) return
-      service.get("/integrations/" + integrationId + "/", (response) => {
-        console.log(response)
-        setForm(
-          produce((draft) => {
-            draft.name = response.data.name
-            draft.parser = parserId
-            draft.integrationType = response.data.integrationType
-            draft.pdfIntegrationType = response.data.pdfIntegrationType
-            draft.preProcessingId = response.data.preProcessingId
-            draft.postProcessingId = response.data.postProcessingId
-            draft.pdfPath = response.data.pdfPath
-            draft.intervalSeconds = response.data.intervalSeconds
-            draft.activated = response.data.activated
-          })
-        )
-      })
+      getIntegration()
+      getPreProcessings()
+      getPostProcessings()
     }
   }, [parserId, integrationId])
 
@@ -184,6 +219,50 @@ export default function Parsers(props) {
                     menuPlacement="auto"
                     menuPosition="fixed" />
                 </Form.Group>
+                {form.pdfIntegrationType == "PRE_PROCESSING" && preProcessings && (
+                  <Form.Group className="col-12" controlId="addForm.preProcessingId">
+                    <Form.Label>Pre-processing</Form.Label>
+                    <Select
+                      classNamePrefix="react-select"
+                      options={preProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      })}
+                      value={preProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      }).find(o => o.value == form.preProcessing)}
+                      onChange={(e) => selectPreProcessingChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" />
+                  </Form.Group>
+                )}
+                {form.pdfIntegrationType == "POST_PROCESSING" && postProcessings && (
+                  <Form.Group className="col-12" controlId="addForm.postProcessingId">
+                    <Form.Label>Post-processing</Form.Label>
+                    <Select
+                      classNamePrefix="react-select"
+                      options={postProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      })}
+                      value={postProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      }).find(o => o.value == form.postProcessing)}
+                      onChange={(e) => selectPostProcessingChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" />
+                  </Form.Group>
+                )}
                 <Form.Group className="col-12" controlId="addForm.sourcePath">
                   <Form.Label>PDF Output Path</Form.Label>
                   <Form.Control

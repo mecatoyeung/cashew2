@@ -6,6 +6,7 @@ from ..models.table_column_separator import TableColumnSeparator
 
 from .table_column_separator import TableColumnSeparatorSerializer
 
+
 class RuleSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -27,8 +28,9 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_y2',
                   'last_modified_at']
         read_only_fields = ['id']
-        
-    table_column_separators = TableColumnSeparatorSerializer(many=True, required=False, allow_null=True)
+
+    table_column_separators = TableColumnSeparatorSerializer(
+        many=True, required=False, allow_null=True)
 
     def _get_or_create_table_column_separators(self, table_column_separators, rule):
         """ Handle getting or creating tags as needed. """
@@ -41,17 +43,20 @@ class RuleSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """ Create a rule. """
-        table_column_separators = validated_data.pop("table_column_separators", [])
+        table_column_separators = validated_data.pop(
+            "table_column_separators", [])
 
         rule = Rule.objects.create(**validated_data)
 
-        self._get_or_create_table_column_separators(table_column_separators, rule)
+        self._get_or_create_table_column_separators(
+            table_column_separators, rule)
 
         return rule
 
     def update(self, instance, validated_data):
 
-        table_column_separators = validated_data.pop("table_column_separators", None)
+        table_column_separators = validated_data.pop(
+            "table_column_separators", None)
 
         TableColumnSeparator.objects.filter(rule__id=instance.id).delete()
 
@@ -62,13 +67,16 @@ class RuleSerializer(serializers.ModelSerializer):
         instance.save()
 
         if table_column_separators is not None:
-            instance.table_column_separators.clear()
-            self._get_or_create_table_column_separators(table_column_separators, instance)
+            instance.table_column_separators.all().delete()
+            self._get_or_create_table_column_separators(
+                table_column_separators, instance)
 
         return instance
-    
+
+
 class RuleCreateSerializer(RuleSerializer):
     pass
+
 
 class RuleUpdateSerializer(RuleSerializer):
     pass

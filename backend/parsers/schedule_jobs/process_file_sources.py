@@ -69,15 +69,17 @@ def process_file_sources():
 
                         document_upload_serializer_data["document_type"] = DocumentType.PDF.value
 
-                        document_upload_serializer_data["filename_without_extension"] = filename.split(".")[
+                        document_upload_serializer_data["filename_without_extension"] = os.path.basename(filename).split(".")[
                             0]
                         document_upload_serializer_data["extension"] = filename.split(".")[
                             1].lower()
 
                         try:
-                            pdf = PdfReader(open(abs_source_file_path, 'rb'))
-                            document_upload_serializer_data["total_page_num"] = len(
-                                pdf.pages)
+                            with open(abs_source_file_path, "rb") as file:
+                                pdf = PdfReader(file)
+                                document_upload_serializer_data["total_page_num"] = len(
+                                    pdf.pages)
+                                file.close()
                         except:
                             document_upload_serializer_data["total_page_num"] = 1
 
@@ -110,4 +112,4 @@ def file_source_scheduler_start():
                       seconds=5, name='process_file_sources', jobstore='default')
     register_events(scheduler)
     scheduler.start()
-    print("Processing file source", file=sys.stdout)
+    print("Processing File Source", file=sys.stdout)

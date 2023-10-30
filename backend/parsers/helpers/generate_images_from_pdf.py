@@ -34,7 +34,7 @@ def generate_images_from_pdf(document):
         abs_pdf_path = os.path.join(
             folder_path, 'source_file.' + document.extension)
 
-        dpi = 150  # choose desired dpi here
+        dpi = 300  # choose desired dpi here
         zoom = dpi / 72  # zoom factor, standard: 72 dpi
         magnify = fitz.Matrix(zoom, zoom)  # magnifies in x, resp. y direction
         with fitz.open(abs_pdf_path) as doc:  # open document
@@ -43,7 +43,7 @@ def generate_images_from_pdf(document):
                 # render page to an image
                 pix = page.get_pixmap(matrix=magnify)
                 abs_png_path = os.path.join(
-                    folder_path, "source_file-" + str(page_no) + ".png")
+                    folder_path, str(page_no) + ".png")
                 pix.save(abs_png_path)
 
                 image = PIL.Image.open(abs_png_path)

@@ -3,6 +3,7 @@ from pathlib import Path
 import requests
 import json
 import base64
+import shutil
 from functools import cmp_to_key
 from .convert_pdf_to_image import convert_pdf_to_image
 from .gcv2hocr import fromResponse
@@ -14,9 +15,6 @@ import re
 import sys
 import zlib
 import cv2
-
-from doctr.models import ocr_predictor
-from doctr.io import DocumentFile
 import torch
 
 from bidi.algorithm import get_display
@@ -27,9 +25,7 @@ from reportlab.pdfgen.canvas import Canvas
 from lxml import etree, html
 from PIL import Image
 
-GOOGLE_VISION_API_KEY = "AIzaSyDoNvelJ3f7-dtCuNAnCry8IeBXqJ2rAmk"
-
-WORKING_DIR = os.getcwd() + "/imgdir/"
+from .convert_pdf_to_xml import convert_pdf_to_xml
 
 
 class StdoutWrapper:
@@ -45,9 +41,37 @@ class StdoutWrapper:
         sys.stdout.write(data)
 
 
+def export_pdf_bytes(images, default_dpi, savefile=False):
+    buffer = io.BytesIO()
+    if len(images) == 0:
+        sys.exit(0)
+    load_invisible_font()
+    pdf = Canvas(buffer)
+    pdf.setCreator('hocr-tools')
+    pdf.setTitle(os.path.basename("temp file"))
+    dpi = default_dpi
+    for image in images:
+        im = Image.open(image)
+        w, h = im.size
+        try:
+            dpi = im.info['dpi'][0]
+        except KeyError:
+            pass
+        width = w * 72 / dpi
+        height = h * 72 / dpi
+        pdf.setPageSize((width, height))
+        pdf.drawImage(image, 0, 0, width=width, height=height)
+        add_text_layer(pdf, image, height, dpi)
+        pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+    return buffer
+
+
 def export_pdf(playground, default_dpi, savefile=False):
     """Create a searchable PDF from a pile of HOCR + JPEG"""
-    images = sorted(glob.glob(os.path.join(playground, '*.jpg')))
+    images = sorted(glob.glob(os.path.join(playground, '*.png')))
     if len(images) == 0:
         print(f"WARNING: No JPG images found in the folder {playground}"
               "\nScript cannot proceed without them and will terminate now.\n")
@@ -81,6 +105,8 @@ def add_text_layer(pdf, image, height, dpi):
     hocr = etree.parse(hocrfile, html.XHTMLParser())
     line_infos = []
     for line in hocr.xpath('//*[@class="ocr_line"]'):
+        if p1.search(line.attrib['title']) == None:
+            continue
         linebox = p1.search(line.attrib['title']).group(1).split()
         linebox = [float(i) for i in linebox]
         line_info = [line, linebox]
@@ -159,38 +185,110 @@ CMGjwvxTsr74/f/F95m3TH9x8o0/TU//N+7/D/ScVcA=
     pdfmetrics.registerFont(TTFont('invisible', ttf))
 
 
-def convert_to_searchable_pdf_doctr(pdf_path,
+def convert_to_searchable_pdf_doctr(document,
                                     searchable_pdf_path,
-                                    working_path,
-                                    poppler_path):
-    convert_pdf_to_image(pdf_path, working_path=working_path,
-                         poppler_path=poppler_path)
-    for dirpath, _, filenames in os.walk(working_path):
-        for filename in filenames:
-            if filename.endswith(".jpg") or filename.endswith(".JPG"):
+                                    document_path,
+                                    preprocessings=[]):
 
-                # doctr to ocr image
+    from doctr.models import ocr_predictor
+    from doctr.io import DocumentFile
 
-                os.add_dll_directory(
-                    r"C:\Program Files\GTK3-Runtime Win64\bin")
-                device = torch.device("cpu")
-                model = ocr_predictor(
-                    det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
-                doc = DocumentFile.from_images(working_path + "\\" + filename)
-                result = model(doc)
-                xml_output = result.export_as_xml()[0][1]
+    working_path = os.path.join(
+        document_path, "ocr")
 
-                hocr_filename = working_path + "\\" + \
-                    Path(filename).stem + ".hocr"
-                with open(hocr_filename, 'wb') as outfile:
-                    xml_output.write(outfile)
-                    outfile.close()
+    if (len(preprocessings) > 0):
+        last_preprocessing = preprocessings.order_by('-step')[0]
+        last_preprocessing_id = last_preprocessing.id
+        last_preprocessing_folder_path = os.path.join(
+            document_path, "pre_processed-" + str(last_preprocessing_id))
+        for dirpath, _, filenames in os.walk(last_preprocessing_folder_path):
+            for filename in filenames:
+                if filename.endswith(".png") or filename.endswith(".PNG"):
+                    preprocessed_image_path = os.path.join(
+                        last_preprocessing_folder_path, filename)
+                    ocr_image_path = os.path.join(working_path, filename)
+                    shutil.copy(preprocessed_image_path,
+                                ocr_image_path)
+    else:
+        for dirpath, _, filenames in os.walk(document_path):
+            for filename in filenames:
+                if filename.endswith(".png") or filename.endswith(".PNG"):
+                    preprocessed_image_path = os.path.join(
+                        document_path, filename)
+                    ocr_image_path = os.path.join(working_path, filename)
+                    shutil.copy(preprocessed_image_path,
+                                ocr_image_path)
 
-        # Convert .hocr to .pdf
-        export_pdf(working_path, 144, searchable_pdf_path)
+    for document_page in document.document_pages.all():
+        filename = str(document_page.page_num) + ".png"
 
-# current_path = Path(__file__)
+        # doctr to ocr image
 
-# convert_to_searchable_pdf(".\\香港常用字.pdf", ".\\OCRed.pdf",
-        # working_path=WORKING_DIR,
-        # poppler_path=os.path.join(os.path.join(current_path.parent, "app", "poppler", "Library", "bin")))
+        os.add_dll_directory(
+            r"C:\Program Files\GTK3-Runtime Win64\bin")
+        device = torch.device("cpu")
+        model = ocr_predictor(
+            det_arch='db_mobilenet_v3_large', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
+        doc = DocumentFile.from_images(working_path + "\\" + filename)
+        result = model(doc)
+
+        for page in result.pages:
+            for block in page.blocks:
+                for line in block.lines:
+
+                    geometry_0 = list(line.geometry[0])
+                    geometry_0[0] = geometry_0[0]
+                    geometry_0[1] = geometry_0[1]
+                    geometry_1 = list(line.geometry[1])
+                    geometry_1[0] = geometry_1[0]
+                    geometry_1[1] = geometry_1[1]
+
+                    geometry_0 = tuple(geometry_0)
+                    geometry_1 = tuple(geometry_1)
+
+                    line.geometry = tuple([geometry_0, geometry_1])
+
+                    for word_index in range(len(line.words)):
+                        word = line.words[word_index]
+                        geometry_0 = list(word.geometry[0])
+
+                        geometry_0 = list(word.geometry[0])
+                        geometry_0[0] = geometry_0[0]
+                        geometry_0[1] = geometry_0[1]
+                        geometry_1 = list(word.geometry[1])
+                        geometry_1[0] = geometry_1[0]
+                        geometry_1[1] = geometry_1[1]
+
+                        geometry_0 = tuple(geometry_0)
+                        geometry_1 = tuple(geometry_1)
+
+                        word.geometry = tuple([geometry_0, geometry_1])
+
+                        if word_index < len(line.words):
+                            word.value = word.value + " "
+
+        xml_output = result.export_as_xml()[0][1]
+
+        hocr_filename = working_path + "\\" + \
+            Path(filename).stem + ".hocr"
+        with open(hocr_filename, 'wb') as outfile:
+            xml_output.write(outfile)
+            outfile.close()
+
+        # Extract .xml and put into database
+        image_path = working_path + "\\" + filename
+        temp_pdf_bytes = export_pdf_bytes(
+            [image_path], 300)
+
+        single_page_pdf_path = working_path + "\\" + \
+            Path(filename).stem + ".pdf"
+        with open(single_page_pdf_path, "wb") as pdf_f:
+            pdf_f.write(temp_pdf_bytes.read())
+            pdf_f.close()
+
+        xml = convert_pdf_to_xml(single_page_pdf_path)
+        document_page.xml = xml
+        document_page.save()
+
+    # Convert .hocr to .pdf
+    export_pdf(working_path, 300, searchable_pdf_path)
