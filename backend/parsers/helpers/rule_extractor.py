@@ -9,26 +9,23 @@ from decimal import Decimal
 import statistics
 import os
 import cv2
-from pyzbar import pyzbar
+from pyzbar.pyzbar import decode
 
 from backend.settings import MEDIA_URL
 
-from .xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
 
-from .get_document_nos_from_range import get_document_nos_from_range
-from .check_chinese_characters import check_chinese_characters
-from .calculate_separator_regions import calculate_separator_regions
-from ..models.rule_type import RuleType
-from ..models.pre_processing import PreProcessing
-from ..serializers.document import DocumentDetailSerializer
+from parsers.models.rule_type import RuleType
+from parsers.models.pre_processing import PreProcessing
+
+from parsers.helpers.xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
+from parsers.helpers.is_chinese import is_chinese
+from parsers.helpers.get_document_nos_from_range import get_document_nos_from_range
+from parsers.helpers.check_chinese_characters import check_chinese_characters
+from parsers.helpers.calculate_separator_regions import calculate_separator_regions
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(5.0)
+ASSUMED_TEXT_WIDTH = Decimal(3.5)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
-
-
-def isChinese(s):
-    return re.search(u'[\u4e00-\u9fff]', s)
 
 
 class RuleExtractor:
@@ -87,6 +84,7 @@ class RuleExtractor:
 
             text_in_current_row = ""
             prev_text_width = xml_page.median_text_width
+            first_textline_in_row = None
             while len(textlines_within_area) > 0:
                 current_textline = textlines_within_area.pop(0)
 
@@ -99,6 +97,7 @@ class RuleExtractor:
 
                 # if it is a new line, just prepend space append to the row array
                 if len(text_in_current_row) == 0:
+                    first_textline_in_row = current_textline
                     # if it is the first line, add empty lines
                     if len(textlines_in_rows) == 0:
                         num_of_empty_lines_to_be_prepend = math.floor(
@@ -107,7 +106,7 @@ class RuleExtractor:
                             textlines_in_rows.append("")
                     # if it is not the first line and there is a line difference between current line and previous line,
                     # add empty lines between them
-                    elif not previous_textline.region.is_in_same_line(current_textline.region):
+                    elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
                         num_of_empty_lines_to_be_prepend = math.floor(
                             (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
                         for i in range(num_of_empty_lines_to_be_prepend):
@@ -117,6 +116,7 @@ class RuleExtractor:
                         (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width)
                     spaces = " " * num_of_spaces_to_be_prepend
                     text_in_current_row = text_in_current_row + spaces + text_to_add
+
                 # else, calculate spaces to prepend from previous textline
                 else:
                     num_of_spaces_to_be_prepend = math.floor(
@@ -143,6 +143,9 @@ class RuleExtractor:
                 previous_textline = current_textline
 
             textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows
+
+        if len(textlines_in_all_pages) == 0:
+            textlines_in_all_pages = [""]
 
         return textlines_in_all_pages
 
@@ -308,7 +311,7 @@ class RuleExtractor:
                         x_difference / median_of_text_widths)
                     text_in_column = text_in_column + \
                         (" " * number_of_spaces_to_be_added_before)
-                if not previous_textline == None and isChinese(previous_textline.text[-1]):
+                if not previous_textline == None and is_chinese(previous_textline.text[-1]):
                     space_char = "　"
                 else:
                     space_char = " "
@@ -381,6 +384,9 @@ class RuleExtractor:
         for header_index in range(len(separator_regions)):
             header.append(header_index + 1)
 
+        if len(text_in_rows) == 0:
+            text_in_rows = [[""]]
+
         response = {
             "header": header,
             "body": text_in_rows
@@ -404,35 +410,29 @@ class RuleExtractor:
             last_preprocessing = preprocessings[len(preprocessings)-1]
             last_preprocessing_id = last_preprocessing.id
             png_path = os.path.join(
-                'documents', self.document.guid, "pre_processed-" + str(last_preprocessing_id), str(page_num) + ".png")
+                'documents', self.document.guid, "pre_processed-" + str(last_preprocessing_id), str(page_num) + ".jpg")
         else:
             png_path = os.path.join(
-                'documents', self.document.guid, str(page_num) + ".png")
+                'documents', self.document.guid, str(page_num) + ".jpg")
         full_png_path = os.path.join(MEDIA_URL, png_path)
 
         im = cv2.imread(full_png_path)
-        ret, bw_im = cv2.threshold(im, 127, 255, cv2.THRESH_BINARY)
-        h, w, c = bw_im.shape
+        h, w, c = im.shape
 
-        def decode(image):
-            decoded_objects = pyzbar.decode(image)
-            for obj in decoded_objects:
+        crop_x1 = int(xml_rule.region.x1 / xml_page.region.x2
+                      * w)
+        crop_x2 = int(xml_rule.region.x2 / xml_page.region.x2
+                      * w)
+        crop_y1 = int((xml_page.region.y2 - xml_rule.region.y2) /
+                      xml_page.region.y2 * h)
+        crop_y2 = int((xml_page.region.y2 - xml_rule.region.y1) /
+                      xml_page.region.y2 * h)
+        cropped_im = im[crop_y1:crop_y2, crop_x1:crop_x2]
 
-                barcode_region = XMLRegion()
-                barcode_region.x1 = Decimal(
-                    obj.rect.left) / w * xml_page.region.x2
-                barcode_region.x2 = Decimal(
-                    obj.rect.left + obj.rect.width) / w * xml_page.region.x2
-                barcode_region.y1 = Decimal(
-                    h - obj.rect.top - obj.rect.height) / h * xml_page.region.y2
-                barcode_region.y2 = Decimal(
-                    h - obj.rect.top) / h * xml_page.region.y2
+        detectedBarcodes = [decoded.data.decode('utf-8')
+                            for decoded in decode(cropped_im)]
 
-                if xml_rule.region.overlaps(barcode_region):
+        if len(detectedBarcodes) == 0:
+            return [""]
 
-                    return obj.data.decode("utf-8")
-
-            return ""
-
-        decoded = decode(bw_im)
-        return [decoded]
+        return detectedBarcodes

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models.integration import Integration
+from parsers.models.integration import Integration
 
 
 class IntegrationSerializer(serializers.ModelSerializer):

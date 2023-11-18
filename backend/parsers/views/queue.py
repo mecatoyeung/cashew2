@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from ..models.queue import Queue
+from parsers.models.queue import Queue
 
-from ..serializers.queue import QueueSerializer
+from parsers.serializers.queue import QueueSerializer
 
 
 @extend_schema_view(
@@ -41,8 +41,8 @@ class QueueViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def _params_to_ints(self, qs):
-         """ Convert a list of strings to integers. """
-         return [int(str_id) for str_id in qs.split(',')]
+        """ Convert a list of strings to integers. """
+        return [int(str_id) for str_id in qs.split(',')]
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """

@@ -25,6 +25,7 @@ from django.conf import settings
 
 
 def process_integration_queue_job():
+
     all_ready_integration_queue_jobs = Queue.objects \
         .select_related("document") \
         .filter(queue_class=QueueClass.INTEGRATION.value, queue_status=QueueStatus.READY.value) \
@@ -46,9 +47,9 @@ def process_integration_queue_job():
                                       ["name"]] = single_parsed_result["streamed"]
 
         # Mark the job as in progress
-        queue_job.queue_class = QueueClass.INTEGRATION.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
+        # queue_job.queue_class = QueueClass.INTEGRATION.value
+        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+        # queue_job.save()
 
         # Do the job
         integrations = Integration.objects.filter(parser_id=parser.id)
@@ -120,10 +121,9 @@ def process_integration_queue_job():
 def integration_queue_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 1})
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # scheduler.add_jobstore(DjangoJobStore(), "integration_queue_job_store")
     # run this job every 60 seconds
-    scheduler.add_job(process_integration_queue_job, 'interval',
-                      seconds=5, name='process_integration_queue', jobstore='default')
-    register_events(scheduler)
+    scheduler.add_job(process_integration_queue_job, 'interval', seconds=5)
+    # register_events(scheduler)
     scheduler.start()
     print("Processing Integration Queue", file=sys.stdout)

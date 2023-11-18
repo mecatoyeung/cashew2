@@ -65,8 +65,16 @@ export default function Parsers() {
       type: "LAYOUT",
       name: addLayoutForm.name,
       ocr: {
-        "ocr_type": "NO_OCR",
-        "google_vision_ocr_api_key": ""
+        "ocrType": "NO_OCR",
+        "googleVisionOcrApiKey": ""
+      },
+      chatbot: {
+        "chatbotType": "NO_CHATBOT",
+        "openAiApiKey": ""
+      },
+      openAi: {
+        "enabled": false,
+        "openAiApiKey": ""
       }
     }, () => {
       getParsers()
@@ -92,25 +100,6 @@ export default function Parsers() {
         draft.name = e.target.value
       })
     )
-  }
-
-
-  const confirmAddRoutingBtnClickHandler = () => {
-    service.post("parsers/", {
-      type: "ROUTING",
-      name: addRoutingForm.name,
-      ocr: {
-        "ocr_type": "NO_OCR",
-        "google_vision_ocr_api_key": ""
-      }
-    }, () => {
-      getParsers()
-      setAddLayoutForm(
-        produce((draft) => {
-          draft.show = false
-        })
-      )
-    })
   }
 
   const trashLayoutNameChangeHandler = (e) => {
@@ -227,38 +216,6 @@ export default function Parsers() {
               Close
             </Button>
             <Button variant="primary" onClick={confirmAddLayoutBtnClickHandler}>
-              Add
-            </Button>
-          </Modal.Footer>
-        </Modal>
-        <li className={parserStyles.addParserLi}>
-          <div className={parserStyles.parserName} onClick={() => addRoutingBtnClickHandler()}>
-            <span>Add New Routing</span>
-          </div>
-          <div className={parserStyles.parserActions}>
-            <i className="bi bi-trash"></i>
-          </div>
-        </li>
-        <Modal show={addRoutingForm.show} onHide={closeRoutingBtnClickHandler} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Add Routing</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group className="mb-3" controlId="routingNameControlInput">
-                <Form.Label>Name</Form.Label>
-                <Form.Control type="text"
-                  placeholder="e.g. Water Supply"
-                  value={addRoutingForm.name}
-                  onChange={routingNameChangeHandler}/>
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={closeRoutingBtnClickHandler}>
-              Close
-            </Button>
-            <Button variant="primary" onClick={confirmAddRoutingBtnClickHandler}>
               Add
             </Button>
           </Modal.Footer>

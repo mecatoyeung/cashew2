@@ -12,9 +12,9 @@ from drf_spectacular.utils import (
     OpenApiTypes,
 )
 
-from ..models.pre_processing import PreProcessing
+from parsers.models.pre_processing import PreProcessing
 
-from ..serializers.pre_processing import PreProcessingSerializer
+from parsers.serializers.pre_processing import PreProcessingSerializer
 
 
 @extend_schema_view(

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models.document_page import DocumentPage
+from parsers.models.document_page import DocumentPage
 
 
 class DocumentPageSerializer(serializers.ModelSerializer):
@@ -14,6 +14,8 @@ class DocumentPageSerializer(serializers.ModelSerializer):
             'image_file',
             'width',
             'height',
+            'ocred',
+            'chatbot_completed'
         ]
         read_only_fields = ['id']
 
@@ -44,6 +46,7 @@ class DocumentPageDetailSerializer(serializers.ModelSerializer):
             'width',
             'height',
             'xml',
+            'ocred',
+            'chatbot_completed'
         ]
         read_only_fields = ['id']
-

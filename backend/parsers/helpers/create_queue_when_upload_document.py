@@ -3,6 +3,7 @@ from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue import Queue
 
+
 def create_queue_when_upload_document(document):
 
     parser = Parser.objects.get(id=document.parser_id)
@@ -11,5 +12,5 @@ def create_queue_when_upload_document(document):
     q.queue_status = QueueStatus.READY.value
     q.parser = parser
     q.document = document
-    q.queue_class = QueueClass.IMPORT.value
+    q.queue_class = QueueClass.PRE_PROCESSING.value
     q.save()

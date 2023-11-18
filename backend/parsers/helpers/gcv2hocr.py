@@ -10,6 +10,7 @@ try:
 except ImportError:
     from cgi import escape  # python 2.x
 
+
 class GCVAnnotation:
 
     height = None
@@ -39,7 +40,7 @@ class GCVAnnotation:
             </span>"""),
         'ocrx_word': Template("""
                 <span class='ocrx_word' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</span>"""),
-        'ocr_carea':Template("""
+        'ocr_carea': Template("""
                 <div class='ocr_carea' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</div>"""),
         'ocr_par': Template("""
                 <p class='ocr_par' dir='ltr' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</p>""")
@@ -57,7 +58,7 @@ class GCVAnnotation:
                  box=None,
                  title='',
                  savefile=False):
-        if content==None:
+        if content == None:
             self.content = []
         else:
             self.content = content
@@ -69,14 +70,18 @@ class GCVAnnotation:
         self.lang = lang
         self.ocr_class = ocr_class
         try:
-            self.x0 = int(float(self.page_width*(box[0]['x'] if 'x' in box[0] and box[0]['x'] > 0 else 0)))
-            self.y0 = int(float(self.page_height*(box[0]['y'] if 'y' in box[0] and box[0]['y'] > 0 else 0)))
-            self.x1 = int(float(self.page_width*(box[2]['x'] if 'x' in box[2] and box[2]['x'] > 0 else 0)))
-            self.y1 = int(float(self.page_height*(box[2]['y'] if 'y' in box[2] and box[2]['y'] > 0 else 0)))
+            self.x0 = int(
+                float(self.page_width*(box[0]['x'] if 'x' in box[0] and box[0]['x'] > 0 else 0)))
+            self.y0 = int(float(
+                self.page_height*(box[0]['y'] if 'y' in box[0] and box[0]['y'] > 0 else 0)))
+            self.x1 = int(
+                float(self.page_width*(box[2]['x'] if 'x' in box[2] and box[2]['x'] > 0 else 0)))
+            self.y1 = int(float(
+                self.page_height*(box[2]['y'] if 'y' in box[2] and box[2]['y'] > 0 else 0)))
         except ValueError as e:
             output = 'Input JSON does not have proper boundingBox values. ' \
-                      'This page of the PDF either must not have been ' \
-                      'parsed correctly by GCV or the JSON is somehow corrupt.'
+                'This page of the PDF either must not have been ' \
+                'parsed correctly by GCV or the JSON is somehow corrupt.'
             print(e, "\n", output)
 
     def maximize_bbox(self):
@@ -89,6 +94,7 @@ class GCVAnnotation:
         return "<%s [%s %s %s %s]>%s</%s>" % (self.ocr_class, self.x0, self.y0,
                                               self.x1, self.y1, self.content,
                                               self.ocr_class)
+
     def render(self):
         if type(self.content) == type([]):
             content = "".join(map(lambda x: x.render(), self.content))
@@ -96,80 +102,117 @@ class GCVAnnotation:
             content = escape(self.content)
         return self.__class__.templates[self.ocr_class].substitute(self.__dict__, content=content)
 
+
 def fromResponse(resp, file_name, width, height, baseline_tolerance=2, **kwargs):
     # last_baseline = -100
     page = None
     curline = None
-    if isinstance(resp, bool) and not resp:
-        box = [{"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}]
+    if (isinstance(resp, bool) and not resp) or \
+            not 'fullTextAnnotation' in resp['responses'][0]:
+        box = [{"x": 0, "y": 0}, {"x": 0, "y": 0},
+               {"x": 0, "y": 0}, {"x": 0, "y": 0}]
         page = GCVAnnotation(
             ocr_class='ocr_page',
             htmlid='page_0',
             box=box,
-            title = file_name
+            title=file_name
         )
     else:
-        for page_id, page_json in enumerate(resp['responses'][0]['fullTextAnnotation']['pages']):
-          box = [{"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}]
-          GCVAnnotation.height = page_json.get('height')
-          GCVAnnotation.width = page_json.get('width')
-          page = GCVAnnotation(
+        try:
+            for page_id, page_json in enumerate(resp['responses'][0]['fullTextAnnotation']['pages']):
+                box = [{"x": 0, "y": 0}, {"x": 0, "y": 0},
+                       {"x": 0, "y": 0}, {"x": 0, "y": 0}]
+                GCVAnnotation.height = page_json.get('height')
+                GCVAnnotation.width = page_json.get('width')
+                page = GCVAnnotation(
                     ocr_class='ocr_page',
-                    htmlid='page'+ str(page_id),
+                    htmlid='page' + str(page_id),
                     box=box,
                     title=file_name
-                    )
-          for block_id, block_json in enumerate(page_json['blocks']):
-            box = block_json['boundingBox']['vertices']
-            box [0]["x"] = box [0]["x"] / width
-            box [0]["y"] = box [0]["y"] / height
-            box [1]["x"] = box [1]["x"] / width
-            box [1]["y"] = box [1]["y"] / height
-            box [2]["x"] = box [2]["x"] / width
-            box [2]["y"] = box [2]["y"] / height
-            box [3]["x"] = box [3]["x"] / width
-            box [3]["y"] = box [3]["y"] / height
-            block = GCVAnnotation(ocr_class='ocr_carea',htmlid="block_%d" % block_id, box=box)
-            page.content.append(block)
+                )
+                for block_id, block_json in enumerate(page_json['blocks']):
+                    box = block_json['boundingBox']['vertices']
+                    if "x" in box[0]:
+                        box[0]["x"] = box[0]["x"] / width
+                    if "y" in box[0]:
+                        box[0]["y"] = box[0]["y"] / height
+                    if "x" in box[1]:
+                        box[1]["x"] = box[1]["x"] / width
+                    if "y" in box[1]:
+                        box[1]["y"] = box[1]["y"] / height
+                    if "x" in box[2]:
+                        box[2]["x"] = box[2]["x"] / width
+                    if "y" in box[2]:
+                        box[2]["y"] = box[2]["y"] / height
+                    if "x" in box[3]:
+                        box[3]["x"] = box[3]["x"] / width
+                    if "y" in box[3]:
+                        box[3]["y"] = box[3]["y"] / height
+                    block = GCVAnnotation(
+                        ocr_class='ocr_carea', htmlid="block_%d" % block_id, box=box)
+                    page.content.append(block)
 
-            line_id = 0
-            for paragraph_id, paragraph_json in enumerate(block_json['paragraphs']):
-                box = paragraph_json['boundingBox']['vertices']
-                box [0]["x"] = box [0]["x"] / width
-                box [0]["y"] = box [0]["y"] / height
-                box [1]["x"] = box [1]["x"] / width
-                box [1]["y"] = box [1]["y"] / height
-                box [2]["x"] = box [2]["x"] / width
-                box [2]["y"] = box [2]["y"] / height
-                box [3]["x"] = box [3]["x"] / width
-                box [3]["y"] = box [3]["y"] / height
-                par = GCVAnnotation(ocr_class='ocr_par',htmlid="par_"+ str(block_id) + "_" + str(paragraph_id), box=box)
-                block.content.append(par)
-                curline = GCVAnnotation(ocr_class='ocr_line', htmlid="line_"+ str(block_id) + "_" + str(paragraph_id)+"_"+ str(line_id), box=box)
-                par.content.append(curline)
-                for word_id, word_json in enumerate(paragraph_json['words']):
-                    box = word_json['boundingBox']['vertices']
-                    box [0]["x"] = box [0]["x"] / width
-                    box [0]["y"] = box [0]["y"] / height
-                    box [1]["x"] = box [1]["x"] / width
-                    box [1]["y"] = box [1]["y"] / height
-                    box [2]["x"] = box [2]["x"] / width
-                    box [2]["y"] = box [2]["y"] / height
-                    box [3]["x"] = box [3]["x"] / width
-                    box [3]["y"] = box [3]["y"] / height
-                    word_text = ''.join([
-                        symbol['text'] for symbol in word_json['symbols']
-                    ])
-                    word = GCVAnnotation(ocr_class='ocrx_word', htmlid="word_"+ str(block_id) + "_" + str(paragraph_id)+"_"+ str(word_id), content=word_text, box=box)
+                    line_id = 0
+                    for paragraph_id, paragraph_json in enumerate(block_json['paragraphs']):
+                        box = paragraph_json['boundingBox']['vertices']
+                        if "x" in box[0]:
+                            box[0]["x"] = box[0]["x"] / width
+                        if "y" in box[0]:
+                            box[0]["y"] = box[0]["y"] / height
+                        if "x" in box[1]:
+                            box[1]["x"] = box[1]["x"] / width
+                        if "y" in box[1]:
+                            box[1]["y"] = box[1]["y"] / height
+                        if "x" in box[2]:
+                            box[2]["x"] = box[2]["x"] / width
+                        if "y" in box[2]:
+                            box[2]["y"] = box[2]["y"] / height
+                        if "x" in box[3]:
+                            box[3]["x"] = box[3]["x"] / width
+                        if "y" in box[3]:
+                            box[3]["y"] = box[3]["y"] / height
+                        par = GCVAnnotation(
+                            ocr_class='ocr_par', htmlid="par_" + str(block_id) + "_" + str(paragraph_id), box=box)
+                        block.content.append(par)
+                        curline = GCVAnnotation(ocr_class='ocr_line', htmlid="line_" + str(
+                            block_id) + "_" + str(paragraph_id)+"_" + str(line_id), box=box)
+                        par.content.append(curline)
+                        for word_id, word_json in enumerate(paragraph_json['words']):
+                            box = word_json['boundingBox']['vertices']
+                            if "x" in box[0]:
+                                box[0]["x"] = box[0]["x"] / width
+                            if "y" in box[0]:
+                                box[0]["y"] = box[0]["y"] / height
+                            if "x" in box[1]:
+                                box[1]["x"] = box[1]["x"] / width
+                            if "y" in box[1]:
+                                box[1]["y"] = box[1]["y"] / height
+                            if "x" in box[2]:
+                                box[2]["x"] = box[2]["x"] / width
+                            if "y" in box[2]:
+                                box[2]["y"] = box[2]["y"] / height
+                            if "x" in box[3]:
+                                box[3]["x"] = box[3]["x"] / width
+                            if "y" in box[3]:
+                                box[3]["y"] = box[3]["y"] / height
+                            word_text = ''.join([
+                                symbol['text'] for symbol in word_json['symbols']
+                            ])
+                            word = GCVAnnotation(ocr_class='ocrx_word', htmlid="word_" + str(
+                                block_id) + "_" + str(paragraph_id)+"_" + str(word_id), content=word_text, box=box)
 
-                    curline.content.append(word)
-                    for symbol_id, symbol_json in enumerate(word_json['symbols']):
-                         if 'property' in symbol_json and 'detectedBreak' in symbol_json['property'] and 'type' in symbol_json['property']['detectedBreak']:
-                             if symbol_json['property']['detectedBreak']['type'] == "LINE_BREAK" or symbol_json['property']['detectedBreak']['type'] == "EOL_SURE_SPACE":
-                                 line_id = line_id + 1
-                                 curline = GCVAnnotation(ocr_class='ocr_line', htmlid="line_"+ str(block_id) + "_" + str(paragraph_id)+"_"+ str(line_id), box=box)
-                                 par.content.append(curline)
+                            curline.content.append(word)
+                            for symbol_id, symbol_json in enumerate(word_json['symbols']):
+                                if 'property' in symbol_json and 'detectedBreak' in symbol_json['property'] and 'type' in symbol_json['property']['detectedBreak']:
+                                    if symbol_json['property']['detectedBreak']['type'] == "LINE_BREAK" or symbol_json['property']['detectedBreak']['type'] == "EOL_SURE_SPACE":
+                                        line_id = line_id + 1
+                                        curline = GCVAnnotation(ocr_class='ocr_line', htmlid="line_" + str(
+                                            block_id) + "_" + str(paragraph_id)+"_" + str(line_id), box=box)
+                                        par.content.append(curline)
+        except Exception as e:
+            raise e
     return page
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -210,13 +253,16 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    instream = sys.stdin if (args.gcv_file == '-') else open(args.gcv_file, 'r', encoding='utf-8' )
+    instream = sys.stdin if (
+        args.gcv_file == '-') else open(args.gcv_file, 'r', encoding='utf-8')
     resp = json.load(instream)
-    page = fromResponse(resp, str(args.gcv_file.rsplit('.',1)[0]), **args.__dict__)
+    page = fromResponse(
+        resp, str(args.gcv_file.rsplit('.', 1)[0]), **args.__dict__)
 
     if args.savefile:
         with (open(args.savefile, 'w', encoding="utf-8")) as outfile:
-            outfile.write(page.render().encode('utf-8') if str == bytes else page.render())
+            outfile.write(page.render().encode('utf-8')
+                          if str == bytes else page.render())
             outfile.close()
     else:
         if str == bytes:

@@ -8,13 +8,13 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from ..helpers.stream_processor import StreamProcessor
+from parsers.models.rule import Rule
+from parsers.models.stream import Stream
+from parsers.models.stream_condition import StreamCondition
 
-from ..models.rule import Rule
-from ..models.stream import Stream
-from ..models.stream_condition import StreamCondition
+from parsers.serializers.stream import StreamSerializer, StreamDetailSerializer, StreamPostSerializer
 
-from ..serializers.stream import StreamSerializer, StreamDetailSerializer, StreamPostSerializer
+from parsers.helpers.stream_processor import StreamProcessor
 
 
 class StreamViewSet(viewsets.ModelViewSet):
@@ -46,4 +46,3 @@ class StreamViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """ Create a new stream. """
         serializer.save()
-

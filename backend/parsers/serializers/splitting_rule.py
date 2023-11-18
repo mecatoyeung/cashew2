@@ -2,12 +2,13 @@ from typing import List
 
 from rest_framework import serializers
 
-from ..models.splitting_rule import SplittingRule
-from ..models.splitting_condition import SplittingCondition
-from .splitting_condition import SplittingConditionSerializer
+from parsers.models.splitting_rule import SplittingRule
+from parsers.models.splitting_condition import SplittingCondition
+
+from parsers.serializers.splitting_condition import SplittingConditionSerializer
 
 
-class ConsecutiveSplittingRuleSerializer(serializers.ModelSerializer):
+class ConsecutivePageSplittingRuleSerializer(serializers.ModelSerializer):
     """ Serializer for splitting rules. """
     sort_order = serializers.IntegerField(required=False)
     splitting_conditions = SplittingConditionSerializer(
@@ -16,8 +17,8 @@ class ConsecutiveSplittingRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = SplittingRule
         fields = ['id', 'splitting', 'splitting_rule_type', 'parent_splitting_rule',
-                  'sort_order', "splitting_conditions", "consecutive_splitting_rules"]
-        read_only_fields = ['id']
+                  'sort_order', "splitting_conditions"]
+        read_only_fields = ['id', 'parent_splitting_rule']
 
     def _get_or_create_splitting_conditions(self, splitting_conditions, splitting_rule):
         """ Handle getting or creating ocr as needed. """
@@ -58,13 +59,14 @@ class SplittingRuleSerializer(serializers.ModelSerializer):
     sort_order = serializers.IntegerField(required=False)
     splitting_conditions = SplittingConditionSerializer(
         many=True, required=False)
-    consecutive_splitting_rules = ConsecutiveSplittingRuleSerializer(
+    consecutive_page_splitting_rules = ConsecutivePageSplittingRuleSerializer(
         many=True, required=False)
 
     class Meta:
         model = SplittingRule
         fields = ['id', 'splitting', 'route_to_parser', 'splitting_rule_type', 'parent_splitting_rule',
-                  'sort_order', "splitting_conditions", "consecutive_splitting_rules"]
+                  'sort_order', "splitting_conditions",
+                  "consecutive_page_splitting_rules"]
         read_only_fields = ['id']
 
     def _get_or_create_splitting_conditions(self, splitting_conditions, splitting_rule):
@@ -101,5 +103,14 @@ class SplittingRuleSerializer(serializers.ModelSerializer):
         return splitting_rule
 
 
-class PostSplittingRuleSerializer(SplittingRuleSerializer):
-    pass
+class PostSplittingRuleSerializer(serializers.ModelSerializer):
+    sort_order = serializers.IntegerField(required=False)
+    splitting_conditions = SplittingConditionSerializer(
+        many=True, required=False)
+    consecutive_page_splitting_rules = ConsecutivePageSplittingRuleSerializer(
+        many=True, required=False)
+
+    class Meta:
+        model = SplittingRule
+        fields = ['splitting', 'route_to_parser', 'splitting_rule_type', 'parent_splitting_rule',
+                  'sort_order', "splitting_conditions", "consecutive_page_splitting_rules"]

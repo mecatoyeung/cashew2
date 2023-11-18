@@ -86,7 +86,7 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  width: calc(100% - 280px);
+  min-width: calc(100vw - 280px);
 }
 
 .workbenchWrapper button {
@@ -261,9 +261,8 @@
 
 .ruleConfigurations {
   padding: 10px;
-  flex-grow: 1;
-  height: calc(100vh - 120px);
-  overflow: scroll
+  min-height: calc(100vh - 120px);
+  overflow-y: scroll
 }
 
 .myReactCrop {

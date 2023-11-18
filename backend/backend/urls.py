@@ -28,14 +28,15 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^api/rest-auth/', include('rest_auth.urls')),
-    re_path(r'^api/rest-auth/registration/', include('rest_auth.registration.urls')),
+    re_path(r'^api/rest-auth/registration/',
+            include('rest_auth.registration.urls')),
     re_path(r'^api/', include('user_countries.urls')),
     re_path(r'^api/', include('parsers.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name="api-schema"),
     path(
         'api/docs',
-         SpectacularSwaggerView.as_view(url_name='api-schema'),
-         name='api-docs',
+        SpectacularSwaggerView.as_view(url_name='api-schema'),
+        name='api-docs',
     ),
-    #path('api/user/', include('user.urls')),
+    # path('api/user/', include('user.urls')),
 ] + static(STATIC_URL, document_root=STATIC_ROOT)

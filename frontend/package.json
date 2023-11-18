@@ -16,6 +16,8 @@
     "ag-grid-react": "^30.0.4",
     "axios": "^1.4.0",
     "bootstrap": "^5.3.0",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "immer": "^10.0.2",
     "moment": "^2.29.4",
     "next": "13.4.1",
@@ -27,9 +29,11 @@
     "react-dropzone": "^14.2.3",
     "react-image-crop": "^10.1.5",
     "react-select": "^5.7.3",
+    "react-zoom-pan-pinch": "^3.3.0",
     "rehype-prism-plus": "^1.6.3",
     "rehype-rewrite": "^4.0.0",
-    "sass": "^1.63.6"
+    "sass": "^1.63.6",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "cypress": "^12.12.0",

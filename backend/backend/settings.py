@@ -110,6 +110,22 @@ DATABASES = {
     }
 }
 
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': os.environ.get('DB_NAME', 'docparser'),
+        'USER': os.environ.get('DB_USER', 'sa'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Aa123456'),
+        'HOST': os.environ.get('DB_HOST', '.\\MSSQLSERVER,1433'),
+        'PORT': os.environ.get('DB_PORT', '1433'),
+        'TEST': {
+            'NAME': 'test_docparser',
+        },
+    }
+}
+"""
+
 AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )

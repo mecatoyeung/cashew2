@@ -1,23 +1,11 @@
 import pytesseract
-import matplotlib.pyplot as plt
-import torch
 import os
 import shutil
-from pathlib import Path
 
-import argparse
-import glob
-import io
-import re
-import sys
-import zlib
 import cv2
 from reportlab.pdfgen.canvas import Canvas
 
-import numpy as np
 import cv2
-
-from pdf2image import convert_from_path
 
 from PIL import Image
 
@@ -88,19 +76,23 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
 
     for page_idx in range(document.total_page_num):
         page_no = page_idx + 1
-        png_path = os.path.join(str(page_no) + ".png")
+        png_path = os.path.join(str(page_no) + ".jpg")
         new_preprocessed_image_path = os.path.join(working_path, png_path)
         if last_preprocessing == None:
             last_preprocessed_image_path = os.path.join(
-                documents_folder_path, str(page_no) + ".png")
+                documents_folder_path, str(page_no) + ".jpg")
         else:
             last_preprocessed_image_path = os.path.join(
-                documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_no) + ".png")
+                documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_no) + ".jpg")
         shutil.copy(last_preprocessed_image_path, new_preprocessed_image_path)
 
         im = cv2.imread(new_preprocessed_image_path)
 
-        osd = pytesseract.image_to_osd(im, output_type='dict')
+        try:
+            osd = pytesseract.image_to_osd(
+                im, output_type='dict')
+        except:
+            osd = {"orientation": 0}
 
         if osd["orientation"] == 0:
             rotated_im = im
@@ -111,7 +103,8 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
         elif osd["orientation"] == 270:
             rotated_im = rotate_image(im, 270)
 
-        cv2.imwrite(new_preprocessed_image_path, rotated_im)
+        cv2.imwrite(new_preprocessed_image_path, rotated_im,
+                    [cv2.IMWRITE_JPEG_QUALITY, 50])
 
         image_paths.append(new_preprocessed_image_path)
 

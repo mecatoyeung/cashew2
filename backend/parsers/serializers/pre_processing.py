@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models.pre_processing import PreProcessing
+from parsers.models.pre_processing import PreProcessing
 
 
 class PreProcessingSerializer(serializers.ModelSerializer):

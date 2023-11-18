@@ -39,14 +39,14 @@ def convert_pdf_to_xml(
         Converted pdf file
     """
     rsrcmgr = PDFResourceManager()
-    retstr = BytesIO()
+    retstr = StringIO()
     laparams = LAParams()
     if format == "text":
-        device = TextConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = TextConverter(rsrcmgr, retstr, laparams=laparams)
     elif format == "html":
-        device = HTMLConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = HTMLConverter(rsrcmgr, retstr, laparams=laparams)
     elif format == "xml":
-        device = XMLConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = XMLConverter(rsrcmgr, retstr, laparams=laparams)
     else:
         raise ValueError("provide format, either text, html or xml!")
     fp = open(path, "rb")
@@ -60,7 +60,7 @@ def convert_pdf_to_xml(
         check_extractable=True,
     ):
         interpreter.process_page(page)
-    text = retstr.getvalue().decode()
+    text = retstr.getvalue()
     fp.close()
     device.close()
     retstr.close()
@@ -105,11 +105,11 @@ def convert_pdf_bytes_to_xml(
     retstr = BytesIO()
     laparams = LAParams()
     if format == "text":
-        device = TextConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = TextConverter(rsrcmgr, retstr, laparams=laparams)
     elif format == "html":
-        device = HTMLConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = HTMLConverter(rsrcmgr, retstr, laparams=laparams)
     elif format == "xml":
-        device = XMLConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+        device = XMLConverter(rsrcmgr, retstr, laparams=laparams)
     else:
         raise ValueError("provide format, either text, html or xml!")
     interpreter = PDFPageInterpreter(rsrcmgr, device)

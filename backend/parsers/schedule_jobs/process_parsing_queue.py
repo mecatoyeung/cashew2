@@ -24,6 +24,7 @@ from ..helpers.stream_processor import StreamProcessor
 
 
 def process_parsing_queue_job():
+
     all_ready_parsing_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -39,9 +40,9 @@ def process_parsing_queue_job():
         document = queue_job.document
 
         # Mark the job as in progress
-        queue_job.queue_class = QueueClass.PARSING.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
+        # queue_job.queue_class = QueueClass.PARSING.value
+        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+        # queue_job.save()
 
         # Do the job
         rules = Rule.objects.filter(parser_id=parser.id)
@@ -77,10 +78,9 @@ def process_parsing_queue_job():
 def parsing_queue_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 1})
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # scheduler.add_jobstore(DjangoJobStore(), "parsing_queue_job_store")
     # run this job every 60 seconds
-    scheduler.add_job(process_parsing_queue_job, 'interval',
-                      seconds=5, name='process_parsing_queue', jobstore='default')
-    register_events(scheduler)
+    scheduler.add_job(process_parsing_queue_job, 'interval', seconds=5)
+    # register_events(scheduler)
     scheduler.start()
     print("Processing Parsing Queue", file=sys.stdout)

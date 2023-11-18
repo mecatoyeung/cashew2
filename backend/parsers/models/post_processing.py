@@ -1,5 +1,6 @@
 from django.db import models
-from .post_processing_type import PostProcessingType
+
+from parsers.models.post_processing_type import PostProcessingType
 
 
 class PostProcessing(models.Model):

@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
-from ..models.ocr import OCR
-from .rule import RuleSerializer
+from parsers.models.ocr import OCR
+
+from parsers.serializers.rule import RuleSerializer
+
 
 class OCRSerializer(serializers.ModelSerializer):
 
-    google_vision_ocr_api_key = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    google_vision_ocr_api_key = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = OCR

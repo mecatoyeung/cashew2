@@ -130,11 +130,14 @@ export default function WorkspaceLayout({ children }) {
                     <Link href={"/workspace/parsers/" + parserId + "/ocr"}>
                       <li>OCR</li>
                     </Link>
-                    <Link href={"/workspace/parsers/" + parserId + "/rules"}>
-                      <li>Rules</li>
+                    <Link href={"/workspace/parsers/" + parserId + "/aichat"}>
+                      <li>AI Chat</li>
                     </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/splitting"}>
                       <li>Splitting</li>
+                    </Link>
+                    <Link href={"/workspace/parsers/" + parserId + "/rules"}>
+                      <li>Rules</li>
                     </Link>
                     <Link
                       href={"/workspace/parsers/" + parserId + "/postprocessings"}

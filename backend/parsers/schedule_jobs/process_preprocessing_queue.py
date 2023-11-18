@@ -23,6 +23,7 @@ from backend.settings import MEDIA_URL
 
 
 def process_preprocessing_queue_job():
+
     all_ready_preprocessing_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -37,9 +38,9 @@ def process_preprocessing_queue_job():
         parser = queue_job.parser
         document = queue_job.document
         # Mark the job as in progress
-        queue_job.queue_class = QueueClass.PRE_PROCESSING.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
+        # queue_job.queue_class = QueueClass.PRE_PROCESSING.value
+        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+        # queue_job.save()
 
         # Do the job
 
@@ -69,11 +70,11 @@ def process_preprocessing_queue_job():
 
 
 def preprocessing_queue_scheduler_start():
-    scheduler = BackgroundScheduler()
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    scheduler = BackgroundScheduler(
+        {'apscheduler.job_defaults.max_instances': 1})
+    # scheduler.add_jobstore(DjangoJobStore(), "preprocessing_queue_job_store")
     # run this job every 60 seconds
-    scheduler.add_job(process_preprocessing_queue_job, 'interval',
-                      seconds=5, name='process_preprocessing_queue', jobstore='default')
-    register_events(scheduler)
+    scheduler.add_job(process_preprocessing_queue_job, 'interval', seconds=5)
+    # register_events(scheduler)
     scheduler.start()
     print("Processing Pre-processing Queue", file=sys.stdout)

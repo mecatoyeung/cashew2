@@ -4,9 +4,9 @@ from django.db import models
 
 from datetime import datetime
 
-from .splitting_rule_type import SplittingRuleType
-from .parser import Parser
-from .splitting import Splitting
+from parsers.models.splitting_rule_type import SplittingRuleType
+from parsers.models.parser import Parser
+from parsers.models.splitting import Splitting
 
 
 class SplittingRule(models.Model):
@@ -15,7 +15,7 @@ class SplittingRule(models.Model):
     splitting_rule_type = models.CharField(
         max_length=255, choices=SplittingRuleType.choices())
     parent_splitting_rule = models.ForeignKey(
-        "SplittingRule", on_delete=models.CASCADE, related_name="consecutive_splitting_rules", null=True)
+        "SplittingRule", on_delete=models.CASCADE, related_name="consecutive_page_splitting_rules", null=True)
     splitting = models.ForeignKey(
         "Splitting", on_delete=models.CASCADE, related_name="splitting_rules")
     route_to_parser = models.ForeignKey(

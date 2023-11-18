@@ -6,10 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 from django.db.models import Prefetch
 
-from ..models.splitting import Splitting
-from ..models.splitting_rule import SplittingRule
+from parsers.models.splitting import Splitting
+from parsers.models.splitting_rule import SplittingRule
 
-from ..serializers.splitting import SplittingSerializer, PostSplittingSerializer
+from parsers.serializers.splitting import SplittingSerializer, PostSplittingSerializer
 
 
 class SplittingViewSet(viewsets.ModelViewSet):
@@ -34,11 +34,11 @@ class SplittingViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return PostSplittingSerializer
         elif self.action == 'retrieve':
-            return PostSplittingSerializer
+            return SplittingSerializer
         elif self.action == 'update':
             return PostSplittingSerializer
         elif self.action == 'list':
-            return PostSplittingSerializer
+            return SplittingSerializer
         elif self.action == 'destroy':
             return PostSplittingSerializer
 

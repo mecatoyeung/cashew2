@@ -1,9 +1,10 @@
 import uuid
 
 from django.db import models
-from .ocr_type import OCRType
-from .ocr_text_layer_type import OCRTextLayerType
-from .ocr_image_layer_type import OCRImageLayerType
+
+from parsers.models.ocr_type import OCRType
+from parsers.models.ocr_text_layer_type import OCRTextLayerType
+from parsers.models.ocr_image_layer_type import OCRImageLayerType
 
 
 class OCR(models.Model):
@@ -20,7 +21,8 @@ class OCR(models.Model):
         "PreProcessing", on_delete=models.CASCADE, null=True, related_name="text_layer_preprocessing")
     image_layer_preprocessing = models.OneToOneField(
         "PreProcessing", on_delete=models.CASCADE, null=True, related_name="image_layer_preprocessing")
-    google_vision_ocr_api_key = models.CharField(max_length=1024, null=True)
+    google_vision_ocr_api_key = models.CharField(
+        max_length=1024, null=True, blank=True)
 
     class Meta:
         db_table = 'ocrs'

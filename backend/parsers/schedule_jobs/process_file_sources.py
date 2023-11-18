@@ -36,6 +36,7 @@ class FileObject:
 
 
 def process_file_sources():
+
     file_sources = Source.objects.all()
     for file_source in file_sources:
         if file_source.next_run_time > timezone.now():
@@ -80,8 +81,8 @@ def process_file_sources():
                                 document_upload_serializer_data["total_page_num"] = len(
                                     pdf.pages)
                                 file.close()
-                        except:
-                            document_upload_serializer_data["total_page_num"] = 1
+                        except Exception as e:
+                            raise e
 
                         document_upload_serializer = DocumentUploadSerializer(
                             data=document_upload_serializer_data)
@@ -106,10 +107,11 @@ def process_file_sources():
 def file_source_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 1})
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # scheduler.add_jobstore(DjangoJobStore(), "file_sources_job_store")
     # run this job every 60 seconds
-    scheduler.add_job(process_file_sources, 'interval',
-                      seconds=5, name='process_file_sources', jobstore='default')
-    register_events(scheduler)
+    # scheduler.add_job(process_file_sources, 'interval',
+    #                  seconds=5, name='process_file_sources', jobstore='file_sources_job_store')
+    scheduler.add_job(process_file_sources, 'interval', seconds=5)
+    # register_events(scheduler)
     scheduler.start()
     print("Processing File Source", file=sys.stdout)

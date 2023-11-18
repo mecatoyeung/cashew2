@@ -1,9 +1,9 @@
 from django.utils import timezone
 from django.db import models
 
-from .parser import Parser
-from .integration_type import IntegrationType
-from .pdf_integration_type import PDFIntegrationType
+from parsers.models.parser import Parser
+from parsers.models.integration_type import IntegrationType
+from parsers.models.pdf_integration_type import PDFIntegrationType
 
 
 class Integration(models.Model):

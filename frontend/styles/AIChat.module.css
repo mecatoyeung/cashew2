@@ -1,0 +1,257 @@
+.parsersIcon {
+  display: inline-block;
+  color: #E31A2F;
+  line-height: 52px;
+  vertical-align: top;
+}
+
+.wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.left-wrapper {
+  padding: 10px;
+}
+
+.right-wrapper {
+  padding: 10px;
+}
+
+.header {
+  color: #000;
+}
+
+.logoDiv {
+  float: left;
+  margin-right: 20px;
+  margin-top: 10px;
+}
+
+@media only screen and (min-width: 576px) {
+  .logoDiv {
+  }
+}
+
+.h1 {
+  font-size: 150%;
+  line-height: 52px;
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 20px;
+}
+
+.nav {
+  float: right
+}
+
+.nav ul {
+  float: right;
+  margin-bottom: 0;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.nav ul li {
+  display: inline-block;
+  line-height: 52px;
+  margin-left: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav ul li:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+@media only screen and (min-width: 576px) {
+  .nav ul li {
+  }
+}
+
+.headerHr {
+  border-top: 3px solid #000;
+  margin: 0 0 0 0;
+  opacity: 1.0;
+}
+
+.tools {
+  width: 100%;
+  position: fixed;
+  z-index: 1000;;
+}
+
+.toolsBtn {
+  margin-top: 5px;
+  margin-left: 5px;
+  font-size: 80%;
+  float: left;
+}
+
+.react-transform-wrapper {
+  width: auto !important;
+  height: auto !important;
+}
+
+.react-transform-component {
+  width: auto !important;
+  height: auto !important;
+  border: 1px solid #000;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+}
+
+.pageText {
+  padding: 10px;
+  width: 100%;
+  flex-grow: 1;
+  overflow: auto;
+  font-size: 90%;
+  flex: 3;
+}
+
+.streamTableDiv {
+  width: 100%;
+}
+
+.streamTable {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 90%;
+  box-shadow: 4px 4px 14px -8px rgb(0 0 0 / 75%);
+  border: 1px solid #0d2434;
+  width: 100%;
+}
+
+.streamTable th {
+  border: 1px solid #0d2434;
+  padding: 10px;
+  color: #0d2434;
+  min-height: 45px;
+  height: 45px;
+  vertical-align: middle;
+  white-space: pre-wrap;
+}
+
+.streamTable td {
+  border: 1px solid #0d2434;
+  padding: 10px;
+  color: #0d2434;
+  min-height: 45px;
+  height: 45px;
+  vertical-align: middle;
+  white-space: pre-wrap;
+}
+
+.chatMessages {
+  position: relative;
+  background-color: lightblue;
+  height: 1000px;
+  overflow: auto;
+  font-size: 90%;
+  flex: 2;
+}
+
+.talkBubble {
+	margin: 20px;
+  display: inline-block;
+  position: relative;
+	width: 80%;
+	height: auto;
+	background-color: lightyellow;
+}
+
+.border{
+  border: 3px solid #666;
+}
+
+.talktext {
+  padding: 1em;
+	text-align: left;
+  line-height: 1.5em;
+}
+.talktext p {
+  -webkit-margin-before: 0em;
+  -webkit-margin-after: 0em;
+}
+
+.triRight.border.btmLeft:before {
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: 15px;
+  right: auto;
+  top: auto;
+	bottom: -40px;
+	border: 10px solid;
+	border-color: #666 transparent transparent #666;
+}
+
+.triRight.btmLeft:after{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: 13px;
+  right: auto;
+  top: auto;
+	bottom: -20px;
+	border: 10px solid;
+	border-color: lightyellow transparent transparent lightyellow;
+}
+
+.triRight.border.btmRightIn:before {
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+  left: auto;
+	right: 15px;
+	bottom: -20px;
+	border: 10px solid;
+	border-color: #666 #666 transparent transparent;
+}
+
+.triRight.btmRightIn:after {
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+  left: auto;
+	right: 15px;
+	bottom: -20px;
+	border: 10px solid;
+	border-color: #666 #666 transparent transparent;
+}
+
+.actions {
+  position: static;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: fit-content;
+}
+
+.chatTextfield {
+  display: flex;
+  flex-direction: row;
+}
+
+.footer {
+  border-top: 3px solid #000;
+}
+
+.copyright {
+  font-family: Merriweather Sans, sans;
+  font-weight: bold;
+  padding: 10px 0;
+}

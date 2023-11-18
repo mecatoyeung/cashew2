@@ -5,6 +5,7 @@ from django.db.models import Prefetch
 from django.core import serializers
 from django.forms.models import model_to_dict
 
+from parsers.models.parser import Parser
 from ..models.rule_type import RuleType
 from ..models.rule import Rule
 from ..models.stream import Stream
@@ -21,6 +22,7 @@ from .stream_processors.textfield.remove_text_after_start_of_text import RemoveT
 from .stream_processors.textfield.remove_text_after_end_of_text import RemoveTextAfterEndOfTextStreamProcessor
 from .stream_processors.textfield.convert_to_table_by_specify_header import ConvertToTableBySpecifyHeaderStreamProcessor
 from .stream_processors.textfield.remove_empty_lines import RemoveEmptyLinesStreamProcessor
+from parsers.helpers.stream_processors.textfield.openai import OpenAIStreamProcessor
 from .stream_processors.table.combine_first_n_lines import CombineFirstNLinesStreamProcessor
 from .stream_processors.table.get_chars_from_next_col_if_regex_not_match import GetCharsFromNextColIfRegexNotMatchStreamProcessor
 from .stream_processors.table.trim_space import TrimSpaceTableStreamProcessor
@@ -41,6 +43,7 @@ STREAM_PROCESSOR_MAPPING = {
     "TRIM_SPACE": TrimSpaceStreamProcessor,
     "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS": TrimSpaceTableStreamProcessor,
     "REMOVE_EMPTY_LINES": RemoveEmptyLinesStreamProcessor,
+    "OPENAI": OpenAIStreamProcessor,
     "REMOVE_TEXT_BEFORE_START_OF_TEXT": RemoveTextBeforeStartOfTextStreamProcessor,
     "REMOVE_TEXT_BEFORE_END_OF_TEXT": RemoveTextBeforeEndOfTextStreamProcessor,
     "REMOVE_TEXT_AFTER_START_OF_TEXT": RemoveTextAfterStartOfTextStreamProcessor,
@@ -56,8 +59,10 @@ STREAM_PROCESSOR_MAPPING = {
     "UNPIVOT_TABLE": UnpivotColumnStreamProcessor
 }
 
+
 def convert_to_table_by_specify_headers_map(object):
     return object.header.header
+
 
 class StreamProcessor:
 
@@ -82,12 +87,18 @@ class StreamProcessor:
         for streamIndex in range(len(streams)):
 
             if streams[streamIndex].stream_class in STREAM_PROCESSOR_MAPPING:
-                sp = STREAM_PROCESSOR_MAPPING[streams[streamIndex].stream_class](streams[streamIndex])
+                sp = STREAM_PROCESSOR_MAPPING[streams[streamIndex].stream_class](
+                    streams[streamIndex])
             else:
                 raise Exception("No such stream")
 
             if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
                 streams[streamIndex].type = "TABLE"
+
+            if streams[streamIndex].stream_class == "OPEN_AI":
+                pass
+
+                # streams[streamIndex].set_openai_api_key()
 
             if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
                 processedStreams.append({
@@ -165,4 +176,3 @@ class StreamProcessor:
                 })
 
         return processedStreams
-

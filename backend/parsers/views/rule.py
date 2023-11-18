@@ -14,15 +14,33 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 
-from ..helpers.document_parser import DocumentParser
-from ..helpers.stream_processor import StreamProcessor
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+)
 
-from ..models.rule import Rule
-from ..models.document import Document
+from parsers.models.rule import Rule
+from parsers.models.document import Document
 
-from ..serializers.rule import RuleSerializer, RuleCreateSerializer, RuleUpdateSerializer
+from parsers.serializers.rule import RuleSerializer, RuleCreateSerializer, RuleUpdateSerializer
+
+from parsers.helpers.document_parser import DocumentParser
+from parsers.helpers.stream_processor import StreamProcessor
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'parser_id',
+                OpenApiTypes.STR,
+                description="Filter by parser id."
+            )
+        ]
+    )
+)
 class RuleViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = RuleSerializer
@@ -33,14 +51,17 @@ class RuleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset.prefetch_related('table_column_separators')
-        parser_id = self.request.query_params.get('parserId', 0)
 
-        if parser_id == 0:
-            return queryset.order_by('id').distinct()
+        if self.action == 'list':
+            parser_id = int(self.request.query_params.get("parserId"))
+
+            return queryset.filter(
+                parser__user=self.request.user,
+                parser_id=parser_id
+            ).order_by('id').distinct()
+
         else:
             return queryset.filter(
-                parser_id=parser_id
-            ).filter(
                 parser__user=self.request.user
             ).order_by('id').distinct()
 
@@ -65,7 +86,8 @@ class RuleViewSet(viewsets.ModelViewSet):
             url_path='document/(?P<document_id>[^/.]+)/processed_streams')
     def processed_streams(self, request, pk, document_id, *args, **kwargs):
 
-        rule = Rule.objects.select_related('parser').prefetch_related("table_column_separators").get(id=pk)
+        rule = Rule.objects.select_related('parser').prefetch_related(
+            "table_column_separators").get(id=pk)
 
         document = Document.objects.get(id=document_id)
 

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from ..models.queue import Queue
+from parsers.models.queue import Queue
+
 
 class QueueSerializer(serializers.ModelSerializer):
 
@@ -30,4 +31,3 @@ class QueueSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-

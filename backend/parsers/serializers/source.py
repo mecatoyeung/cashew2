@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from ..models.source import Source
+from parsers.models.source import Source
+
 
 class SourceSerializer(serializers.ModelSerializer):
 
@@ -23,7 +24,6 @@ class SourceSerializer(serializers.ModelSerializer):
         return source
 
     def update(self, instance, validated_data):
-
         """ Update rule. """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -31,6 +31,7 @@ class SourceSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
+
+
 class SourceCreateSerializer(SourceSerializer):
     pass

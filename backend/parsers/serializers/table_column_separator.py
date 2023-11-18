@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from ..models.table_column_separator import TableColumnSeparator
+from parsers.models.table_column_separator import TableColumnSeparator
+
 
 class TableColumnSeparatorSerializer(serializers.ModelSerializer):
 
@@ -13,7 +14,8 @@ class TableColumnSeparatorSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """ Create a rule. """
-        table_column_separator = TableColumnSeparator.objects.create(**validated_data)
+        table_column_separator = TableColumnSeparator.objects.create(
+            **validated_data)
 
         return table_column_separator
 
@@ -25,9 +27,9 @@ class TableColumnSeparatorSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class TableColumnSeparatorDetailSerializer(TableColumnSeparatorSerializer):
     """ Serializer for rule detail view. """
 
     class Meta(TableColumnSeparatorSerializer.Meta):
         fields = TableColumnSeparatorSerializer.Meta.fields
-

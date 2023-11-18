@@ -5,11 +5,29 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 
-from ..models.source import Source
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+)
 
-from ..serializers.source import SourceSerializer, SourceCreateSerializer
+from parsers.models.source import Source
+
+from parsers.serializers.source import SourceSerializer, SourceCreateSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'parser_id',
+                OpenApiTypes.STR,
+                description="Filter by parser id."
+            )
+        ]
+    )
+)
 class SourceViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = SourceSerializer
@@ -21,9 +39,18 @@ class SourceViewSet(viewsets.ModelViewSet):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
 
-        return queryset.filter(
-            parser__user=self.request.user
-        ).order_by('id').distinct()
+        if self.action == 'list':
+            parser_id = int(self.request.query_params.get("parserId"))
+
+            return queryset.filter(
+                parser__user=self.request.user,
+                parser_id=parser_id
+            ).order_by('id').distinct()
+
+        else:
+            return queryset.filter(
+                parser__user=self.request.user
+            ).order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """

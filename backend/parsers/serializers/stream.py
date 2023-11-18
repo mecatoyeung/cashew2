@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
-from ..models.stream import Stream
-from ..models.stream_condition import StreamCondition
-from ..models.rule import RuleType
+from parsers.models.stream import Stream
+from parsers.models.stream_condition import StreamCondition
+from parsers.models.rule import RuleType
 
-from ..serializers.stream_condition import StreamConditionSerializer
+from parsers.serializers.stream_condition import StreamConditionSerializer
+
 
 class StreamSerializer(serializers.ModelSerializer):
 
@@ -29,7 +30,7 @@ class StreamSerializer(serializers.ModelSerializer):
                   'col_indexes',
                   'stream_conditions',
                   'remove_matched_row_also',
-                  #'unpivot_table'
+                  # 'unpivot_table'
                   ]
         read_only_fields = ['id']
 
@@ -47,6 +48,7 @@ class StreamSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class StreamDetailSerializer(StreamSerializer):
     """ Serializer for stream detail view. """
 
@@ -62,7 +64,7 @@ class StreamPostSerializer(StreamSerializer):
         model = Stream
         fields = StreamSerializer.Meta.fields
         read_only_fields = StreamSerializer.Meta.read_only_fields
-    
+
     def _get_or_create_stream_conditions(self, stream_conditions, stream):
         """ Handle getting or creating tags as needed. """
         for stream_condition_index in range(len(stream_conditions)):
@@ -85,7 +87,7 @@ class StreamPostSerializer(StreamSerializer):
         instance.save()
 
         return instance
-    
+
     def update(self, instance, validated_data):
         """ Update Stream. """
         stream_conditions = validated_data.pop("stream_conditions", None)

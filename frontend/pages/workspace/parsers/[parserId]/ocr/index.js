@@ -34,7 +34,7 @@ const ocrOptions = [
   }
 ]
 
-const Settings = () => {
+const OCR = () => {
 
   const router = useRouter()
 
@@ -120,4 +120,4 @@ const Settings = () => {
   )
 }
 
-export default Settings
+export default OCR

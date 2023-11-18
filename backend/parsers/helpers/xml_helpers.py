@@ -9,18 +9,15 @@ from decimal import Decimal
 from pathlib import Path
 
 from .path_helper import xml_path
+from parsers.helpers.is_chinese import is_chinese
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
-ASSUMED_TEXT_WIDTH = Decimal(5.0)
+ASSUMED_TEXT_WIDTH = Decimal(3.5)
 ASSUMED_TEXT_HEIGHT = Decimal(10.0)
 
 
 def is_english(s):
     return s.isascii() and s.isalpha()
-
-
-def is_chinese(s):
-    return re.search(u'[\u4e00-\u9fff]', s)
 
 
 class XMLPage:
@@ -91,7 +88,7 @@ class XMLPage:
             actual_textline_y2 = None
             prev_text = None
             for text_el in textline.textline_element.findall('.//text'):
-                if text_el.text != '\n' and text_el.text != '' and 'bbox' in text_el.attrib:
+                if text_el.text != '\n' and text_el.text != '' and text_el.text != None and 'bbox' in text_el.attrib:
 
                     text = XMLText()
                     text_bbox_str = text_el.attrib['bbox']
@@ -160,6 +157,10 @@ class XMLPage:
             textline.region.y2 = actual_textline_y2
 
         self.sort_textlines()
+        product = self.textlines[64]
+        buyer_size = self.textlines[65]
+        type_code = self.textlines[66]
+        return
 
     def sort_textlines(self):
         def compare(a, b):
@@ -168,20 +169,21 @@ class XMLPage:
             if b.region.x1 == None or b.region.x2 == None or b.region.y1 == None or b.region.y2 == None:
                 return 0
 
-            if (math.floor(a.region.y1) > math.floor(b.region.y2)):
-                return 1
-            elif (math.floor(a.region.y2) < math.floor(b.region.y1)):
-                return -1
-            else:
-                if (math.floor(a.region.x2) < math.floor(b.region.x1)):
+            if (a.region.is_in_same_line(b.region)):
+                if a.region.x1 < b.region.x1:
                     return 1
-                elif (math.floor(a.region.x1) > math.floor(b.region.x2)):
-                    return -1
-                else:
-                    return 0
+                elif a.region.x2 < b.region.x2:
+                    return 1
+            elif (a.region.y1 > b.region.y1):
+                return 1
+            elif (a.region.y2 > b.region.y2):
+                return 1
+            return -1
 
         self.textlines = sorted(
             self.textlines, key=functools.cmp_to_key(compare), reverse=True)
+
+        return
 
 
 class XMLRegion:
@@ -221,10 +223,15 @@ class XMLRegion:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
             return False
-        if (((self.y2 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1 and self.y1 <= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE)) or (self.y1 <= (another_region.y2 + SAME_LINE_ACCEPTANCE_RANGE) and (self.y1 + SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1)):
+        if (self.y1 + SAME_LINE_ACCEPTANCE_RANGE) <= another_region.y2 and self.y1 >= (another_region.y1) and self.y2 >= (another_region.y2):
             return True
-        else:
-            return False
+        if (self.y1) <= another_region.y1 and (self.y2) <= another_region.y2 and self.y2 >= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE):
+            return True
+        if self.y2 >= (another_region.y2) and (self.y1) <= another_region.y1:
+            return True
+        if (self.y2) <= another_region.y2 and self.y1 >= (another_region.y1):
+            return True
+        return False
 
 
 class XMLTextLine:

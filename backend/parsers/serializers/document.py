@@ -6,23 +6,28 @@ from pathlib import Path
 
 from pdf2image import convert_from_path
 import PIL
-from ..helpers.generate_images_from_pdf import generate_images_from_pdf
-from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
-from ..helpers.upload_document import upload_document
-from ..helpers.create_queue_when_upload_document import create_queue_when_upload_document
+
+from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue import Queue
+
+from parsers.models.document_type import DocumentType
+
+from parsers.serializers.queue import QueueSerializer
+from parsers.serializers.document_page import DocumentPageSerializer, DocumentPageDetailSerializer
+
+from parsers.helpers.generate_images_from_pdf import generate_images_from_pdf
+from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
+from parsers.helpers.upload_document import upload_document
+from parsers.helpers.create_queue_when_upload_document import create_queue_when_upload_document
 
 from backend import settings
-
-from ..models.document import Document
-from ..models.document_page import DocumentPage
-from ..models.queue_class import QueueClass
-from ..models.queue import Queue
-
-from .document_page import DocumentPageSerializer, DocumentPageDetailSerializer
 
 
 class DocumentSerializer(serializers.ModelSerializer):
 
+    queue = QueueSerializer(many=False, read_only=True)
     document_pages = DocumentPageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -30,6 +35,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'parser',
+            'queue',
             'guid',
             'file',
             'document_type',
@@ -74,16 +80,17 @@ class DocumentUploadSerializer(DocumentSerializer):
         extension = file.name.split(".")[1].lower()
         validated_data["guid"] = guid
         validated_data["filename_without_extension"] = filename_without_extension
+        if extension == "pdf" or extension == "PDF":
+            validated_data["document_type"] = DocumentType.PDF.value
         validated_data["extension"] = extension
-        validated_data["total_page_num"] = 1
         document = Document.objects.create(**validated_data)
 
-        upload_document(document, file)
-        create_queue_when_upload_document(document)
-        generate_images_from_pdf(document)
-        # parse_pdf_to_xml(document)
-
         document.save()
+
+        upload_document(document, file)
+        generate_images_from_pdf(document)
+        create_queue_when_upload_document(document)
+        # parse_pdf_to_xml(document)
 
         return document
 

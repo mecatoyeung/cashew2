@@ -5,9 +5,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 
-from ..models.splitting_rule import SplittingRule
+from parsers.models.splitting_rule import SplittingRule
 
-from ..serializers.splitting_rule import SplittingRuleSerializer, PostSplittingRuleSerializer
+from parsers.serializers.splitting_rule import SplittingRuleSerializer, PostSplittingRuleSerializer
 
 
 class SplittingRuleViewSet(viewsets.ModelViewSet):

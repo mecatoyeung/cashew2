@@ -21,3 +21,5 @@ docker-compose -f docker-compose.development.yml run --rm frontend sh -c "npm i 
 docker-compose down
 
 docker compose -f docker-compose.development.yml run --rm  certbot renew
+
+python manage.py runserver --nothreading

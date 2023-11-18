@@ -6,9 +6,10 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from parsers.models.document_type import DocumentType
+from parsers.models.parser import Parser
+
 from backend.settings import MEDIA_URL
-from .document_type import DocumentType
-from .parser import Parser
 
 
 class Document(models.Model):

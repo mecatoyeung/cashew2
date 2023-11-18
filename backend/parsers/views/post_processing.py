@@ -5,11 +5,29 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 
-from ..models.post_processing import PostProcessing
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+)
 
-from ..serializers.post_processing import PostProcessingSerializer
+from parsers.models.post_processing import PostProcessing
+
+from parsers.serializers.post_processing import PostProcessingSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'parser_id',
+                OpenApiTypes.STR,
+                description="Filter by parser id."
+            )
+        ]
+    )
+)
 class PostProcessingViewSet(viewsets.ModelViewSet):
     """ View for manage post processing APIs. """
     serializer_class = PostProcessingSerializer
@@ -21,9 +39,18 @@ class PostProcessingViewSet(viewsets.ModelViewSet):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
 
-        return queryset.filter(
-            parser__user=self.request.user
-        ).order_by('id').distinct()
+        if self.action == 'list':
+            parser_id = int(self.request.query_params.get("parserId"))
+
+            return queryset.filter(
+                parser__user=self.request.user,
+                parser_id=parser_id
+            ).order_by('id').distinct()
+
+        else:
+            return queryset.filter(
+                parser__user=self.request.user
+            ).order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """

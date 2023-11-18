@@ -32,7 +32,6 @@
         "program": "${workspaceRoot}/backend/manage.py",
         "args": [
             "runserver",
-            "--no-color",
             "--noreload"
         ],
         "debugOptions": [

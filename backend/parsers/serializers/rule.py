@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-from ..models.parser import Parser
-from ..models.rule import Rule
-from ..models.table_column_separator import TableColumnSeparator
+from parsers.models.parser import Parser
+from parsers.models.rule import Rule
+from parsers.models.table_column_separator import TableColumnSeparator
 
-from .table_column_separator import TableColumnSeparatorSerializer
+from parsers.serializers.table_column_separator import TableColumnSeparatorSerializer
 
 
 class RuleSerializer(serializers.ModelSerializer):

@@ -1,20 +1,14 @@
 import os
 from pathlib import Path
-import requests
-import json
 import base64
 import shutil
 from functools import cmp_to_key
-from .convert_pdf_to_image import convert_pdf_to_image
-from .gcv2hocr import fromResponse
 
-import argparse
 import glob
 import io
 import re
 import sys
 import zlib
-import cv2
 import torch
 
 from bidi.algorithm import get_display
@@ -22,10 +16,14 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 
+from django.db import transaction
+
 from lxml import etree, html
 from PIL import Image
 
-from .convert_pdf_to_xml import convert_pdf_to_xml
+from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
+
+from django.db import transaction
 
 
 class StdoutWrapper:
@@ -71,7 +69,8 @@ def export_pdf_bytes(images, default_dpi, savefile=False):
 
 def export_pdf(playground, default_dpi, savefile=False):
     """Create a searchable PDF from a pile of HOCR + JPEG"""
-    images = sorted(glob.glob(os.path.join(playground, '*.png')))
+    images = glob.glob(os.path.join(playground, '*.jpg'))
+    images.sort(key=lambda x: int(Path(x).stem))
     if len(images) == 0:
         print(f"WARNING: No JPG images found in the folder {playground}"
               "\nScript cannot proceed without them and will terminate now.\n")
@@ -131,7 +130,7 @@ def add_text_layer(pdf, image, height, dpi):
             xpath_elements = '.'
         for word in line.xpath(xpath_elements):
             rawtext = word.text_content().strip()
-            font_width = pdf.stringWidth(rawtext, 'invisible', 8)
+            font_width = pdf.stringWidth(rawtext, 'invisible', 7)
             if font_width <= 0:
                 continue
             box = p1.search(word.attrib['title']).group(1).split()
@@ -140,7 +139,7 @@ def add_text_layer(pdf, image, height, dpi):
                         (box[0] + box[2]) / 2 - linebox[0]) + linebox[3]
             text = pdf.beginText()
             text.setTextRenderMode(3)  # double invisible
-            text.setFont('invisible', 8)
+            text.setFont('invisible', 7)
             text.setTextOrigin(box[0] * 72 / dpi, height - box[3] * 72 / dpi)
             box_width = (box[2] - box[0]) * 72 / dpi
             text.setHorizScale(100.0 * box_width / font_width)
@@ -203,16 +202,20 @@ def convert_to_searchable_pdf_doctr(document,
             document_path, "pre_processed-" + str(last_preprocessing_id))
         for dirpath, _, filenames in os.walk(last_preprocessing_folder_path):
             for filename in filenames:
-                if filename.endswith(".png") or filename.endswith(".PNG"):
+                if filename.endswith(".jpg") or filename.endswith(".JPG"):
+                    ocr_image_path = os.path.join(working_path, filename)
+                    if os.path.exists(ocr_image_path):
+                        continue
                     preprocessed_image_path = os.path.join(
                         last_preprocessing_folder_path, filename)
-                    ocr_image_path = os.path.join(working_path, filename)
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
     else:
         for dirpath, _, filenames in os.walk(document_path):
             for filename in filenames:
-                if filename.endswith(".png") or filename.endswith(".PNG"):
+                if filename.endswith(".jpg") or filename.endswith(".JPG"):
+                    if os.path.exists(ocr_image_path):
+                        continue
                     preprocessed_image_path = os.path.join(
                         document_path, filename)
                     ocr_image_path = os.path.join(working_path, filename)
@@ -220,7 +223,10 @@ def convert_to_searchable_pdf_doctr(document,
                                 ocr_image_path)
 
     for document_page in document.document_pages.all():
-        filename = str(document_page.page_num) + ".png"
+        if document_page.ocred:
+            continue
+
+        filename = str(document_page.page_num) + ".jpg"
 
         # doctr to ocr image
 
@@ -237,8 +243,28 @@ def convert_to_searchable_pdf_doctr(document,
                 for line in block.lines:
 
                     geometry_0 = list(line.geometry[0])
-                    geometry_0[0] = geometry_0[0]
+
+                    geometry_0[0] = geometry_0[0] + 0.005
+                    if geometry_0[1] < 0.25:
+                        geometry_0[1] = geometry_0[1] - 0.00475
+                    elif geometry_0[1] < 0.5:
+                        geometry_0[1] = geometry_0[1] - 0.005
+                    elif geometry_0[1] < 0.75:
+                        geometry_0[1] = geometry_0[1] - 0.00525
+                    else:
+                        geometry_0[1] = geometry_0[1] - 0.0055
+                    geometry_1 = list(line.geometry[1])
+                    geometry_1[0] = geometry_1[0] - 0.005
+                    if geometry_1[1] < 0.25:
+                        geometry_1[1] = geometry_1[1] - 0.00475
+                    elif geometry_1[1] < 0.5:
+                        geometry_1[1] = geometry_1[1] - 0.005
+                    elif geometry_1[1] < 0.75:
+                        geometry_1[1] = geometry_1[1] - 0.00525
+                    else:
+                        geometry_1[1] = geometry_1[1] - 0.0055
                     geometry_0[1] = geometry_0[1]
+
                     geometry_1 = list(line.geometry[1])
                     geometry_1[0] = geometry_1[0]
                     geometry_1[1] = geometry_1[1]
@@ -252,12 +278,24 @@ def convert_to_searchable_pdf_doctr(document,
                         word = line.words[word_index]
                         geometry_0 = list(word.geometry[0])
 
-                        geometry_0 = list(word.geometry[0])
-                        geometry_0[0] = geometry_0[0]
-                        geometry_0[1] = geometry_0[1]
+                        if geometry_0[1] < 0.25:
+                            geometry_0[1] = geometry_0[1] - 0.00475
+                        elif geometry_0[1] < 0.5:
+                            geometry_0[1] = geometry_0[1] - 0.005
+                        elif geometry_0[1] < 0.75:
+                            geometry_0[1] = geometry_0[1] - 0.00525
+                        else:
+                            geometry_0[1] = geometry_0[1] - 0.0055
                         geometry_1 = list(word.geometry[1])
-                        geometry_1[0] = geometry_1[0]
-                        geometry_1[1] = geometry_1[1]
+                        geometry_1[0] = geometry_1[0] - 0.005
+                        if geometry_1[1] < 0.25:
+                            geometry_1[1] = geometry_1[1] - 0.00475
+                        elif geometry_1[1] < 0.5:
+                            geometry_1[1] = geometry_1[1] - 0.005
+                        elif geometry_1[1] < 0.75:
+                            geometry_1[1] = geometry_1[1] - 0.00525
+                        else:
+                            geometry_1[1] = geometry_1[1] - 0.0055
 
                         geometry_0 = tuple(geometry_0)
                         geometry_1 = tuple(geometry_1)
@@ -267,12 +305,12 @@ def convert_to_searchable_pdf_doctr(document,
                         if word_index < len(line.words):
                             word.value = word.value + " "
 
-        xml_output = result.export_as_xml()[0][1]
+        hocr_output = result.export_as_xml()[0][1]
 
         hocr_filename = working_path + "\\" + \
             Path(filename).stem + ".hocr"
         with open(hocr_filename, 'wb') as outfile:
-            xml_output.write(outfile)
+            hocr_output.write(outfile)
             outfile.close()
 
         # Extract .xml and put into database
@@ -287,8 +325,17 @@ def convert_to_searchable_pdf_doctr(document,
             pdf_f.close()
 
         xml = convert_pdf_to_xml(single_page_pdf_path)
+
+        xml_filename = working_path + "\\" + \
+            Path(filename).stem + ".xml"
+        with open(xml_filename, "w", encoding="utf-8") as f:
+            f.write(xml)
+
         document_page.xml = xml
+        document_page.ocred = True
         document_page.save()
 
+        # lower dpi to reduce file size
+
     # Convert .hocr to .pdf
-    export_pdf(working_path, 300, searchable_pdf_path)
+    export_pdf(working_path, 72, searchable_pdf_path)

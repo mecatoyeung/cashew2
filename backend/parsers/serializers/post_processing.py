@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models.post_processing import PostProcessing
+from parsers.models.post_processing import PostProcessing
 
 
 class PostProcessingSerializer(serializers.ModelSerializer):

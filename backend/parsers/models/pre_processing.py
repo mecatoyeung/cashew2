@@ -1,5 +1,5 @@
 from django.db import models
-from .pre_processing_type import PreProcessingType
+from parsers.models.pre_processing_type import PreProcessingType
 
 
 class PreProcessing(models.Model):

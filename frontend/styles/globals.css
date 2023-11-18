@@ -181,9 +181,33 @@ h2.accordion-header {
   line-height: 28px;
 }
 
-.w-tc-editor-text {
-}
-
 .w-tc-editor-text::placeholder {
   color: #fff;
+}
+
+.react-transform-wrapper {
+  cursor: grab;
+}
+
+.react-transform-component {
+  border: 1px solid #000;
+  cursor: grab;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.talk-table-div {
+  overflow-x: auto;
+}
+
+.talk-table th, .talk-table td {
+  white-space: nowrap;
+  padding: 5px 10px;
+  border: 1px solid #000;
 }

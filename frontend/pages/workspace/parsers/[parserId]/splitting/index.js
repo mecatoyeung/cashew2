@@ -67,6 +67,21 @@ const conditionOperators = [
   },
 ]
 
+const noFirstPageRulesMatchedOperations = [
+  {
+    label: "Remove the page",
+    value: "REMOVE_THE_PAGE"
+  },
+  {
+    label: "Proceed to parsing queue of the current layout",
+    value: "CONTINUE_PARSING"
+  },
+  {
+    label: "Route to parser",
+    value: "ROUTE_TO_PARSER"
+  },
+]
+
 const Splitting = () => {
 
   const router = useRouter()
@@ -98,6 +113,7 @@ const Splitting = () => {
   const getSplitting = () => {
     if (!parserId) return
     service.get("parsers/" + parserId + "/splitting", response => {
+      console.log(response.data)
       setSplitting(response.data)
     })
   }
@@ -127,12 +143,12 @@ const Splitting = () => {
     )
   }
 
-  const addConsecutivePageSplittingClickHandler = (firstPageSpittingRuleId) => {
+  const addConsecutivePageSplittingClickHandler = (firstPageSplittingRuleIndex) => {
     setSplittingModal(
       produce((draft) => {
         draft.show = true
         draft.type = "CONSECUTIVE_PAGE"
-        draft.parentSplittingRule = firstPageSpittingRuleId
+        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
         draft.routeToParser = null
       })
     )
@@ -179,20 +195,110 @@ const Splitting = () => {
     }))
   }
 
-  const splittingRuleAddBtnClickHandler = (index) => {
-    service.post("splitting_rules/", {
-      splittingRuleType: splittingModal.type,
-      parentSplittingRule: splittingModal.parentSplittingRule,
-      splitting: splitting.id,
-      routeToParser: splittingModal.routeToParser,
-      splittingConditions: splittingModal.conditions
-    })
+  const selectNoFirstPageRulesMatchedRouteToParserChangeHandler = (e) => {
+    setSplitting(produce((draft) => {
+      draft.noFirstPageRulesMatchedRouteToParser = e.value
+    }))
   }
 
-  const splittingRuleDeleteHandler = (id) => {
-    service.delete("splitting_rules/" + id + "/", () => {
-      getSplitting()
-    })
+  const firstRuleMoveUpBtnClickHandler = (firstPageIndex) => {
+    if (firstPageIndex <= 0) return
+    setSplitting(produce(draft => {
+      let firstPageSplittingRules = draft.splittingRules
+      let tmpFirstPageRule = firstPageSplittingRules[firstPageIndex]
+      firstPageSplittingRules[firstPageIndex] = firstPageSplittingRules[firstPageIndex - 1]
+      firstPageSplittingRules[firstPageIndex - 1] = tmpFirstPageRule
+    }))
+  }
+
+  const firstRuleMoveDownBtnClickHandler = (firstPageIndex) => {
+    setSplitting(produce(draft => {
+      let firstPageSplittingRules = draft.splittingRules
+      if (firstPageIndex >= (firstPageSplittingRules.length - 1)) return
+      let tmpFirstPageRule = firstPageSplittingRules[firstPageIndex + 1]
+      firstPageSplittingRules[firstPageIndex + 1] = firstPageSplittingRules[firstPageIndex]
+      firstPageSplittingRules[firstPageIndex] = tmpFirstPageRule
+    }))
+  }
+
+  const consecutiveRuleMoveUpBtnClickHandler = (firstPageIndex, consecutivePageIndex) => {
+    if (consecutivePageIndex <= 0) return
+    setSplitting(produce(draft => {
+      let consecutivePageSplittingRules = draft.splittingRules[firstPageIndex].consecutivePageSplittingRules
+      let tmpConsecutiveRule = consecutivePageSplittingRules[consecutivePageIndex]
+      consecutivePageSplittingRules[consecutivePageIndex] = consecutivePageSplittingRules[consecutivePageIndex - 1]
+      consecutivePageSplittingRules[consecutivePageIndex - 1] = tmpConsecutiveRule
+    }))
+  }
+
+  const consecutiveRuleMoveDownBtnClickHandler = (firstPageIndex, consecutivePageIndex) => {
+    setSplitting(produce(draft => {
+      let consecutivePageSplittingRules = draft.splittingRules[firstPageIndex].consecutivePageSplittingRules
+      if (consecutivePageIndex >= (consecutivePageSplittingRules.length - 1)) return
+      let tmpConsecutiveRule = consecutivePageSplittingRules[consecutivePageIndex + 1]
+      consecutivePageSplittingRules[consecutivePageIndex + 1] = consecutivePageSplittingRules[consecutivePageIndex]
+      consecutivePageSplittingRules[consecutivePageIndex] = tmpConsecutiveRule
+    }))
+  }
+
+  const firstPageSplittingRuleAddBtnClickHandler = (index) => {
+    setSplitting(produce((draft) => {
+      draft.splittingRules.push({
+        splittingRuleType: "FIRST_PAGE",
+        parentSplittingRule: splittingModal.parentSplittingRule,
+        splitting: splitting.id,
+        routeToParser: splittingModal.routeToParser,
+        splittingConditions: splittingModal.conditions
+      })
+    }))
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = false
+       } ))
+  }
+
+  const consecutivePageSplittingRuleAddBtnClickHandler = (index) => {
+    setSplitting(produce((draft) => {
+      if (draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].consecutivePageSplittingRules == undefined) {
+        draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].consecutivePageSplittingRules = []
+      }
+      draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].consecutivePageSplittingRules.push({
+        splittingRuleType: "CONSECUTIVE_PAGE",
+        parentSplittingRule: splittingModal.parentSplittingRule,
+        splitting: splitting.id,
+        routeToParser: splittingModal.routeToParser,
+        splittingConditions: splittingModal.conditions
+      })
+    }))
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = false
+       } ))
+  }
+
+  const firstSplittingRuleDeleteHandler = (firstPageIndex) => {
+    setSplitting(produce(draft => {
+      draft.splittingRules.splice(firstPageIndex, 1)
+    }))
+  }
+
+  const consecutiveSplittingRuleDeleteHandler = (firstPageIndex, consecutivePageIndex) => {
+    setSplitting(produce(draft => {
+      let consecutivePageSplittingRules = draft.splittingRules[firstPageIndex].consecutivePageSplittingRules
+      consecutivePageSplittingRules = consecutivePageSplittingRules.splice(consecutivePageIndex, 1)
+    }))
+  }
+
+  const noFirstPageRulesMatchedOperationTypeChangeHandler = (e) => {
+    setSplitting(produce(draft => {
+      draft.noFirstPageRulesMatchedOperationType = e.value
+    }))
+  }
+
+  const toggleActivatedChkHandler = (e) => {
+    setSplitting(produce(draft => {
+      draft.activated = e.target.checked
+    }))
   }
 
   const closeSplittingModalHandler = () => {
@@ -201,6 +307,12 @@ const Splitting = () => {
         draft.show = false
       })
     )
+  }
+
+  const saveBtnClickHandler = () => {
+    service.put("splittings/" + splitting.id + '/', splitting, (response) => {
+      getSplitting()
+    })
   }
   
   const getAllParsers = () => {
@@ -225,14 +337,11 @@ const Splitting = () => {
         <h1>Splitting</h1>
         <Card style={{ width: '100%', marginBottom: 10 }}>
           <Card.Body>
-            {console.log(splitting)}
-            {splitting && splitting.splittingRules.map(firstPageSplittingRule => (
+            {splitting && splitting.splittingRules.map((firstPageSplittingRule, firstPageSplittingRuleIndex) => (
             <Card style={{ width: '100%', marginBottom: 10 }}>
-              {console.log(firstPageSplittingRule)}
               <Card.Body>
                 <Card.Title>
                   First Page Splitting&nbsp;
-                  <Button variant='danger' onClick={() => splittingRuleDeleteHandler(firstPageSplittingRule.id)}>Delete</Button>
                 </Card.Title>
                 <fieldset>
                   <div className={styles.firstPageSplitting}>
@@ -243,9 +352,11 @@ const Splitting = () => {
                             <>
                               <div className={styles.firstPageSplittingCondition}>
                                 <span className={styles.firstPageSplittingIf}>If</span>
-                                <span className={styles.firstPageSplittingRuleName}>
-                                  {rules.find(r => r.id == firstPageSplittingCondition.rule).name}
-                                </span>
+                                {rules && (
+                                  <span className={styles.firstPageSplittingRuleName}>
+                                    {rules.find(r => r.id == firstPageSplittingCondition.rule).name}
+                                  </span>
+                                )}
                                 <span className={styles.firstPageSplittingOperator}>
                                   {conditionOperators.find(o => o.value == firstPageSplittingCondition.operator).label}
                                 </span>
@@ -280,8 +391,7 @@ const Splitting = () => {
                     {allParsers && allParsers.length > 0 && (
                       <div className={styles.firstPageSplittingRouter}>
                         <span className={styles.firstPageSplittingRouteTo}>route to: </span>
-                        {console.log(allParsers)}
-                        {console.log(firstPageSplittingRule)}
+                        {console.log(splitting)}
                         <span className={styles.firstPageSplittingParser}>{allParsers.find(p => p.id == firstPageSplittingRule.routeToParser).name}</span>
                         <span className={styles.firstPageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>first page</span></span>
                       </div>
@@ -290,95 +400,80 @@ const Splitting = () => {
                       Consecutive Page Splitting
                     </Card.Title>
                     {firstPageSplittingRule.consecutivePageSplittingRules && 
-                      consecutivePageSplittingRules.map((consecutivePageSplittingRule, consecutivePageSplittingRuleIndex) => {
+                      firstPageSplittingRule.consecutivePageSplittingRules.map((consecutivePageSplittingRule, consecutivePageSplittingRuleIndex) => {
                       return (
-                        <Card style={{ width: '100%', marginBottom: 10 }}>
-                          <Card.Body>
-                            <fieldset>
-                              <div className={styles.consecutivePageSplitting}>
-                                <div className={styles.consecutivePageSplittingConditions}>
-                                  {consecutivePageSplittingRule && consecutivePageSplittingRule.splittingConditions.map((consecutiveSplittingCondition, consecutiveSplittingConditionIndex) => {
-                                    if (consecutiveSplittingConditionIndex == 0) {
-                                      return (
-                                        <>
-                                          <div className={styles.consecutivePageSplittingCondition}>
-                                            <span className={styles.consecutivePageSplittingIf}>If</span>
-                                            <span className={styles.consecutivePageSplittingRuleName}>
-                                              {rules.find(r => r.id == consecutiveSplittingCondition.rule).name}
-                                            </span>
-                                            <span className={styles.consecutivePageSplittingOperator}>
-                                              {conditionOperators.find(o => o.value == consecutiveSplittingCondition.operator).label}
-                                            </span>
-                                            {(consecutiveSplittingCondition.operator == "CONTAINS" || consecutiveSplittingCondition.operator == "EQUALS") && (
-                                              <span className={styles.consecutivePageSplittingValue}>{consecutiveSplittingCondition.value}</span>
-                                            )}
-                                          </div>
-                                          <br/>
-                                        </>
-                                      )
-                                    } else {
-                                      return (
-                                        <>
-                                          <div className={styles.consecutivePageSplittingCondition}>
-                                            <span className={styles.consecutivePageSplittingAnd}>and</span>
-                                            <span className={styles.consecutivePageSplittingRuleName}>
-                                              {rules.find(r => r.id == consecutivePageSplittingCondition.rule).name}
-                                            </span>
-                                            <span className={styles.consecutivePageSplittingOperator}>
-                                              {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
-                                            </span>
-                                            {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
-                                              <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
-                                            )}
-                                          </div>
-                                        </>
-                                      )
-                                    }
-                                  })}
-                                  
-                                  <span className={styles.consecutivePageSplittingThen}>Then</span>
+                        <>
+                          {consecutivePageSplittingRuleIndex > 0 && (
+                            <p style={{textAlign: "center", margin: 10}}>or</p>
+                          )}
+                          <Card style={{ width: '100%', marginBottom: 10 }}>
+                            <Card.Body>
+                              <fieldset>
+                                <div className={styles.consecutivePageSplitting}>
+                                  <div className={styles.consecutivePageSplittingConditions}>
+                                    {consecutivePageSplittingRule && consecutivePageSplittingRule.splittingConditions.map((consecutivePageSplittingCondition, consecutiveSplittingConditionIndex) => {
+                                      if (consecutiveSplittingConditionIndex == 0) {
+                                        return (
+                                          <>
+                                            <div className={styles.consecutivePageSplittingCondition}>
+                                              <span className={styles.consecutivePageSplittingIf}>If</span>
+                                              <span className={styles.consecutivePageSplittingRuleName}>
+                                                {rules.find(r => r.id == consecutivePageSplittingCondition.rule).name}
+                                              </span>
+                                              <span className={styles.consecutivePageSplittingOperator}>
+                                                {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
+                                              </span>
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                                <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
+                                              )}
+                                            </div>
+                                            <br/>
+                                          </>
+                                        )
+                                      } else {
+                                        return (
+                                          <>
+                                            <div className={styles.consecutivePageSplittingCondition}>
+                                              <span className={styles.consecutivePageSplittingAnd}>and</span>
+                                              <span className={styles.consecutivePageSplittingRuleName}>
+                                                {rules.find(r => r.id == consecutivePageSplittingCondition.rule).name}
+                                              </span>
+                                              <span className={styles.consecutivePageSplittingOperator}>
+                                                {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
+                                              </span>
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                                <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
+                                              )}
+                                            </div>
+                                          </>
+                                        )
+                                      }
+                                    })}
+                                    
+                                    <span className={styles.consecutivePageSplittingThen}>Then</span>
+                                  </div>
+                                  <div className={styles.consecutivePageSplittingRouter}>
+                                    <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
+                                    <span className={styles.consecutivePageSplittingParser}>Invoice</span>
+                                    <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
+                                  </div>
+                                  <div className={styles.consecutivePageSplittingActions}>
+                                    <Button style={{marginRight: 10}} onClick={() => consecutiveRuleMoveUpBtnClickHandler(firstPageSplittingRuleIndex, consecutivePageSplittingRuleIndex)}>&uarr;</Button>
+                                    <Button style={{marginRight: 10}} onClick={() => consecutiveRuleMoveDownBtnClickHandler(firstPageSplittingRuleIndex, consecutivePageSplittingRuleIndex)}>&darr;</Button>
+                                    <Button variant='danger' onClick={() => consecutiveSplittingRuleDeleteHandler(firstPageSplittingRuleIndex, consecutivePageSplittingRuleIndex)}>Delete</Button>
+                                  </div>
                                 </div>
-                                <div className={styles.consecutivePageSplittingRouter}>
-                                  <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
-                                  <span className={styles.consecutivePageSplittingParser}>Invoice</span>
-                                  <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
-                                </div>
-                                <div className={styles.consecutivePageSplittingActions}>
-                                  <Button style={{marginRight: 10}}>&uarr;</Button>
-                                  <Button>&darr;</Button>
-                                </div>
-                              </div>
-                            </fieldset>
-                          </Card.Body>
-                        </Card>
+                              </fieldset>
+                            </Card.Body>
+                          </Card>
+                        </>
                       )
                     })}
-                    <Card style={{ width: '100%', marginBottom: 10 }}>
-                      <Card.Body>
-                        <fieldset>
-                          <div className={styles.consecutivePageSplitting}>
-                            <div className={styles.consecutivePageSplittingConditions}>
-                              <div className={styles.consecutivePageSplittingCondition}>
-                                <span className={styles.consecutivePageSplittingIf}>Else If</span>
-                                <span className={styles.consecutivePageSplittingRuleName}>Invoice No Detector</span>
-                                <span className={styles.consecutivePageSplittingOperator}>is not empty</span>
-                              </div>
-                              <span className={styles.consecutivePageSplittingThen}>Then</span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingRouter}>
-                              <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
-                              <span className={styles.consecutivePageSplittingParser}>Invoice</span>
-                              <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingActions}>
-                              <Button style={{marginRight: 10}}>&uarr;</Button>
-                              <Button>&darr;</Button>
-                            </div>
-                          </div>
-                        </fieldset>
-                      </Card.Body>
-                    </Card>
-                    <Card style={{ width: '100%', marginBottom: 10 }}>
+                    <div className={styles.consecutivePageSplittingActions}>
+                      <Button onClick={() => addConsecutivePageSplittingClickHandler(firstPageSplittingRuleIndex)}>Add Consecutive Page Splitting</Button>
+                    </div>
+                    
+                    <Card style={{ width: '100%', marginBottom: 10, marginTop: 10 }}>
                       <Card.Body>
                         <fieldset>
                           <div className={styles.consecutivePageSplitting}>
@@ -394,136 +489,54 @@ const Splitting = () => {
                         </fieldset>
                       </Card.Body>
                     </Card>
-                    <div className={styles.firstPageSplittingActions}>
-                      <Button style={{marginRight: 10}}>&uarr;</Button>
-                      <Button style={{marginRight: 10}}>&darr;</Button>
-                      <Button onClick={() => addConsecutivePageSplittingClickHandler(firstPageSplittingRule.id)}>Add Consecutive Page Splitting</Button>
-                    </div>
                   </div>
                 </fieldset>
+                <Button style={{marginRight: 10, marginBottom: 10}} onClick={() => firstRuleMoveUpBtnClickHandler(firstPageSplittingRuleIndex)}>&uarr;</Button>
+                <Button style={{marginRight: 10, marginBottom: 10}} onClick={() => firstRuleMoveDownBtnClickHandler(firstPageSplittingRuleIndex)}>&darr;</Button>
+                <Button style={{marginRight: 10, marginBottom: 10}} variant='danger' onClick={() => firstSplittingRuleDeleteHandler(firstPageSplittingRuleIndex)}>Delete</Button>
               </Card.Body>
             </Card>
             ))}
-            {/*<Card style={{ width: '100%', marginBottom: 10 }}>
-              <Card.Body>
-                <Card.Title>
-                  First Page Splitting
-                </Card.Title>
-                <fieldset>
-                  <div className={styles.firstPageSplitting}>
-                    <div className={styles.firstPageSplittingConditions}>
-                      <div className={styles.firstPageSplittingCondition}>
-                        <span className={styles.firstPageSplittingIf}>If</span>
-                        <span className={styles.firstPageSplittingRuleName}>DN No Detector</span>
-                        <span className={styles.firstPageSplittingOperator}>is not empty</span>
+            <Button onClick={addFirstPageSplittingClickHandler} style={{marginBottom: 10}}>Add First Page Splitting</Button>
+            {splitting && splitting.splittingRules.length > 0 && (
+              <Card style={{ width: '100%', marginBottom: 10 }}>
+                <Card.Body>
+                  <fieldset>
+                    <div className={styles.firstPageSplitting}>
+                      <div className={styles.firstPageSplittingConditions}>
+                        <span className={styles.firstPageSplittingIf}>Else</span>
                       </div>
-                      <span className={styles.firstPageSplittingAnd}>and</span><br/>
-                      <div className={styles.firstPageSplittingCondition}>
-                        <span className={styles.firstPageSplittingRuleName}>DN No Detector</span>
-                        <span className={styles.firstPageSplittingOperator}>regex</span>
-                        <span className={styles.firstPageSplittingValue}>DN[0-9]{5}</span>
+                      <div className={styles.firstPageSplittingRouter}>
+                        <Select options={noFirstPageRulesMatchedOperations} value={
+                            noFirstPageRulesMatchedOperations.find(m => m.value == splitting.noFirstPageRulesMatchedOperationType)
+                          } onChange={noFirstPageRulesMatchedOperationTypeChangeHandler}/>
                       </div>
-                      <span className={styles.firstPageSplittingThen}>Then</span>
+                      {console.log(splitting)}
+                      {allParsers && splitting && splitting.noFirstPageRulesMatchedOperationType == "ROUTE_TO_PARSER" && (
+                        <Form.Group>
+                          <Form.Label>Route to parser: </Form.Label>
+                          <Select options={allParsers.map(p => {
+                            return {
+                              label: p.name,
+                              value: p.id
+                            }
+                          })}
+                          value={allParsers.map(p => {
+                            return {
+                              label: p.name,
+                              value: p.id
+                            }
+                          }).find(p => p.value == splitting.noFirstPageRulesMatchedRouteToParser)}
+                          onChange={selectNoFirstPageRulesMatchedRouteToParserChangeHandler}
+                                className={styles.parserSelect}></Select>
+                        </Form.Group>
+                        )}
                     </div>
-                    <div className={styles.firstPageSplittingRouter}>
-                      <span className={styles.firstPageSplittingRouteTo}>route to: </span>
-                      <span className={styles.firstPageSplittingParser}>Delivery Note</span>
-                      <span className={styles.firstPageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>first page</span></span>
-                    </div>
-                    <Card.Title style={{marginTop: "20px"}}>
-                      Consecutive Page Splitting
-                    </Card.Title>
-                    <Card style={{ width: '100%', marginBottom: 10 }}>
-                      <Card.Body>
-                        <fieldset>
-                          <div className={styles.consecutivePageSplitting}>
-                            <div className={styles.consecutivePageSplittingConditions}>
-                              <div className={styles.consecutivePageSplittingCondition}>
-                                <span className={styles.consecutivePageSplittingIf}>If</span>
-                                <span className={styles.consecutivePageSplittingRuleName}>DN No Detector</span>
-                                <span className={styles.consecutivePageSplittingOperator}>does not change</span>
-                              </div>
-                              <span className={styles.consecutivePageSplittingThen}>Then</span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingRouter}>
-                              <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
-                              <span className={styles.consecutivePageSplittingParser}>Delivery Note</span>
-                              <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingActions}>
-                              <Button style={{marginRight: 10}}>&uarr;</Button>
-                              <Button>&darr;</Button>
-                            </div>
-                          </div>
-                        </fieldset>
-                      </Card.Body>
-                    </Card>
-                    <Card style={{ width: '100%', marginBottom: 10 }}>
-                      <Card.Body>
-                        <fieldset>
-                          <div className={styles.consecutivePageSplitting}>
-                            <div className={styles.consecutivePageSplittingConditions}>
-                              <div className={styles.consecutivePageSplittingCondition}>
-                                <span className={styles.consecutivePageSplittingIf}>Else If</span>
-                                <span className={styles.consecutivePageSplittingRuleName}>DN No Detector</span>
-                                <span className={styles.consecutivePageSplittingOperator}>is not empty</span>
-                              </div>
-                              <span className={styles.consecutivePageSplittingThen}>Then</span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingRouter}>
-                              <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
-                              <span className={styles.consecutivePageSplittingParser}>Delivery Note</span>
-                              <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
-                            </div>
-                            <div className={styles.consecutivePageSplittingActions}>
-                              <Button style={{marginRight: 10}}>&uarr;</Button>
-                              <Button>&darr;</Button>
-                            </div>
-                          </div>
-                        </fieldset>
-                      </Card.Body>
-                    </Card>
-                    <Card style={{ width: '100%', marginBottom: 10 }}>
-                      <Card.Body>
-                        <fieldset>
-                          <div className={styles.consecutivePageSplitting}>
-                            <div className={styles.consecutivePageSplittingConditions}>
-                              <div className={styles.consecutivePageSplittingCondition}>
-                                <span className={styles.consecutivePageSplittingIf}>Else</span>
-                              </div>
-                            </div>
-                            <div className={styles.consecutivePageSplittingRouter}>
-                              <span className={styles.consecutivePageSplittingRouteTo}>return to first page checking.</span>
-                            </div>
-                          </div>
-                        </fieldset>
-                      </Card.Body>
-                    </Card>
-                    <div className={styles.firstPageSplittingActions}>
-                      <Button style={{marginRight: 10}}>&uarr;</Button>
-                      <Button style={{marginRight: 10}}>&darr;</Button>
-                      <Button onClick={addConsecutivePageSplittingClickHandler}>Add Consecutive Page Splitting</Button>
-                    </div>
-                  </div>
-                </fieldset>
-              </Card.Body>
-            </Card>*/}
-            <Card style={{ width: '100%', marginBottom: 10 }}>
-              <Card.Body>
-                <fieldset>
-                  <div className={styles.firstPageSplitting}>
-                    <div className={styles.firstPageSplittingConditions}>
-                      <span className={styles.firstPageSplittingIf}>Else</span>
-                    </div>
-                    <div className={styles.firstPageSplittingRouter}>
-                      <span className={styles.firstPageSplittingRouteTo}>route to: </span>
-                      <span className={styles.firstPageSplittingParser}>General Document</span>
-                    </div>
-                  </div>
-                </fieldset>
-              </Card.Body>
-            </Card>
-            <Button onClick={addFirstPageSplittingClickHandler}>Add First Page Splitting</Button>
+                  </fieldset>
+                </Card.Body>
+              </Card>
+            )}
+            
             <Modal className={styles.splittingModal}
               show={splittingModal.show}
               onHide={closeSplittingModalHandler}
@@ -547,24 +560,23 @@ const Splitting = () => {
                       <tr key={conditionIndex}>
                       <td>{conditionIndex + 1}</td>
                       <td>
-                        {console.log(condition)}
-                          <Select
-                              classNamePrefix="react-select"
-                              options={rules.map(r => {
-                                return {
-                                  label: r.name,
-                                  value: r.id
-                                }
-                              })}
-                              value={rules.map(r => {
-                                return {
-                                  label: r.name,
-                                  value: r.id
-                                }
-                              }).find(o => o.value == condition.ruldId)}
-                              onChange={(e) => selectConditionRuleChangeHandler(conditionIndex, e)}
-                              menuPlacement="auto"
-                              menuPosition="fixed" />
+                        <Select
+                            classNamePrefix="react-select"
+                            options={rules.map(r => {
+                              return {
+                                label: r.name,
+                                value: r.id
+                              }
+                            })}
+                            value={rules.map(r => {
+                              return {
+                                label: r.name,
+                                value: r.id
+                              }
+                            }).find(o => o.value == condition.ruldId)}
+                            onChange={(e) => selectConditionRuleChangeHandler(conditionIndex, e)}
+                            menuPlacement="auto"
+                            menuPosition="fixed" />
                       </td>
                       <td>
                           <Select
@@ -576,7 +588,6 @@ const Splitting = () => {
                               menuPosition="fixed" />
                       </td>
                       <td>
-                        {console.log(condition.operator)}
                         {(condition.operator == "EQUALS" ||
                           condition.operator == "REGEX" ||
                           condition.operator == "CONTAINS") && (
@@ -617,13 +628,34 @@ const Splitting = () => {
                 </Form.Group>
                 )}
                 <Form.Group>
-                  <Button style={{ marginRight: 10 }} onClick={splittingRuleAddBtnClickHandler}>Add</Button>
+                  {splittingModal.type == "FIRST_PAGE" && (
+                  <Button style={{ marginRight: 10 }} onClick={firstPageSplittingRuleAddBtnClickHandler}>Add</Button>
+                  )}
+                  {splittingModal.type == "CONSECUTIVE_PAGE" && (
+                  <Button style={{ marginRight: 10 }} onClick={consecutivePageSplittingRuleAddBtnClickHandler}>Add</Button>
+                  )}
                   <Button variant="danger" onClick={closeSplittingModalHandler}>Cancel</Button>
                 </Form.Group>
               </Modal.Body>
             </Modal>
           </Card.Body>
         </Card>
+        {splitting && (
+          <Form.Group style={{marginBottom: 10}}>
+            <Form.Check
+              type={"checkbox"}
+              id={`default-activated`}
+              label={`Activated`}
+              onChange={toggleActivatedChkHandler}
+              checked={splitting.activated}
+            />
+          </Form.Group>
+        )}
+        
+        <Button 
+          onClick={() => saveBtnClickHandler()}>
+          Save
+        </Button>
       </div>
     </WorkspaceLayout>
   )

@@ -5,7 +5,6 @@ import json
 import base64
 from functools import cmp_to_key
 
-import argparse
 import glob
 import io
 import re
@@ -22,10 +21,10 @@ from reportlab.pdfgen.canvas import Canvas
 from lxml import etree, html
 from PIL import Image
 
-from django.conf import settings
+import natsort
 
-from .convert_pdf_to_xml import convert_pdf_bytes_to_xml
-from .gcv2hocr import fromResponse
+from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
+from parsers.helpers.gcv2hocr import fromResponse
 
 WORKING_DIR = os.getcwd() + "/imgdir/"
 
@@ -43,17 +42,16 @@ class StdoutWrapper:
         sys.stdout.write(data)
 
 
-def export_pdf_bytes(images, hocr_files, default_dpi):
+def export_pdf_bytes(images, default_dpi, savefile=False):
     buffer = io.BytesIO()
-    """Create a searchable PDF from a pile of HOCR + PNG"""
     if len(images) == 0:
         sys.exit(0)
     load_invisible_font()
     pdf = Canvas(buffer)
     pdf.setCreator('hocr-tools')
-    pdf.setTitle("Temp file to generate XML")
+    pdf.setTitle(os.path.basename("temp file"))
     dpi = default_dpi
-    for image_index, image in enumerate(images):
+    for image in images:
         im = Image.open(image)
         w, h = im.size
         try:
@@ -64,59 +62,8 @@ def export_pdf_bytes(images, hocr_files, default_dpi):
         height = h * 72 / dpi
         pdf.setPageSize((width, height))
         pdf.drawImage(image, 0, 0, width=width, height=height)
-
-        # Add Text Layer
-        """Draw an invisible text layer for OCR data"""
-        p1 = re.compile(r'bbox((\s+\d+){4})')
-        p2 = re.compile(r'baseline((\s+[\d\.\-]+){2})')
-        hocrfile = hocr_files[image_index]
-        hocr = etree.parse(hocrfile, html.XHTMLParser())
-        line_infos = []
-        for line in hocr.xpath('//*[@class="ocr_line"]'):
-            linebox = p1.search(line.attrib['title']).group(1).split()
-            linebox = [float(i) for i in linebox]
-            line_info = [line, linebox]
-            line_infos.append(line_info)
-
-        sorted(line_infos, key=cmp_to_key(
-            lambda x, y: x[1][0] - y[1][0] if x[1][1] == y[1][1] else x[1][1] - y[1][1]))
-
-        for line_info in line_infos:
-            line = line_info[0]
-            linebox = p1.search(line.attrib['title']).group(1).split()
-            try:
-                baseline = p2.search(line.attrib['title']).group(1).split()
-            except AttributeError:
-                baseline = [0, 0]
-            linebox = [float(i) for i in linebox]
-            baseline = [float(i) for i in baseline]
-            xpath_elements = './/*[@class="ocrx_word"]'
-            if (not (line.xpath('boolean(' + xpath_elements + ')'))):
-                # if there are no words elements present,
-                # we switch to lines as elements
-                xpath_elements = '.'
-            for word in line.xpath(xpath_elements):
-                rawtext = word.text_content().strip()
-                font_width = pdf.stringWidth(rawtext, 'invisible', 8)
-                if font_width <= 0:
-                    continue
-                box = p1.search(word.attrib['title']).group(1).split()
-                box = [float(i) for i in box]
-                b = polyval(baseline,
-                            (box[0] + box[2]) / 2 - linebox[0]) + linebox[3]
-                text = pdf.beginText()
-                text.setTextRenderMode(3)  # double invisible
-                text.setFont('invisible', 8)
-                text.setTextOrigin(box[0] * 72 / dpi,
-                                   height - box[3] * 72 / dpi)
-                box_width = (box[2] - box[0]) * 72 / dpi
-                text.setHorizScale(100.0 * box_width / font_width)
-                rawtext = get_display(rawtext)
-                text.textLine(rawtext)
-                pdf.drawText(text)
-
+        add_text_layer(pdf, image, height, dpi)
         pdf.showPage()
-
     pdf.save()
 
     buffer.seek(0)
@@ -125,7 +72,8 @@ def export_pdf_bytes(images, hocr_files, default_dpi):
 
 def export_pdf(playground, default_dpi, savefile=False):
     """Create a searchable PDF from a pile of HOCR + PNG"""
-    images = sorted(glob.glob(os.path.join(playground, '*.png')))
+    images = glob.glob(os.path.join(playground, '*.jpg'))
+    images.sort(key=lambda x: int(Path(x).stem))
     if len(images) == 0:
         print(f"WARNING: No JPG images found in the folder {playground}"
               "\nScript cannot proceed without them and will terminate now.\n")
@@ -255,24 +203,30 @@ def convert_to_searchable_pdf_gcv(document,
             document_path, "pre_processed-" + str(last_preprocessing_id))
         for dirpath, _, filenames in os.walk(last_preprocessing_folder_path):
             for filename in filenames:
-                if filename.endswith(".png") or filename.endswith(".PNG"):
+                if filename.endswith(".jpg") or filename.endswith(".JPG"):
                     preprocessed_image_path = os.path.join(
                         last_preprocessing_folder_path, filename)
                     ocr_image_path = os.path.join(working_path, filename)
+                    if os.path.exists(ocr_image_path):
+                        continue
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
     else:
         for dirpath, _, filenames in os.walk(document_path):
             for filename in filenames:
-                if filename.endswith(".png") or filename.endswith(".PNG"):
+                if filename.endswith(".jpg") or filename.endswith(".JPG"):
                     preprocessed_image_path = os.path.join(
                         document_path, filename)
                     ocr_image_path = os.path.join(working_path, filename)
+                    if os.path.exists(ocr_image_path):
+                        continue
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
 
     for document_page in document.document_pages.all():
-        filename = str(document_page.page_num) + ".png"
+        if document_page.ocred:
+            continue
+        filename = str(document_page.page_num) + ".jpg"
         # Use Google Vision API to ocr image
         url = "https://vision.googleapis.com/v1/images:annotate?key=" + google_vision_api_key
         with open(working_path + "\\" + filename, 'rb') as image_file:
@@ -313,11 +267,24 @@ def convert_to_searchable_pdf_gcv(document,
 
         # Extract .xml and put into database
         image_path = working_path + "\\" + filename
-        temp_xml_pdf_bytes = export_pdf_bytes(
-            [image_path], [hocr_filename], 72)
+        temp_pdf_bytes = export_pdf_bytes(
+            [image_path], 300)
 
-        xml = convert_pdf_bytes_to_xml(temp_xml_pdf_bytes)
+        single_page_pdf_path = working_path + "\\" + \
+            Path(filename).stem + ".pdf"
+        with open(single_page_pdf_path, "wb") as pdf_f:
+            pdf_f.write(temp_pdf_bytes.read())
+            pdf_f.close()
+
+        xml = convert_pdf_to_xml(single_page_pdf_path)
+
+        xml_filename = working_path + "\\" + \
+            Path(filename).stem + ".xml"
+        with open(xml_filename, "w", encoding="utf-8") as f:
+            f.write(xml)
+
         document_page.xml = xml
+        document_page.ocred = True
         document_page.save()
 
         # Convert .hocr to .pdf

@@ -1,30 +1,18 @@
 import os
 
-import uuid
-
-from datetime import datetime
-
-from pathlib import Path
-
-from django.conf import settings
 from django.db import transaction
-
-from pdf2image import convert_from_path
 
 import fitz
 
 import PIL
 
-from ..models.parser import Parser
-from ..models.document import Document
-from ..models.document_page import DocumentPage
-from ..models.queue import Queue
-from ..models.queue_class import QueueClass
+import numpy as np
+
+import cv2
+
+from parsers.models.document_page import DocumentPage
 
 from backend.settings import MEDIA_URL
-from .convert_pdf_to_xml import convert_pdf_to_xml
-
-from django.db import transaction
 
 
 def generate_images_from_pdf(document):
@@ -36,24 +24,26 @@ def generate_images_from_pdf(document):
 
         dpi = 300  # choose desired dpi here
         zoom = dpi / 72  # zoom factor, standard: 72 dpi
-        magnify = fitz.Matrix(zoom, zoom)  # magnifies in x, resp. y direction
+
+        magnify = fitz.Matrix(zoom, zoom)
         with fitz.open(abs_pdf_path) as doc:  # open document
             for page_idx, page in enumerate(doc):
                 page_no = page_idx + 1
                 # render page to an image
                 pix = page.get_pixmap(matrix=magnify)
                 abs_png_path = os.path.join(
-                    folder_path, str(page_no) + ".png")
-                pix.save(abs_png_path)
+                    folder_path, str(page_no) + ".jpg")
+                pix.save(abs_png_path, jpg_quality=80)
 
-                image = PIL.Image.open(abs_png_path)
-                width, height = image.size
+                width = pix.width
+                height = pix.height
 
                 # Create document page object in database
                 dp = DocumentPage(
                     document=document,
                     page_num=page_no,
-                    image_file=abs_png_path,
+                    image_file=os.path.join(
+                        'documents/%s/' % (document.guid), str(page_no) + '.' + document.extension),
                     width=width,
                     height=height
                 )

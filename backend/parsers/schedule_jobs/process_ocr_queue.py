@@ -23,6 +23,7 @@ from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 
 def process_ocr_queue_job():
+
     all_ready_import_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -39,9 +40,9 @@ def process_ocr_queue_job():
         preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
         ocr = OCR.objects.get(parser_id=parser.id)
         # Mark the job as in progress
-        queue_job.queue_class = QueueClass.OCR.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
+        # queue_job.queue_class = QueueClass.OCR.value
+        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+        # queue_job.save()
 
         # Do the job
         # Create Working Dir if not exist
@@ -86,10 +87,9 @@ def process_ocr_queue_job():
 def ocr_queue_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 1})
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # scheduler.add_jobstore(DjangoJobStore(), "ocr_queue_job_store")
     # run this job every 60 seconds
-    scheduler.add_job(process_ocr_queue_job, 'interval',
-                      seconds=5, name='process_ocr_queue', jobstore='default')
-    register_events(scheduler)
+    scheduler.add_job(process_ocr_queue_job, 'interval', seconds=5)
+    # register_events(scheduler)
     scheduler.start()
     print("Processing OCR Queue", file=sys.stdout)
