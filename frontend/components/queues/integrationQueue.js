@@ -86,7 +86,7 @@ const IntegrationQueue = (props) => {
 
   const getQueues = () => {
     if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueType=INTEGRATION", response => {
+    service.get("queues/?parserId=" + props.parserId + "&queueClass=INTEGRATION", response => {
       let queues = response.data
       setSelectedIds([])
       setQueues(response.data)
@@ -108,13 +108,11 @@ const IntegrationQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
-          <Dropdown.Item href="#" onClick={uploadDocumentsBtnClickHandler}>Upload PDF File(s)</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Documents</Dropdown.Item>
+          <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -133,6 +131,7 @@ const IntegrationQueue = (props) => {
                   <Form.Check
                     type="checkbox"
                     label=""
+                    style={{padding: 0}}
                   />
                 </th>
                 <th colSpan={2}>
@@ -150,10 +149,11 @@ const IntegrationQueue = (props) => {
                         label=""
                         checked={queue.selected}
                         onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        style={{padding: 0}}
                       />
                     </td>
-                    <td className={styles.tdGrow}>{queue.document.filename_without_extension + "." + queue.document.extension}</td>
-                    <td className={styles.tdNoWrap}>{moment(queue.document.last_modified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
+                    <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )
               })}

@@ -31,6 +31,45 @@ const ocrOptions = [
   {
     label: "DocTR (On Premise, Free, very good at English and cannot recognize Traditional Chinese and Simplified Chinese)",
     value: "DOCTR"
+  },
+  {
+    label: "PaddleOCR (On Premise, Free, very good at Simplified Chinese, good at English/Japanese/Korean and fair at Traditional Chinese)",
+    value: "PADDLE_OCR"
+  }
+]
+
+const paddleOCRLangOptions = [
+  {
+    label: "Simplified Chinese",
+    value: "ch"
+  },
+  {
+    label: "English",
+    value: "en"
+  },
+  {
+    label: "Traditional Chinese",
+    value: "ch_tra"
+  },
+  {
+    label: "Japanese",
+    value: "japan"
+  },
+  {
+    label: "Korean",
+    value: "korean"
+  },
+  {
+    label: "French",
+    value: "fr"
+  },
+  {
+    label: "German",
+    value: "german"
+  },
+  {
+    label: "Vietnamese",
+    value: "vi"
   }
 ]
 
@@ -60,7 +99,6 @@ const Settings = () => {
 
   const getParser = () => {
     service.get("parsers/" + parserId + "/", response => {
-      console.log(response.data)
       setParser(response.data)
     })
   }
@@ -106,6 +144,15 @@ const Settings = () => {
   const googleVisionOcrApiKeyChangeHandler = (e) => {
     let updatedOCR = { ...parser.ocr }
     updatedOCR.googleVisionOcrApiKey = e.target.value
+    setParser({
+      ...parser,
+      ocr: updatedOCR
+    })
+  }
+
+  const paddleOCRLanguageChangeHandler = (e) => {
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.paddleOCRLanguage = e.value
     setParser({
       ...parser,
       ocr: updatedOCR
@@ -241,7 +288,7 @@ const Settings = () => {
               </Modal>
           </Card.Body>
         </Card>
-        {parser && parser.ocr != null && (
+        {/*parser && parser.ocr != null && (
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>
               <Card.Title>OCR</Card.Title>
@@ -261,10 +308,23 @@ const Settings = () => {
                   </Form.Group>
                 </>
               )}
+              {parser.ocr.ocrType == "PADDLE_OCR" && (
+                <>
+                  <Form.Group className="mb-3" controlId="formPaddleOcrApiKey">
+                    <Form.Label>Paddle OCR Language</Form.Label>
+                    <Select
+                      options={paddleOCRLangOptions}
+                      value={paddleOCRLangOptions.find(oo => oo.value == parser.ocr.paddleOcrLanguage)}
+                      onChange={(e) => paddleOCRLanguageChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" />
+                  </Form.Group>
+                </>
+              )}
               <Button variant="primary" onClick={ocrSaveBtnClickHandler}>Save</Button>
             </Card.Body>
           </Card>
-        )}
+              )*/}
         {parser && parser.chatbot != null && (
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>

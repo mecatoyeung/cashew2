@@ -1,8 +1,9 @@
 from ..base import StreamBase
 
+
 class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
 
-    def __init__(self):
+    def __init__(self, stream):
         pass
 
     def process(self, input):
@@ -14,6 +15,8 @@ class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
 
         for l in range(0, len(output_body[0])):
             output_header.append(output_body[0][l])
+
+        output_body = output_body[1:]
 
         output = {
             'header': output_header,

@@ -109,8 +109,8 @@ def process_integration_queue_job():
                 shutil.copyfile(pdf_from_path, pdf_to_path)
 
         # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
+        # queue_job.queue_status = QueueStatus.COMPLETED.value
+        # queue_job.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.PROCESSED.value

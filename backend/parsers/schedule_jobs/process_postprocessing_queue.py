@@ -118,8 +118,8 @@ def process_postprocessing_queue_job():
                 redactor.redaction()
 
         # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
+        # queue_job.queue_status = QueueStatus.COMPLETED.value
+        # queue_job.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.INTEGRATION.value

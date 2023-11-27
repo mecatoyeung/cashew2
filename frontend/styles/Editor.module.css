@@ -273,3 +273,7 @@
   position: absolute;
   bottom: 70px;
 }
+
+.textfieldAnchorSelect {
+  line-height: 32px;
+}

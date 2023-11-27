@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
-import requests
-import json
 import base64
+import shutil
 from functools import cmp_to_key
 
 import glob
@@ -10,23 +9,24 @@ import io
 import re
 import sys
 import zlib
-import cv2
-import shutil
-
-from bidi.algorithm import get_display
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen.canvas import Canvas
 
 from lxml import etree, html
 from PIL import Image
 
-import natsort
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen.canvas import Canvas
 
-from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
-from parsers.helpers.gcv2hocr import fromResponse
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-WORKING_DIR = os.getcwd() + "/imgdir/"
+from bidi.algorithm import get_display
+
+from paddleocr import PaddleOCR, draw_ocr
+from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element as ETElement
+from xml.etree.ElementTree import SubElement
+
+from .convert_pdf_to_xml import convert_pdf_to_xml
 
 
 class StdoutWrapper:
@@ -40,6 +40,115 @@ class StdoutWrapper:
         if bytes != str and isinstance(data, bytes):
             data = data.decode('latin1')
         sys.stdout.write(data)
+
+
+def export_as_xml(im, result):
+    """Export the page as XML (hOCR-format)
+    convention: https://github.com/kba/hocr-spec/blob/master/1.2/spec.md
+
+    Args:
+        file_title: the title of the XML file
+
+    Returns:
+        a tuple of the XML byte string, and its ElementTree
+    """
+    p_idx = 1
+    block_count: int = 1
+    line_count: int = 1
+    word_count: int = 1
+    width, height = im.size
+    language = "cn"
+    # Create the XML root element
+    page_hocr = ETElement("html", attrib={
+                          "xmlns": "http://www.w3.org/1999/xhtml", "xml:lang": str(language)})
+    # Create the header / SubElements of the root element
+    head = SubElement(page_hocr, "head")
+    SubElement(head, "title").text = "Paddle OCR hocr"
+    SubElement(head, "meta", attrib={
+               "http-equiv": "Content-Type", "content": "text/html; charset=utf-8"})
+    SubElement(
+        head,
+        "meta",
+        attrib={"name": "ocr-system", "content": f"paddleocr"},
+    )
+    SubElement(
+        head,
+        "meta",
+        attrib={"name": "ocr-capabilities",
+                "content": "ocr_page ocr_carea ocr_par ocr_line ocrx_word"},
+    )
+    # Create the body
+    body = SubElement(page_hocr, "body")
+    page = SubElement(
+        body,
+        "div",
+        attrib={
+            "class": "ocr_page",
+            "id": f"page_{p_idx}",
+            "title": f"image; bbox 0 0 {width} {height}; ppageno 0",
+        },
+    )
+
+    # iterate over the blocks / lines / words and create the XML elements in body line by line with the attributes
+    for line in result[0]:
+        xmin = line[0][0][0]
+        ymin = line[0][0][1] + 12
+        xmax = line[0][2][0]
+        ymax = line[0][2][1] - 20
+
+        # NOTE: baseline, x_size, x_descenders, x_ascenders is currently initalized to 0
+        block_span = SubElement(
+            body,
+            "div",
+            attrib={
+                "class": "ocr_carea",
+                "id": f"block_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}",
+            },
+        )
+        paragraph_span = SubElement(
+            block_span,
+            "p",
+            attrib={
+                "class": "ocr_par",
+                "id": f"par_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}",
+            },
+        )
+        line_span = SubElement(
+            paragraph_span,
+            "span",
+            attrib={
+                "class": "ocr_line",
+                "id": f"line_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}; baseline 0 0; x_size 0; x_descenders 0; x_ascenders 0",
+            },
+        )
+        line_count += 1
+        word_in_line_count = 0
+        for word in line[1][0]:
+            word_xmin = (xmax - xmin) / \
+                len(line[1][0]) * word_in_line_count + xmin
+            word_xmax = (xmax - xmin) / \
+                len(line[1][0]) * (word_in_line_count+1) + xmin
+            word_ymin = ymin
+            word_ymax = ymax
+            conf = line[1][1]
+            word_div = SubElement(
+                line_span,
+                "span",
+                attrib={
+                    "class": "ocrx_word",
+                    "id": f"word_{word_count}",
+                    "title": f"bbox {int(round(word_xmin))} {int(round(word_ymin))} {int(round(word_xmax))} {int(round(word_ymax))}; x_wconf {int(round(conf * 100))}",
+                },
+            )
+            # set the text
+            word_div.text = word
+            word_count += 1
+            word_in_line_count += 1
+
+    return ET.tostring(page_hocr, encoding="utf-8", method="xml")
 
 
 def export_pdf_bytes(images, default_dpi, savefile=False):
@@ -71,7 +180,7 @@ def export_pdf_bytes(images, default_dpi, savefile=False):
 
 
 def export_pdf(playground, default_dpi, savefile=False):
-    """Create a searchable PDF from a pile of HOCR + PNG"""
+    """Create a searchable PDF from a pile of HOCR + JPEG"""
     images = glob.glob(os.path.join(playground, '*.jpg'))
     images.sort(key=lambda x: int(Path(x).stem))
     if len(images) == 0:
@@ -107,6 +216,8 @@ def add_text_layer(pdf, image, height, dpi):
     hocr = etree.parse(hocrfile, html.XHTMLParser())
     line_infos = []
     for line in hocr.xpath('//*[@class="ocr_line"]'):
+        if p1.search(line.attrib['title']) == None:
+            continue
         linebox = p1.search(line.attrib['title']).group(1).split()
         linebox = [float(i) for i in linebox]
         line_info = [line, linebox]
@@ -131,16 +242,15 @@ def add_text_layer(pdf, image, height, dpi):
             xpath_elements = '.'
         for word in line.xpath(xpath_elements):
             rawtext = word.text_content().strip()
-            font_width = pdf.stringWidth(rawtext, 'invisible', 8)
-            if font_width <= 0:
-                continue
             box = p1.search(word.attrib['title']).group(1).split()
             box = [float(i) for i in box]
-            b = polyval(baseline,
-                        (box[0] + box[2]) / 2 - linebox[0]) + linebox[3]
+            font_height = box[3] - box[1]
+            font_width = pdf.stringWidth(rawtext, 'invisible', 7)
+            if font_width <= 0:
+                continue
             text = pdf.beginText()
             text.setTextRenderMode(3)  # double invisible
-            text.setFont('invisible', 8)
+            text.setFont('invisible', 7)
             text.setTextOrigin(box[0] * 72 / dpi, height - box[3] * 72 / dpi)
             box_width = (box[2] - box[0]) * 72 / dpi
             text.setHorizScale(100.0 * box_width / font_width)
@@ -185,13 +295,11 @@ CMGjwvxTsr74/f/F95m3TH9x8o0/TU//N+7/D/ScVcA=
     pdfmetrics.registerFont(TTFont('invisible', ttf))
 
 
-def convert_to_searchable_pdf_gcv(document,
-                                  searchable_pdf_path,
-                                  document_path,
-                                  google_vision_api_key=None,
-                                  preprocessings=[]):
-    if google_vision_api_key == None:
-        raise Exception("Please fill in Google Vision OCR API Key.")
+def convert_to_searchable_pdf_paddleocr(document,
+                                        searchable_pdf_path,
+                                        document_path,
+                                        preprocessings=[],
+                                        lang="cn"):
 
     working_path = os.path.join(
         document_path, "ocr")
@@ -204,22 +312,22 @@ def convert_to_searchable_pdf_gcv(document,
         for dirpath, _, filenames in os.walk(last_preprocessing_folder_path):
             for filename in filenames:
                 if filename.endswith(".jpg") or filename.endswith(".JPG"):
-                    preprocessed_image_path = os.path.join(
-                        last_preprocessing_folder_path, filename)
                     ocr_image_path = os.path.join(working_path, filename)
                     if os.path.exists(ocr_image_path):
                         continue
+                    preprocessed_image_path = os.path.join(
+                        last_preprocessing_folder_path, filename)
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
     else:
         for dirpath, _, filenames in os.walk(document_path):
             for filename in filenames:
                 if filename.endswith(".jpg") or filename.endswith(".JPG"):
-                    preprocessed_image_path = os.path.join(
-                        document_path, filename)
                     ocr_image_path = os.path.join(working_path, filename)
                     if os.path.exists(ocr_image_path):
                         continue
+                    preprocessed_image_path = os.path.join(
+                        document_path, filename)
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
 
@@ -227,44 +335,27 @@ def convert_to_searchable_pdf_gcv(document,
     for document_page in document_pages:
         if document_page.ocred:
             continue
-        filename = str(document_page.page_num) + ".jpg"
-        # Use Google Vision API to ocr image
-        url = "https://vision.googleapis.com/v1/images:annotate?key=" + google_vision_api_key
-        with open(working_path + "\\" + filename, 'rb') as image_file:
-            png_in_base64 = base64.b64encode(
-                image_file.read()).decode('ascii')
-            response = requests.post(url, json={
-                "requests": [
-                    {
-                        "image": {
-                            "content": png_in_base64
-                        },
-                        "features": [
-                            {
-                                "type": "TEXT_DETECTION"
-                            }
-                        ]
-                    }
-                ]
-            })
-            response_in_json = response.json()
-            gcv_filename = working_path + "\\" + \
-                Path(filename).stem + ".gcv"
-            with open(gcv_filename, 'w') as f:
-                json.dump(response_in_json, f)
 
-        im = cv2.imread(working_path + "\\" + filename)
-        height, width, c = im.shape
-        # Convert .gcv to .hocr
+        filename = str(document_page.page_num) + ".jpg"
+
+        # paddle ocr
+        # need to run only once to download and load model into memory
+        ocr = PaddleOCR(use_angle_cls=True, lang=lang)
+        img_path = os.path.join(working_path, filename)
+        result = ocr.ocr(img_path, cls=True)
+
+        im = Image.open(img_path).convert('RGB')
+
+        hocr_output = export_as_xml(im, result)
 
         hocr_filename = working_path + "\\" + \
             Path(filename).stem + ".hocr"
-        hocr_page = fromResponse(
-            response_in_json, hocr_filename, width, height)
-        with (open(hocr_filename, 'w', encoding="utf-8")) as outfile:
-            outfile.write(hocr_page.render().encode(
-                'utf-8') if str == bytes else hocr_page.render())
-            outfile.close()
+        # with open(hocr_filename, 'wb') as outfile:
+        #    hocr_output.write(outfile)
+        #    outfile.close()
+        with open(hocr_filename, 'wb') as f:
+            f.write(hocr_output)
+            f.close()
 
         # Extract .xml and put into database
         image_path = working_path + "\\" + filename
@@ -288,5 +379,7 @@ def convert_to_searchable_pdf_gcv(document,
         document_page.ocred = True
         document_page.save()
 
-        # Convert .hocr to .pdf
-    export_pdf(working_path, 300, searchable_pdf_path)
+        # lower dpi to reduce file size
+
+    # Convert .hocr to .pdf
+    export_pdf(working_path, 72, searchable_pdf_path)

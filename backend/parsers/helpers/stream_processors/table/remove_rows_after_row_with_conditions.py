@@ -3,6 +3,7 @@ import json
 
 from ..base import StreamBase
 
+
 class RemoveRowsAfterRowWithConditionsStreamProcessor(StreamBase):
 
     def __init__(self, stream):
@@ -46,13 +47,14 @@ class RemoveRowsAfterRowWithConditionsStreamProcessor(StreamBase):
                     matched_already = True
                     matched_i = i
                     break
+                else:
+                    if remove_matched_row_also:
+                        output_body.append(input["body"][i])
+                    else:
+                        break
 
         if not matched_already:
             output_body = input["body"]
-        else:
-            if remove_matched_row_also:
-                matched_i += 1
-            output_body = input["body"][matched_i:]
 
         if len(output_body) == 0:
             output_body = [[""]]

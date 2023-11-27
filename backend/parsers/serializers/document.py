@@ -1,6 +1,8 @@
 import os
 import uuid
 from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework import status
 
 from pathlib import Path
 
@@ -8,11 +10,11 @@ from pdf2image import convert_from_path
 import PIL
 
 from parsers.models.document import Document
+from parsers.models.document_type import DocumentType
+from parsers.models.document_extension import DocumentExtension
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue import Queue
-
-from parsers.models.document_type import DocumentType
 
 from parsers.serializers.queue import QueueSerializer
 from parsers.serializers.document_page import DocumentPageSerializer, DocumentPageDetailSerializer
@@ -39,6 +41,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             'guid',
             'file',
             'document_type',
+            'document_extension',
             'filename_without_extension',
             'extension',
             'total_page_num',
@@ -53,10 +56,19 @@ class DocumentSerializer(serializers.ModelSerializer):
 
         return document
 
+    def delete(self, request, pk, format=None):
+        # delete document pages first
+        DocumentPage.objects.delete(document_id=pk)
+        # delete queue first
+        Queue.objects.delete(document_id=pk)
+        instance = self.get_object(pk)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class DocumentUploadSerializer(DocumentSerializer):
     """ Serializer for document upload view. """
-    document_type = serializers.CharField(required=False, allow_null=True)
+    document_extension = serializers.CharField(required=False, allow_null=True)
     filename_without_extension = serializers.CharField(
         required=False, allow_null=True)
     extension = serializers.CharField(required=False, allow_null=True)
@@ -81,7 +93,7 @@ class DocumentUploadSerializer(DocumentSerializer):
         validated_data["guid"] = guid
         validated_data["filename_without_extension"] = filename_without_extension
         if extension == "pdf" or extension == "PDF":
-            validated_data["document_type"] = DocumentType.PDF.value
+            validated_data["document_extension"] = DocumentExtension.PDF.value
         validated_data["extension"] = extension
         document = Document.objects.create(**validated_data)
 
@@ -90,7 +102,6 @@ class DocumentUploadSerializer(DocumentSerializer):
         upload_document(document, file)
         generate_images_from_pdf(document)
         create_queue_when_upload_document(document)
-        # parse_pdf_to_xml(document)
 
         return document
 

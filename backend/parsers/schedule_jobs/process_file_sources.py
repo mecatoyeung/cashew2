@@ -23,8 +23,9 @@ from parsers.models.source import Source
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
-from parsers.models.document_type import DocumentType
 from parsers.models.document import Document
+from parsers.models.document_type import DocumentType
+from parsers.models.document_extension import DocumentExtension
 from parsers.serializers.document import DocumentUploadSerializer
 
 
@@ -68,7 +69,7 @@ def process_file_sources():
                         document_upload_serializer_data["guid"] = str(
                             uuid.uuid4())
 
-                        document_upload_serializer_data["document_type"] = DocumentType.PDF.value
+                        document_upload_serializer_data["document_extension"] = DocumentExtension.PDF.value
 
                         document_upload_serializer_data["filename_without_extension"] = os.path.basename(filename).split(".")[
                             0]

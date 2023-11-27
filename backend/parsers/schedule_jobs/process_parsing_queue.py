@@ -12,6 +12,7 @@ from parsers.models.document import Document
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.rule import Rule
+from parsers.models.rule_type import RuleType
 from backend.settings import MEDIA_URL
 from parsers.helpers.document_parser import DocumentParser
 import sys
@@ -53,6 +54,16 @@ def process_parsing_queue_job():
             stream_processor = StreamProcessor(rule)
             processed_streams = stream_processor.process(extracted)
 
+            if rule.rule_type == RuleType.TEXTFIELD.value or \
+                rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value or \
+                rule.rule_type == RuleType.BARCODE.value or \
+                    rule.rule_type == RuleType.ACROBAT_FORM.value:
+                if processed_streams[-1]["data"] == None:
+                    processed_streams[-1]["data"] = ""
+                else:
+                    processed_streams[-1]["data"] = " ".join(
+                        processed_streams[-1]["data"])
+
             parsed_result.append({
                 "rule": {
                     "id": rule.id,
@@ -66,8 +77,6 @@ def process_parsing_queue_job():
         queue_job.parsed_result = json.dumps(parsed_result)
 
         # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.POST_PROCESSING.value

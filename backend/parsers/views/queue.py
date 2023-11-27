@@ -47,14 +47,20 @@ class QueueViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
-        parser_id = self.request.query_params.get('parserId', 0)
-        queue_class = self.request.query_params.get('queueClass', None)
+        if self.action == 'list':
+            parser_id = self.request.query_params.get('parserId', 0)
+            queue_class = self.request.query_params.get('queueClass', [])
+            queue_classes = queue_class.split(",")
 
-        return queryset.filter(
-            parser_id=parser_id,
-            parser__user=self.request.user,
-            queue_class=queue_class
-        ).order_by('id').distinct()
+            return queryset.filter(
+                parser_id=parser_id,
+                parser__user=self.request.user,
+                queue_class__in=queue_classes
+            ).order_by('id').distinct()
+        else:
+            return queryset.filter(
+                parser__user=self.request.user,
+            ).order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """

@@ -11,9 +11,9 @@ from pathlib import Path
 from .path_helper import xml_path
 from parsers.helpers.is_chinese import is_chinese
 
-SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
-ASSUMED_TEXT_WIDTH = Decimal(3.5)
-ASSUMED_TEXT_HEIGHT = Decimal(10.0)
+SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
+ASSUMED_TEXT_WIDTH = Decimal(0.75)
+ASSUMED_TEXT_HEIGHT = Decimal(1.5)
 
 
 def is_english(s):
@@ -28,10 +28,16 @@ class XMLPage:
         self.region = XMLRegion()
         self.xml = document_parser.document.document_pages.get(
             page_num=page_num).xml
-        self.width = self.document_parser.document.document_pages.all()[
-            page_num-1].width
-        self.height = self.document_parser.document.document_pages.all()[
-            page_num-1].height
+        root = ET.fromstring(self.xml.replace('\n', ''))
+
+        page_el = root.find('.//page')
+        page_bbox_str = page_el.attrib['bbox']
+        page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
+                                     page_bbox_str,
+                                     re.IGNORECASE
+                                     )
+        self.width = Decimal(page_bbox_search.group(3))
+        self.height = Decimal(page_bbox_search.group(4))
         self.text_widths = []
         self.text_heights = []
         self.median_text_width = ASSUMED_TEXT_WIDTH
@@ -44,17 +50,10 @@ class XMLPage:
         root = ET.fromstring(self.xml.replace('\n', ''))
         textline_elements = root.findall('.//textline')
 
-        page_el = root.find('.//page')
-        page_bbox_str = page_el.attrib['bbox']
-        page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                     page_bbox_str,
-                                     re.IGNORECASE
-                                     )
-
-        self.region.x1 = Decimal(page_bbox_search.group(1))
-        self.region.y1 = Decimal(page_bbox_search.group(2))
-        self.region.x2 = Decimal(page_bbox_search.group(3))
-        self.region.y2 = Decimal(page_bbox_search.group(4))
+        self.region.x1 = Decimal(0)
+        self.region.y1 = Decimal(0)
+        self.region.x2 = Decimal(100)
+        self.region.y2 = Decimal(100)
 
         # put all textlines into page
         for textline_element in textline_elements:
@@ -66,10 +65,14 @@ class XMLPage:
 
             textline = XMLTextLine(self)
 
-            textline.region.x1 = Decimal(textline_bbox_search.group(1))
-            textline.region.y1 = Decimal(textline_bbox_search.group(2))
-            textline.region.x2 = Decimal(textline_bbox_search.group(3))
-            textline.region.y2 = Decimal(textline_bbox_search.group(4))
+            textline.region.x1 = Decimal(
+                textline_bbox_search.group(1)) / self.width * Decimal(100.00)
+            textline.region.y1 = Decimal(
+                textline_bbox_search.group(2)) / self.height * Decimal(100.00)
+            textline.region.x2 = Decimal(
+                textline_bbox_search.group(3)) / self.width * Decimal(100.00)
+            textline.region.y2 = Decimal(
+                textline_bbox_search.group(4)) / self.height * Decimal(100.00)
             textline.textline_element = textline_element
 
             if textline.region.x1 == None or textline.region.x2 == None or textline.region.y1 == None or textline.region.y2 == None:
@@ -96,10 +99,14 @@ class XMLPage:
                                                  text_bbox_str,
                                                  re.IGNORECASE
                                                  )
-                    text.region.x1 = Decimal(text_bbox_search.group(1))
-                    text.region.y1 = Decimal(text_bbox_search.group(2))
-                    text.region.x2 = Decimal(text_bbox_search.group(3))
-                    text.region.y2 = Decimal(text_bbox_search.group(4))
+                    text.region.x1 = Decimal(text_bbox_search.group(
+                        1)) / self.width * Decimal(100.00)
+                    text.region.y1 = Decimal(text_bbox_search.group(
+                        2)) / self.height * Decimal(100.00)
+                    text.region.x2 = Decimal(text_bbox_search.group(
+                        3)) / self.width * Decimal(100.00)
+                    text.region.y2 = Decimal(text_bbox_search.group(
+                        4)) / self.height * Decimal(100.00)
 
                     prev_text_width = text.region.x2 - text.region.x1
 
@@ -140,10 +147,14 @@ class XMLPage:
                     text = XMLText()
                     text.text = " "
 
-                    text.region.x1 = Decimal(text_bbox_search.group(1))
-                    text.region.y1 = Decimal(text_bbox_search.group(2))
-                    text.region.x2 = Decimal(text_bbox_search.group(3))
-                    text.region.y2 = Decimal(text_bbox_search.group(4))
+                    text.region.x1 = Decimal(text_bbox_search.group(
+                        1)) / self.width * Decimal(100.00)
+                    text.region.y1 = Decimal(text_bbox_search.group(
+                        2)) / self.height * Decimal(100.00)
+                    text.region.x2 = Decimal(text_bbox_search.group(
+                        3)) / self.width * Decimal(100.00)
+                    text.region.y2 = Decimal(text_bbox_search.group(
+                        4)) / self.height * Decimal(100.00)
 
                     textline.text_elements.append(text)
 
@@ -157,12 +168,30 @@ class XMLPage:
             textline.region.y2 = actual_textline_y2
 
         self.sort_textlines()
-        product = self.textlines[64]
-        buyer_size = self.textlines[65]
-        type_code = self.textlines[66]
+
         return
 
     def sort_textlines(self):
+
+        def insertionSort(arr):
+
+            n = len(arr)  # Get the length of the array
+
+            if n <= 1:
+                return  # If the array has 0 or 1 element, it is already sorted, so return
+
+            for i in range(1, n):  # Iterate over the array starting from the second element
+                # Store the current element as the key to be inserted in the right position
+                key = arr[i]
+                j = i-1
+                # Move elements greater than key one position ahead
+                while j >= 0 and compare(key, arr[j]) > 0:
+                    arr[j+1] = arr[j]  # Shift elements to the right
+                    j -= 1
+                arr[j+1] = key
+
+            return arr
+
         def compare(a, b):
             if a.region.x1 == None or a.region.x2 == None or a.region.y1 == None or a.region.y2 == None:
                 return 0
@@ -180,8 +209,7 @@ class XMLPage:
                 return 1
             return -1
 
-        self.textlines = sorted(
-            self.textlines, key=functools.cmp_to_key(compare), reverse=True)
+        self.textlines = insertionSort(self.textlines)
 
         return
 

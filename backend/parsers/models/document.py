@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import models
 
 from parsers.models.document_type import DocumentType
+from parsers.models.document_extension import DocumentExtension
 from parsers.models.parser import Parser
 
 from backend.settings import MEDIA_URL
@@ -22,9 +23,11 @@ class Document(models.Model):
     file = models.FileField(null=True, upload_to=file_upload_to)
     document_type = models.CharField(
         max_length=255, choices=DocumentType.choices())
+    document_extension = models.CharField(
+        max_length=255, choices=DocumentExtension.choices())
     filename_without_extension = models.CharField(max_length=255, null=False)
     extension = models.CharField(max_length=255, null=False)
-    total_page_num = models.IntegerField()
+    total_page_num = models.IntegerField(null=True)
     last_modified_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:

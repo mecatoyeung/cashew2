@@ -24,13 +24,13 @@ class StreamSerializer(serializers.ModelSerializer):
                   'join_string',
                   'extract_first_n_lines',
                   'extract_nth_lines',
+                  'open_ai_question',
                   'combine_first_n_lines',
                   'convert_to_table_by_specify_headers',
                   'col_index',
                   'col_indexes',
                   'stream_conditions',
                   'remove_matched_row_also',
-                  # 'unpivot_table'
                   ]
         read_only_fields = ['id']
 

@@ -1,11 +1,13 @@
 from enum import Enum
 
 
-class StreamType(Enum):
+class DocumentExtension(Enum):
 
-    TEXTFIELD = "TEXTFIELD"
-    TABLE = "TABLE"
-    ACROBAT_FORM = "ACROBAT_FORM"
+    PDF = "PDF"
+    PNG = "PNG"
+    JPG = "JPG"
+    GIF = "GIF"
+    TIFF = "TIFF"
 
     @classmethod
     def choices(cls):

@@ -34,8 +34,8 @@ def process_import_queue_job():
         # Do the job
 
         # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
+        # queue_job.queue_status = QueueStatus.COMPLETED.value
+        # queue_job.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.PRE_PROCESSING.value

@@ -23,6 +23,8 @@ class OCR(models.Model):
         "PreProcessing", on_delete=models.CASCADE, null=True, related_name="image_layer_preprocessing")
     google_vision_ocr_api_key = models.CharField(
         max_length=1024, null=True, blank=True)
+    paddle_ocr_language = models.CharField(
+        max_length=256, null=True, blank=True, default="cn")
 
     class Meta:
         db_table = 'ocrs'

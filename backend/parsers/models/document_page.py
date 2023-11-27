@@ -9,7 +9,8 @@ class DocumentPage(models.Model):
     image_file = models.FileField(null=True, max_length=1023)
     width = models.IntegerField()
     height = models.IntegerField()
-    xml = models.TextField()
+    xml = models.TextField(
+        default="<?xml version=\"1.0\" encoding=\"utf-8\" ?>")
     hocr = models.TextField()
     ocred = models.BooleanField(null=False, blank=False, default=False)
     chatbot_completed = models.BooleanField(

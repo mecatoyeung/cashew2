@@ -9,6 +9,7 @@ from django.db.models import Prefetch
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import action
 
 from drf_spectacular.utils import (
@@ -164,9 +165,6 @@ class ParserViewSet(viewsets.ModelViewSet):
         if question == "":
             return Response("Please ask me with meaningful questions.", status=200)
 
-        # content_to_be_sent_to_openai = "\n".join(
-        #    document_parser.extract_all_text_in_one_page(page_num))
-
         content_to_be_sent_to_openai = "\n".join(
             document_parser.extract_all_text_in_all_pages())
 
@@ -187,6 +185,8 @@ class ParserViewSet(viewsets.ModelViewSet):
 
             response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
                                      data=json.dumps(json_data), headers=headers)
+            if response.status_code == 400:
+                raise Exception(response.json()["error"]["message"])
             response_dict = json.loads(
                 response.json()["choices"][0]["message"]['content'].replace("Output:", ""))
 
@@ -215,4 +215,4 @@ class ParserViewSet(viewsets.ModelViewSet):
             return Response(response_dict, status=200)
 
         except Exception as e:
-            raise e
+            return Response(e.args[0], status.HTTP_400_BAD_REQUEST)

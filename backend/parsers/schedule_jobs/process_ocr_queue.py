@@ -9,6 +9,7 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
@@ -17,24 +18,28 @@ import sys
 import os
 from pathlib import Path
 import shutil
-from ..helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
-from ..helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
-from ..helpers.parse_pdf_to_xml import parse_pdf_to_xml
+from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
+from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
+from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
+from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 
 def process_ocr_queue_job():
 
-    all_ready_import_queue_jobs = Queue.objects \
+    all_ready_ocr_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
             "document",
             queryset=Document.objects.prefetch_related(
-                "document_pages"
+                Prefetch(
+                    "document_pages",
+                    queryset=DocumentPage.objects.order_by("page_num")
+                )
             )
         )) \
         .filter(queue_class=QueueClass.OCR.value, queue_status=QueueStatus.READY.value) \
         .all()
-    for queue_job in all_ready_import_queue_jobs:
+    for queue_job in all_ready_ocr_queue_jobs:
         parser = queue_job.parser
         document = queue_job.document
         preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
@@ -67,16 +72,18 @@ def process_ocr_queue_job():
                                             searchable_pdf_path,
                                             documents_path,
                                             preprocessings=preprocessings)
+        elif ocr.ocr_type == OCRType.PADDLE_OCR.value:
+            convert_to_searchable_pdf_paddleocr(document,
+                                                searchable_pdf_path,
+                                                documents_path,
+                                                preprocessings=preprocessings,
+                                                lang=ocr.paddle_ocr_language)
         elif ocr.ocr_type == OCRType.NO_OCR.value:
             parse_pdf_to_xml(document)
             source_file_path = os.path.join(
                 documents_path, 'source_file.pdf')
             shutil.copy(source_file_path,
                         searchable_pdf_path)
-
-        # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.SPLITTING.value

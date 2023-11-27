@@ -189,12 +189,8 @@ const RegionSelector = () => {
   const setInitialRegion = () => {
     let y1 = 100 - rule.y2
     let y2 = 100 - rule.y1
-    let anchorX1 = rule.anchorX1 ?? 0
-    let anchorX2 = rule.anchorX2 ?? 100
-    let ruleAnchorY1 = rule.anchorY2 ?? 100
-    let ruleAnchorY2 = rule.anchorY1 ?? 0
-    let anchorY1 = 100 - ruleAnchorY2
-    let anchorY2 = 100 - ruleAnchorY1
+    let anchorY1 = 100 - rule.anchorY2
+    let anchorY2 = 100 - rule.anchorY1
     let initialRegions = [
       {
         unit: "%",
@@ -205,9 +201,9 @@ const RegionSelector = () => {
       },
       {
         unit: "%",
-        x: parseFloat(anchorX1),
+        x: parseFloat(rule.anchorX1),
         y: anchorY1,
-        width: rule.anchorX2 - anchorX1,
+        width: rule.anchorX2 - rule.anchorX1,
         height: anchorY2 - anchorY1
       }
     ]
@@ -231,17 +227,38 @@ const RegionSelector = () => {
       anchorX2: (anchorRegion.x + anchorRegion.width).toFixed(2),
       anchorY1: (100 - anchorRegion.y - anchorRegion.height).toFixed(2),
       anchorY2: (100 - anchorRegion.y).toFixed(2),
-    }
-    if (rule.ruleType == "ANCHORED_TEXTFIELD") {
-      rule.anchorDocumentId = documentId
-      rule.anchorPageNo = pageNum
-      rule.anchorText = anchorText
+      anchorDocument: documentId,
+      anchorPageNum: pageNum
     }
     setRule(updatedRule)
   }
 
+  const anchorRegionChangeHandler = (p) => {
+    setAnchorRegion(p)
+    let updatedRule = {
+      ...rule,
+      x1: textfieldRegion.x.toFixed(2),
+      x2: (textfieldRegion.x + textfieldRegion.width).toFixed(2),
+      y1: (100 - textfieldRegion.y - textfieldRegion.height).toFixed(2),
+      y2: (100 - textfieldRegion.y).toFixed(2),
+      anchorX1: p.x.toFixed(2),
+      anchorX2: (p.x + p.width).toFixed(2),
+      anchorY1: (100 - p.y - p.height).toFixed(2),
+      anchorY2: (100 - p.y).toFixed(2),
+      anchorDocument: documentId,
+      anchorPageNum: pageNum
+    }
+    setRule(updatedRule)
+  }
+
+  const anchorRegionDragEndHandler = (p) => {
+    updateRule(rule)
+    console.log(rule)
+  }
+
   const textfieldRegionDragEndHandler = (p) => {
     updateRule(rule)
+    console.log(rule)
   }
 
   const addSeparatorBtnClickHandler = (e) => {
@@ -253,8 +270,9 @@ const RegionSelector = () => {
     } else {
       x = 10.0
     }
-    tableColumnSeparators.push({ x })
+    tableColumnSeparators.push({ x, rule: updatedRule.id })
     updatedRule.tableColumnSeparators = tableColumnSeparators
+    console.log(tableColumnSeparators)
     updateRule(updatedRule)
     setRule(updatedRule)
   }
@@ -281,15 +299,19 @@ const RegionSelector = () => {
 
     let updatedRule = { ...rule }
     let tableColumnSeparators = updatedRule.tableColumnSeparators
-    tableColumnSeparators[xIndex] = { x: (el.x / width * 100).toFixed(2) }
+    tableColumnSeparators[xIndex] = { 
+      x: (el.x / width * 100).toFixed(2),
+      rule: updatedRule.id
+    }
     tableColumnSeparators.sort((a, b) => (a.x > b.x) ? 1 : -1)
+    console.log(updatedRule)
     setRule(updatedRule)
     updateRule(updatedRule)
     e.stopPropagation()
   }
 
   const proceedToStreamEditorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId)
+    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   return (
@@ -372,8 +394,8 @@ const RegionSelector = () => {
                     <div className="col-3">
                       <Form.Group className="mb-3" controlId="formRegionMode">
                         <Form.Label>Region Mode: </Form.Label>
-                        <Form.Select aria-label="textFieldAnchor" onChange={(e) => selectTextFieldAnchorChangeHandler(e)} value={textfieldAnchorToggle}>
-                          <option value="textField">Textfield</option>
+                        <Form.Select className={styles.textfieldAnchorSelect} aria-label="textFieldAnchor" onChange={(e) => selectTextFieldAnchorChangeHandler(e)} value={textfieldAnchorToggle}>
+                          <option value="textfield">Textfield</option>
                           <option value="anchor">Anchor</option>
                         </Form.Select>
                       </Form.Group>
@@ -396,11 +418,11 @@ const RegionSelector = () => {
                     </ReactCrop>
                   )}
                   {rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "anchor" && (
-                    <ReactCrop className={styles.myReactCrop} crop={anchorRegion} onChange={(c, p) => {
-                      setAnchorRegion(p)
-                    }} onDragEnd={textfieldRegionDragEndHandler}>
+                    <ReactCrop className={styles.myReactCrop + " " + "anchorReactCrop"} crop={anchorRegion} onChange={(c, p) => {
+                      anchorRegionChangeHandler(p)
+                    }} onDragEnd={anchorRegionDragEndHandler}>
 
-                      <img src={process.env.NEXT_PUBLIC_API_BASE_URL + "documents/" + documentId + "/page/" + pageNum + "/image"} />
+                      <img src={imageUri} ref={imageRef}/>
 
                     </ReactCrop>
                   )}

@@ -21,7 +21,7 @@ import streamConditionOperators from '../../helpers/streamConditionOperators'
 
 const StreamEditor = () => {
   const router = useRouter()
-  const { pathname, parserId, layoutId, ruleId, documentId = 0 } = router.query
+  const { pathname, parserId, layoutId, ruleId, documentId = 0, pageNum = 1 } = router.query
 
   const [rule, setRule] = useState(null)
   const [parserDocuments, setParserDocuments] = useState([])
@@ -90,7 +90,7 @@ const StreamEditor = () => {
     getRule()
     getParserDocuments()
     getProcessedStreams()
-  }, [router.isReady, ruleId, documentId])
+  }, [router.isReady, parserId, ruleId, documentId])
 
   return (
     <EditorLayout>
@@ -126,7 +126,6 @@ const StreamEditor = () => {
         </div>
       </div>
       <div className={styles.streamEditorWrapper}>
-        {console.log(processedStreams)}
         {processedStreams && processedStreams.map(processedStream => (
           <div key={processedStream.step}>
             {processedStream.step == 0 && (
@@ -138,7 +137,7 @@ const StreamEditor = () => {
             {processedStream.step != 0 && (
             <div>
               {(processedStream.type == "TEXTFIELD" || processedStream.type == "ANCHORED_TEXTFIELD"
-               || processedStream.type == "BARCODE") &&
+               || processedStream.type == "BARCODE" || processedStream.type == "ACROBAT_FORM") &&
                 (
                   <>
                     {processedStream.class == "EXTRACT_FIRST_N_LINES" && (
@@ -173,6 +172,9 @@ const StreamEditor = () => {
                     )}
                     {processedStream.class == "REMOVE_TEXT_AFTER_END_OF_TEXT" && (
                       <div className={styles.streamDescription}>Remove Text after End of Text {processedStream.text}:</div>
+                    )}
+                    {processedStream.class == "OPEN_AI" && (
+                      <div className={styles.streamDescription}>Open AI Question: {processedStream.openAiQuestion}:</div>
                     )}
                     <div className={styles.streamDeleteBtn}>
                       <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
@@ -495,7 +497,7 @@ const StreamEditor = () => {
       </div>
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId}>
+          <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
             &lt; Back to Region Selection
           </Link>
         </div>

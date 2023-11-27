@@ -85,6 +85,15 @@ const textfieldStreamOptions = [
         value: "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS"
       }
     ]
+  },
+  {
+    label: "Open AI Extract",
+    options: [
+      {
+        label: "Open AI Extract",
+        value: "OPEN_AI"
+      }
+    ]
   }
 ]
 

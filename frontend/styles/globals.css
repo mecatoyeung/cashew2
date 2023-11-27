@@ -211,3 +211,7 @@ h2.accordion-header {
   padding: 5px 10px;
   border: 1px solid #000;
 }
+
+.anchorReactCrop .ReactCrop__crop-selection {
+  background: rgba(255, 0, 0, 0.2);
+}

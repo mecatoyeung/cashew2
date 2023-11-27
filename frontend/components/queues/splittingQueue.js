@@ -30,7 +30,7 @@ const SplittingQueue = (props) => {
 
   const getQueues = () => {
     if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueType=SPLIT", response => {
+    service.get("queues/?parserId=" + props.parserId + "&queueClass=SPLIT", response => {
       let queues = response.data
       for (let i = 0; i < queues.length; i++) {
         queues[i].selected = false
@@ -53,6 +53,9 @@ const SplittingQueue = (props) => {
     if (!router.isReady) return
     getParser()
     getQueues()
+    const interval = setInterval(() => {
+      getQueues()
+    }, 5000);
   }, [router.isReady])
 
   return (
@@ -61,10 +64,10 @@ const SplittingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Documents</Dropdown.Item>
+          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -83,6 +86,7 @@ const SplittingQueue = (props) => {
                   <Form.Check
                     type="checkbox"
                     label=""
+                    style={{padding: 0}}
                   />
                 </th>
                 <th colSpan={2}>
@@ -100,10 +104,11 @@ const SplittingQueue = (props) => {
                         label=""
                         checked={queue.selected}
                         onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        style={{padding: 0}}
                       />
                     </td>
-                    <td className={styles.tdGrow}>{queue.document.filename_without_extension + "." + queue.document.extension}</td>
-                    <td className={styles.tdNoWrap}>{moment(queue.document.last_modified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
+                    <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )
               })}

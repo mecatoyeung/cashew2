@@ -22,6 +22,8 @@ from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.parser import Parser
 from parsers.models.document import Document
+from parsers.models.document_type import DocumentType
+from parsers.models.document_extension import DocumentExtension
 from parsers.models.document_page import DocumentPage
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
@@ -31,7 +33,6 @@ from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_rule_type import SplittingRuleType
 from parsers.models.rule import Rule
 from parsers.models.splitting_operator_type import SplittingOperatorType
-from parsers.models.document_type import DocumentType
 
 from parsers.serializers.document import DocumentUploadSerializer
 
@@ -265,7 +266,7 @@ def process_splitting_queue_job():
                         document_upload_serializer_data["guid"] = str(
                             uuid.uuid4())
 
-                        document_upload_serializer_data["document_type"] = DocumentType.PDF.value
+                        document_upload_serializer_data["document_extension"] = DocumentExtension.PDF.value
 
                         document_upload_serializer_data["filename_without_extension"] = filename_without_extension
                         document_upload_serializer_data["extension"] = "pdf"
@@ -282,14 +283,11 @@ def process_splitting_queue_job():
                 page_num = document_page_index + 1
 
         # Mark the job as completed
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
+        # queue_job.queue_status = QueueStatus.COMPLETED.value
+        # queue_job.save()
 
         # Mark the job as preprocessing in progress
-        if parser.chatbot.chatbot_type == ChatBotType.NO_CHATBOT.value:
-            queue_job.queue_class = QueueClass.AICHAT.value
-        else:
-            queue_job.queue_class = QueueClass.PARSING.value
+        queue_job.queue_class = QueueClass.PARSING.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
 

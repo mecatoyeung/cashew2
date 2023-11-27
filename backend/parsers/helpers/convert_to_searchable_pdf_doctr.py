@@ -214,15 +214,16 @@ def convert_to_searchable_pdf_doctr(document,
         for dirpath, _, filenames in os.walk(document_path):
             for filename in filenames:
                 if filename.endswith(".jpg") or filename.endswith(".JPG"):
+                    ocr_image_path = os.path.join(working_path, filename)
                     if os.path.exists(ocr_image_path):
                         continue
                     preprocessed_image_path = os.path.join(
                         document_path, filename)
-                    ocr_image_path = os.path.join(working_path, filename)
                     shutil.copy(preprocessed_image_path,
                                 ocr_image_path)
 
-    for document_page in document.document_pages.all():
+    document_pages = list(document.document_pages.order_by("page_num"))
+    for document_page in document_pages:
         if document_page.ocred:
             continue
 

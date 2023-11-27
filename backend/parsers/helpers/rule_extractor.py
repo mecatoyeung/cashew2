@@ -13,6 +13,11 @@ from pyzbar.pyzbar import decode
 
 from backend.settings import MEDIA_URL
 
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdftypes import resolve1
+from pdfminer.psparser import PSLiteral, PSKeyword
+from pdfminer.utils import decode_text
 
 from parsers.models.rule_type import RuleType
 from parsers.models.pre_processing import PreProcessing
@@ -23,33 +28,41 @@ from parsers.helpers.get_document_nos_from_range import get_document_nos_from_ra
 from parsers.helpers.check_chinese_characters import check_chinese_characters
 from parsers.helpers.calculate_separator_regions import calculate_separator_regions
 
+from django.conf import settings
+
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(3.5)
-ASSUMED_TEXT_HEIGHT = Decimal(10.0)
+ASSUMED_TEXT_WIDTH = Decimal(0.75)
+ASSUMED_TEXT_HEIGHT = Decimal(1.5)
 
 
 class RuleExtractor:
 
-    def __init__(self, parser, rule, document):
+    def __init__(self, parser, rule, document, xml_pages):
         self.parser = parser
         self.rule = rule
         self.document = document
+        self.xml_pages = xml_pages
         self.page_nums = get_document_nos_from_range(
             self.rule.pages, last=str(document.total_page_num))
 
-    def extract(self, parsed_result=[]):
+    def extract(self, xml_pages, parsed_result=[]):
 
         if self.rule.rule_type == RuleType.TEXTFIELD.value:
 
-            result = self.extract_textfield(parsed_result=[])
+            result = self.extract_textfield(xml_pages, parsed_result=[])
 
         elif self.rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value:
 
-            result = self.extract_anchored_textfield()
+            result = self.extract_anchored_textfield(
+                xml_pages, parsed_result=[])
 
         elif self.rule.rule_type == RuleType.TABLE.value:
 
-            result = self.extract_table()
+            result = self.extract_table(xml_pages, parsed_result=[])
+
+        elif self.rule.rule_type == RuleType.ACROBAT_FORM.value:
+
+            result = self.extract_acrobat_form(xml_pages, parsed_result=[])
 
         elif self.rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
 
@@ -61,7 +74,9 @@ class RuleExtractor:
 
         return result
 
-    def extract_textfield(self, xml_pages, parsed_result=[]):
+    def extract_textfield(self, parsed_result=[]):
+
+        xml_pages = self.xml_pages
 
         page_nums = get_document_nos_from_range(
             self.rule.pages, 1, self.document.total_page_num)
@@ -149,7 +164,209 @@ class RuleExtractor:
 
         return textlines_in_all_pages
 
-    def extract_table(self, xml_pages, parsed_result=[]):
+    def get_anchor_relative_region(self, parsed_result=[]):
+
+        xml_pages = self.xml_pages
+
+        xml_page = [x for x in xml_pages if x.page_num ==
+                    self.rule.anchor_page_num][0]
+
+        anchor_region = XMLRegion()
+
+        anchor_region.x1 = Decimal(
+            self.rule.anchor_x1)
+        anchor_region.x2 = Decimal(
+            self.rule.anchor_x2)
+        anchor_region.y1 = Decimal(
+            self.rule.anchor_y1)
+        anchor_region.y2 = Decimal(
+            self.rule.anchor_y2)
+
+        result = XMLRegion()
+
+        for textline in xml_page.textlines:
+
+            if self.rule.anchor_text in textline.text:
+                start_pos = textline.text.find(self.rule.anchor_text)
+
+                result.x1 = self.rule.x1 - \
+                    textline.text_elements[start_pos].region.x1
+                result.y1 = self.rule.y1 - \
+                    textline.text_elements[start_pos].region.y1
+                result.x2 = self.rule.x2 - \
+                    textline.text_elements[start_pos].region.x2
+                result.y2 = self.rule.y2 - \
+                    textline.text_elements[start_pos].region.y2
+
+                return result
+
+        result.x1 = self.rule.anchor_x1
+        result.y1 = self.rule.anchor_y1
+        result.x2 = self.rule.anchor_x2
+        result.y2 = self.rule.anchor_y2
+
+        return result
+
+    def extract_anchored_textfield(self, parsed_result=[]):
+
+        xml_pages = self.xml_pages
+
+        xml_page = [x for x in xml_pages if x.page_num ==
+                    self.rule.anchor_page_num][0]
+
+        anchor_region = XMLRegion()
+        anchor_region.x1 = self.rule.anchor_x1
+        anchor_region.x2 = self.rule.anchor_x2
+        anchor_region.y1 = self.rule.anchor_y1
+        anchor_region.y2 = self.rule.anchor_y2
+
+        result = [""]
+
+        for textline in xml_page.textlines:
+
+            if self.rule.anchor_text in textline.text and anchor_region.overlaps(textline.region):
+                start_pos = textline.text.find(self.rule.anchor_text)
+                textline.text_elements[start_pos]
+
+                anchored_textline_region = XMLRegion()
+
+                anchored_textline_region.x1 = textline.text_elements[
+                    start_pos].region.x1 + self.rule.anchor_relative_x1
+                anchored_textline_region.y1 = textline.text_elements[
+                    start_pos].region.y1 + self.rule.anchor_relative_y1
+                anchored_textline_region.x2 = textline.text_elements[
+                    start_pos].region.x2 + self.rule.anchor_relative_x2
+                anchored_textline_region.y2 = textline.text_elements[
+                    start_pos].region.y2 + self.rule.anchor_relative_y2
+
+                xml_rule = XMLRule(xml_page, self.rule)
+
+                textlines_in_rows = []
+
+                # Get All Textlines within Area
+                textlines_within_area = []
+                for textline in xml_page.textlines:
+                    if anchored_textline_region.overlaps(textline.region) and textline.text != "":
+                        textlines_within_area.append(textline)
+
+                text_in_current_row = ""
+                prev_text_width = xml_page.median_text_width
+                first_textline_in_row = None
+                while len(textlines_within_area) > 0:
+                    current_textline = textlines_within_area.pop(0)
+
+                    text_to_add = ""
+                    for text_in_textline in current_textline.text_elements:
+                        if anchored_textline_region.overlaps(text_in_textline.region):
+                            text_to_add = text_to_add + text_in_textline.text
+                            if check_chinese_characters(text_in_textline.text):
+                                prev_text_width = text_in_textline.region.x2 - text_in_textline.region.x1
+
+                    # if it is a new line, just prepend space append to the row array
+                    if len(text_in_current_row) == 0:
+                        first_textline_in_row = current_textline
+                        # if it is the first line, add empty lines
+                        if len(textlines_in_rows) == 0:
+                            num_of_empty_lines_to_be_prepend = math.floor(
+                                (anchored_textline_region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                            for i in range(num_of_empty_lines_to_be_prepend):
+                                textlines_in_rows.append("")
+                        # if it is not the first line and there is a line difference between current line and previous line,
+                        # add empty lines between them
+                        elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
+                            num_of_empty_lines_to_be_prepend = math.floor(
+                                (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
+                            for i in range(num_of_empty_lines_to_be_prepend):
+                                textlines_in_rows.append("")
+
+                        num_of_spaces_to_be_prepend = math.floor(
+                            (current_textline.region.x1 - anchored_textline_region.x1) / prev_text_width)
+                        spaces = " " * num_of_spaces_to_be_prepend
+                        text_in_current_row = text_in_current_row + spaces + text_to_add
+
+                    # else, calculate spaces to prepend from previous textline
+                    else:
+                        num_of_spaces_to_be_prepend = math.floor(
+                            (current_textline.region.x1 - anchored_textline_region.x1) / prev_text_width) - len(text_in_current_row)
+                        spaces = " " * num_of_spaces_to_be_prepend
+                        text_in_current_row = text_in_current_row + spaces + text_to_add
+
+                    # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
+                    if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
+                        num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - anchored_textline_region.x1) / prev_text_width) - \
+                            len(text_in_current_row)
+                        spaces = " " * num_of_spaces_to_be_append
+                        text_in_current_row = text_in_current_row + spaces
+                        textlines_in_rows.append(text_in_current_row)
+                        text_in_current_row = ""
+
+                    # append empty textlines in the end
+                    if len(textlines_within_area) == 0:
+                        num_of_empty_lines_to_be_append = math.floor(
+                            (current_textline.region.y1 - anchored_textline_region.y1) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_append):
+                            textlines_in_rows.append("")
+
+                    previous_textline = current_textline
+
+                result = textlines_in_rows
+
+        return result
+
+    def extract_acrobat_form(self, parsed_result=[]):
+
+        def decode_value(value):
+
+            # decode PSLiteral, PSKeyword
+            if isinstance(value, (PSLiteral, PSKeyword)):
+                value = value.name
+
+            # decode bytes
+            if isinstance(value, bytes):
+                value = decode_text(value)
+
+            return value
+
+        pdf_path = os.path.join(settings.MEDIA_ROOT, 'documents', self.document.guid,
+                                "source_file.pdf")
+
+        data = []
+
+        with open(pdf_path, 'rb') as fp:
+            parser = PDFParser(fp)
+
+            doc = PDFDocument(parser)
+            res = resolve1(doc.catalog)
+
+            if 'AcroForm' not in res:
+                raise ValueError("No AcroForm Found")
+
+            fields = resolve1(doc.catalog['AcroForm'])[
+                'Fields']  # may need further resolving
+
+            for f in fields:
+                field = resolve1(f)
+                name, values = field.get('T'), field.get('V')
+
+                # decode name
+                name = decode_text(name)
+
+                # resolve indirect obj
+                values = resolve1(values)
+
+                # decode value(s)
+                if isinstance(values, list):
+                    values = [decode_value(v) for v in values]
+                else:
+                    values = decode_value(values)
+
+                data.append(name + ": " + values)
+
+        return data
+
+    def extract_table(self, parsed_result=[]):
+
+        xml_pages = self.xml_pages
 
         page_nums = get_document_nos_from_range(
             self.rule.pages, 1, self.document.total_page_num)
@@ -197,7 +414,7 @@ class RuleExtractor:
                         overlap_text_elements = textline.text_elements[
                             overlap_start_index:overlap_end_index]
                         if (len(overlap_text_elements) > 0):
-                            new_textline = XMLTextLine(self)
+                            new_textline = XMLTextLine(xml_page)
                             new_textline.region.x1 = Decimal(
                                 overlap_text_elements[0].region.x1)
                             new_textline.region.y1 = Decimal(
@@ -345,9 +562,11 @@ class RuleExtractor:
                     # if it is the second or further textline in the column, add white spaces before the text
                     elif textline_index > 0:
                         previous_textline = textlines_in_column[textline_index - 1]
-                        x_difference = textline.region.x1 - previous_textline.region.x2
+                        # x_difference = textline.region.x1 - previous_textline.region.x2
+                        # number_of_spaces_to_be_added_before = math.floor(
+                        #    x_difference / median_of_text_widths)
                         number_of_spaces_to_be_added_before = math.floor(
-                            x_difference / median_of_text_widths)
+                            textline.region.x1 / median_of_text_widths) - len(text_in_column)
                         text_in_column = text_in_column + \
                             (space_char * number_of_spaces_to_be_added_before)
                         # add the text after adding spaces
@@ -394,7 +613,9 @@ class RuleExtractor:
 
         return response
 
-    def extract_barcode(self, xml_pages, parsed_result=[]):
+    def extract_barcode(self, parsed_result=[]):
+
+        xml_pages = self.xml_pages
 
         preprocessings = PreProcessing.objects.filter(
             parser_id=self.parser.id).all()

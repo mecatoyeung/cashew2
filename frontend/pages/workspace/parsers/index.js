@@ -126,17 +126,21 @@ export default function Parsers() {
     )
   }
 
-  const trashClickHandler = () => {
+  const trashClickHandler = (parserId) => {
     console.log("ok")
     setTrashConfirmForm(
       produce((draft) => {
         draft.show = true
+        draft.parserId = parserId
       })
     )
   }
 
   const confirmTrashHandler = (parserId) => {
-    if (trashConfirmForm.name != parsers.find(p => p.id == parserId).name) {
+    console.log(trashConfirmForm)
+    console.log(parsers)
+    console.log(parserId)
+    if (trashConfirmForm.name != parsers.find(p => p.id == trashConfirmForm.parserId).name) {
       setTrashConfirmForm(
         produce((draft) => {
           draft.isValid = false
@@ -152,7 +156,7 @@ export default function Parsers() {
         })
       )
     }
-    service.delete("parsers/" + parserId + "/", (response) => {
+    service.delete("parsers/" + trashConfirmForm.parserId + "/", (response) => {
       if (response.status == 204) {
         setTrashConfirmForm(
           produce((draft) => {
@@ -226,39 +230,39 @@ export default function Parsers() {
               <span>{parser.name}</span>
             </div>
             <div className={parserStyles.parserActions}>
-              <i className="bi bi-trash" onClick={trashClickHandler}></i>
-              <Modal show={trashConfirmForm.show} onHide={closeTrashHandler} centered>
-                <Modal.Header closeButton>
-                  <Modal.Title>Delete Layout</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <Form>
-                    <Form.Group className="mb-3" controlId="layoutNameControlInput">
-                      <Form.Label>Name</Form.Label>
-                      <Form.Control type="text"
-                        placeholder="e.g. Water Supply"
-                        value={trashConfirmForm.name}
-                        onChange={trashLayoutNameChangeHandler}/>
-                    </Form.Group>
-                  </Form>
-                  {!trashConfirmForm.isValid && (
-                    <div className="formErrorMessage">
-                      {trashConfirmForm.errorMessage}
-                    </div>
-                  )}
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button variant="secondary" onClick={closeTrashHandler}>
-                    Close
-                  </Button>
-                  <Button variant="danger" onClick={() => confirmTrashHandler(parser.id)}>
-                    Delete
-                  </Button>
-                </Modal.Footer>
-              </Modal>
+              <i className="bi bi-trash" onClick={() => trashClickHandler(parser.id)}></i>
             </div>
           </li>
         ))}
+        <Modal show={trashConfirmForm.show} onHide={closeTrashHandler} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Delete Layout</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3" controlId="layoutNameControlInput">
+                <Form.Label>Name</Form.Label>
+                <Form.Control type="text"
+                  placeholder="e.g. Water Supply"
+                  value={trashConfirmForm.name}
+                  onChange={trashLayoutNameChangeHandler}/>
+              </Form.Group>
+            </Form>
+            {!trashConfirmForm.isValid && (
+              <div className="formErrorMessage">
+                {trashConfirmForm.errorMessage}
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={closeTrashHandler}>
+              Close
+            </Button>
+            <Button variant="danger" onClick={() => confirmTrashHandler()}>
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </ul>
     </ParserLayout>
   )

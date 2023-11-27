@@ -31,10 +31,27 @@ const ProcessedQueue = (props) => {
 
   const getQueues = () => {
     if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueType=PROCESSED", response => {
+    service.get("queues/?parserId=" + props.parserId + "&queueClass=PROCESSED", response => {
       let qs = response.data
       setQueues(qs)
     })
+  }
+
+  const deleteQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      await service.delete("queues/" + selectedQueueIds[i] + "/")
+    }
+    getQueues()
+  }
+
+  const moveToOCRQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "OCR"
+      queue.queueStatus = "READY"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+    getQueues()
   }
 
   const moveToSplitQueueClickHandler = () => {
@@ -98,13 +115,14 @@ const ProcessedQueue = (props) => {
     <>
       <div className={sharedStyles.actionsDiv}>
         <DropdownButton title="Perform Action" className={styles.performActionDropdown}>
-          <Dropdown.Item href="#">Download Excel File</Dropdown.Item>
+          <Dropdown.Item href="#">Download Excel File (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Documents</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={deleteQueueClickHandler}>Delete Queues and Documents</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -124,6 +142,7 @@ const ProcessedQueue = (props) => {
                   type="checkbox"
                   label=""
                   onChange={chkAllChangeHandler}
+                  style={{padding: 0}}
                 />
               </th>
               <th colSpan={2}>
@@ -141,6 +160,7 @@ const ProcessedQueue = (props) => {
                       label=""
                       checked={selectedQueueIds.filter(x => x == queue.id).length > 0}
                       onChange={(e) => chkQueueChangeHandler(e, queue)}
+                      style={{padding: 0}}
                     />
                   </td>
                   <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>

@@ -219,7 +219,7 @@ export default function SignUp() {
                   <Form.Control
                     type="text"
                     name="companyName"
-                    placeholder="Enter full name"
+                    placeholder="Enter company name"
                     onChange={(e) => companyNameChangeHandler(e)}
                     value={signUpForm.companyName}/>
                     {!formValidation.isValid && (

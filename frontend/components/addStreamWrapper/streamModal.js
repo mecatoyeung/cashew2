@@ -85,6 +85,15 @@ const textfieldStreamOptions = [
         value: "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS"
       }
     ]
+  },
+  {
+    label: "Open AI Extract",
+    options: [
+      {
+        label: "Open AI Extract",
+        value: "OPEN_AI"
+      }
+    ]
   }
 ]
 
@@ -225,6 +234,12 @@ const AddStreamModal = (props) => {
     setStream(updatedStream)
   }
 
+  const txtOpenAIQuestionChangeHandler = (e) => {
+    let updatedStream = { ...stream }
+    updatedStream.openAIQuestion = e.target.value
+    setStream(updatedStream)
+  }
+
   const txtGetCharsFromNextColIfRegexNotMatchColIndexChangeHandler = (e) => {
     let updatedStream = { ...stream }
     updatedStream.colIndex = parseInt(e.target.value)
@@ -316,7 +331,7 @@ const AddStreamModal = (props) => {
           <Form.Control value={stream.step} readOnly />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formStreamClass">
-          {(stream.type == "TEXTFIELD" || stream.type == "ANCHORED_TEXTFIELD") && (
+          {(stream.type == "TEXTFIELD" || stream.type == "ANCHORED_TEXTFIELD" || stream.type == "ACROBAT_FORM") && (
             <Select
               options={textfieldStreamOptions}
               value={stream.streamClass}
@@ -390,6 +405,14 @@ const AddStreamModal = (props) => {
               </Form.Group>
             </>
           )}
+        {stream.streamClass.value == "OPEN_AI" && (
+          <>
+            <Form.Group className="mb-3" controlId="formOpenAIQuestion">
+              <Form.Label>Open AI Question: </Form.Label>
+              <Form.Control value={stream.openAIQuestion} onChange={txtOpenAIQuestionChangeHandler} placeholder="e.g. Extract Invoice No, Vendor, Total Invoice Amount and Item Table for me."/>
+            </Form.Group>
+          </>
+        )}
         {stream.streamClass.value == "GET_CHARS_FROM_NEXT_COL_IF_REGEX_NOT_MATCH" && (
           <>
             <Form.Group className="mb-3" controlId="formGetCharsFromNextColIfRegexNotMatch">

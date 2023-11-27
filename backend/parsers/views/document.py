@@ -95,6 +95,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return DocumentSerializer
         elif self.action == 'create':
             return DocumentUploadSerializer
+        elif self.action == "delete":
+            return DocumentSerializer
 
         return self.serializer_class
 

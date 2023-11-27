@@ -29,7 +29,7 @@ class Service {
         break;
       case 401:
         callbackUrl = document.location
-        //this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
+        this.redirectTo(document, '/signin?callbackUrl=' + callbackUrl)
         break;
       case 403:
         callbackUrl = document.location
@@ -51,13 +51,13 @@ class Service {
     document.location = path
   }
 
-  get(path, callback) {
-    return this.service.get(path).then(
+  async get(path, callback) {
+    return await this.service.get(path).then(
       (response) => callback(response)
     );
   }
 
-  getFile(path, callback) {
+  async getFile(path, callback) {
     let service = axios.create({
       baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
       responseType: "arraybuffer",
@@ -70,13 +70,13 @@ class Service {
       }
       return config
     })
-    return service.get(path).then(
+    return await service.get(path).then(
       (response) => callback(response)
     );
   }
 
-  patch(path, payload, callback) {
-    return this.service.request({
+  async patch(path, payload, callback) {
+    return await this.service.request({
       method: 'PATCH',
       url: path,
       responseType: 'json',
@@ -84,9 +84,8 @@ class Service {
     }).then((response) => callback(response));
   }
 
-  post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
-    console.log("headers: ", headers)
-    return this.service.request({
+  async post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
+    return await this.service.request({
       method: 'POST',
       url: path,
       responseType: 'json',
@@ -101,8 +100,8 @@ class Service {
     });
   }
 
-  put(path, payload, callback, errorCallback = null) {
-    return this.service.request({
+  async put(path, payload, callback, errorCallback = null) {
+    return await this.service.request({
       method: 'PUT',
       url: path,
       responseType: 'json',
@@ -115,8 +114,8 @@ class Service {
     });
   }
 
-  update(path, payload, callback, errorCallback = null) {
-    return this.service.request({
+  async update(path, payload, callback, errorCallback = null) {
+    return await this.service.request({
       method: 'UPDATE',
       url: path,
       responseType: 'json',
@@ -129,8 +128,8 @@ class Service {
     });
   }
 
-  delete(path, callback, errorCallback = null) {
-    return this.service.request({
+  async delete (path, callback, errorCallback = null) {
+    return await this.service.request({
       method: 'DELETE',
       url: path,
       responseType: 'json'

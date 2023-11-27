@@ -136,7 +136,6 @@ const AIChat = () => {
         pageNum: newPageNum
       },
     })
-    //refreshChatHistories()
   }
 
   const nextPage = () => {
@@ -186,8 +185,14 @@ const AIChat = () => {
         from: "machine",
         chat: response.data
       })
-    }, errorResponse => {
+    }, error => {
+      console.error(error)
       setChatIsLoading(false)
+      addChatHistory({
+        uuid: uuidv4(),
+        from: "machine",
+        chat: { "Error": error.response.data }
+      })
     })
   }
 
@@ -551,6 +556,7 @@ const AIChat = () => {
                             <div className={styles.talktext}>
                               {Object.entries(chatHistory.chat)
                                 .map(([chatKey, chatValue]) => {
+                                  console.log(chatKey, chatValue)
                                   if (!Array.isArray(chatValue)) {
                                     return (
                                       <div className={styles.talkKeyToValue} key={chatKey}>

@@ -100,7 +100,8 @@ const ImportQueue = (props) => {
       let droppedFile = droppedFiles[i];
       let formData = new FormData();
       formData.set("parser", props.parserId)
-      formData.append("file", droppedFile, droppedFile.name);
+      formData.set("documentType", documentType)
+      formData.append("file", droppedFile, droppedFile.name)
 
       const response = service
         .post(
@@ -171,7 +172,7 @@ const ImportQueue = (props) => {
   const getQueues = () => {
     if (!props.parserId) return;
     service.get(
-      "queues/?parserId=" + props.parserId + "&queueType=IMPORT",
+      "queues/?parserId=" + props.parserId + "&queueClass=IMPORT",
       (response) => {
         let queues = response.data;
         setSelectedIds([]);
@@ -201,14 +202,14 @@ const ImportQueue = (props) => {
           </Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>
-            Move to Split Queue
+            Move to Split Queue (In Progress)
           </Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>
-            Move to Parse Queue
+            Move to Parse Queue (In Progress)
           </Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue</Dropdown.Item>
+          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Documents</Dropdown.Item>
+          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control
           className={styles.searchTxt}
@@ -325,7 +326,7 @@ const ImportQueue = (props) => {
             <thead>
               <tr>
                 <th>
-                  <Form.Check type="checkbox" label="" />
+                  <Form.Check type="checkbox" label="" style={{padding: 0}}/>
                 </th>
                 <th colSpan={2}></th>
               </tr>
@@ -341,6 +342,7 @@ const ImportQueue = (props) => {
                           label=""
                           checked={queue.selected}
                           onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                          style={{padding: 0}}
                         />
                       </td>
                       <td className={styles.tdGrow}>

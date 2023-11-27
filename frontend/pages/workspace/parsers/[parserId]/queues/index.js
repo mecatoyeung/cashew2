@@ -16,6 +16,7 @@ import ImportQueue from '../../../../../components/queues/importQueue'
 import OCRQueue from '../../../../../components/queues/ocrQueue'
 import ParsingQueue from '../../../../../components/queues/parsingQueue'
 import SplittingQueue from '../../../../../components/queues/splittingQueue'
+import PostProcessingQueue from '../../../../../components/queues/postProcessingQueue'
 import IntegrationQueue from '../../../../../components/queues/integrationQueue'
 
 import styles from '../../../../../styles/Parser.module.css'
@@ -48,6 +49,9 @@ const ParserDocuments = () => {
           </Tab>
           <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title="Parsing Queue">
             <ParsingQueue parserId={parserId} />
+          </Tab>
+          <Tab id="postProcessingQueue" eventKey="postProcessingQueue" title="Post Processing Queue">
+            <PostProcessingQueue parserId={parserId} />
           </Tab>
           <Tab id="integrationQueue" eventKey="integrationQueue" title="Integration Queue">
             <IntegrationQueue parserId={parserId} />

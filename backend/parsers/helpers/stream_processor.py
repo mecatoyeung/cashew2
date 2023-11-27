@@ -43,7 +43,7 @@ STREAM_PROCESSOR_MAPPING = {
     "TRIM_SPACE": TrimSpaceStreamProcessor,
     "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS": TrimSpaceTableStreamProcessor,
     "REMOVE_EMPTY_LINES": RemoveEmptyLinesStreamProcessor,
-    "OPENAI": OpenAIStreamProcessor,
+    "OPEN_AI": OpenAIStreamProcessor,
     "REMOVE_TEXT_BEFORE_START_OF_TEXT": RemoveTextBeforeStartOfTextStreamProcessor,
     "REMOVE_TEXT_BEFORE_END_OF_TEXT": RemoveTextBeforeEndOfTextStreamProcessor,
     "REMOVE_TEXT_AFTER_START_OF_TEXT": RemoveTextAfterStartOfTextStreamProcessor,
@@ -56,7 +56,8 @@ STREAM_PROCESSOR_MAPPING = {
     "MERGE_ROWS_WITH_CONDITIONS": MergeRowsWithConditionsStreamProcessor,
     "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS": RemoveRowsBeforeRowWithConditionsStreamProcessor,
     "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS": RemoveRowsAfterRowWithConditionsStreamProcessor,
-    "UNPIVOT_TABLE": UnpivotColumnStreamProcessor
+    "UNPIVOT_TABLE": UnpivotColumnStreamProcessor,
+    "MAKE_FIRST_ROW_TO_BE_HEADER": MakeFirstRowToBeHeaderStreamProcessor
 }
 
 
@@ -116,6 +117,7 @@ class StreamProcessor:
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
+                    "open_ai_question": streams[streamIndex].open_ai_question,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
                     "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
                     "unpivot_column_index": streams[streamIndex].unpivot_column_index,
@@ -141,6 +143,7 @@ class StreamProcessor:
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
+                    "open_ai_question": streams[streamIndex].open_ai_question,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
                     "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
                     "unpivot_column_index": streams[streamIndex].unpivot_column_index,
@@ -166,6 +169,7 @@ class StreamProcessor:
                     "join_string": streams[streamIndex].join_string,
                     "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
                     "extract_nth_lines": streams[streamIndex].extract_nth_lines,
+                    "open_ai_question": streams[streamIndex].open_ai_question,
                     "text": streams[streamIndex].text,
                     "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
                     "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,

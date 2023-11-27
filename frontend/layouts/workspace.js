@@ -137,7 +137,7 @@ export default function WorkspaceLayout({ children }) {
                       <li>Splitting</li>
                     </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/rules"}>
-                      <li>Rules</li>
+                      <li>Fields</li>
                     </Link>
                     <Link
                       href={"/workspace/parsers/" + parserId + "/postprocessings"}

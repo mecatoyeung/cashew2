@@ -39,8 +39,8 @@ class OpenAIStreamProcessor(StreamBase):
                 for col, value in row.items():
                     output.append(str(col) + ": " + str(value))
                 output.append("")
-        elif "table" in response_dict:
-            for row in response_dict["table"]:
+        elif "Item Table" in response_dict:
+            for row in response_dict["Item Table"]:
                 for col, value in row.items():
                     output.append(str(col) + ": " + str(value))
                 output.append("")

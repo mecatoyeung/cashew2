@@ -21,15 +21,13 @@ import every from 'lodash/every'
 
 import moment from 'moment'
 
-import camelize from "../../helpers/camelize"
-
 import service from "../../service"
 
 import sharedStyles from '../../styles/Queue.module.css'
 import styles from '../../styles/ParsingQueue.module.css'
 import { LayoutCssClasses } from 'ag-grid-community'
 
-const ParsingQueue = (props) => {
+const PostProcessingQueue = (props) => {
 
   const router = useRouter()
 
@@ -74,7 +72,7 @@ const ParsingQueue = (props) => {
 
   const getParser = () => {
     if (!props.parserId) return
-    service.get("parsers/" + props.parserId +"/", response => {
+    service.get("parsers/" + props.parserId + "/", response => {
       setParser(response.data)
     })
   }
@@ -88,7 +86,7 @@ const ParsingQueue = (props) => {
 
   const getQueues = () => {
     if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueClass=PARSING", response => {
+    service.get("queues/?parserId=" + props.parserId + "&queueClass=POST_PROCESSING", response => {
       let queues = response.data
       setSelectedIds([])
       setQueues(response.data)
@@ -114,7 +112,7 @@ const ParsingQueue = (props) => {
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -155,7 +153,7 @@ const ParsingQueue = (props) => {
                       />
                     </td>
                     <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
-                    <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
+                    <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )
               })}
@@ -167,4 +165,4 @@ const ParsingQueue = (props) => {
   )
 }
 
-export default ParsingQueue
+export default PostProcessingQueue

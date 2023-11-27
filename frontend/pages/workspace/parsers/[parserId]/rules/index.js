@@ -28,13 +28,13 @@ export default function Parsers() {
 
   const ruleTypes = [
     { label: "Textfield", value: "TEXTFIELD"},
-    { label: "Input Textfield", value: "INPUT_TEXTFIELD"},
-    { label: "Input Dropdown", value: "INPUT_DROPDOWN"},
     { label: "Anchored Textfield", value: "ANCHORED_TEXTFIELD"},
     { label: "Table", value: "TABLE"},
     { label: "Acrobat Form", value: "ACROBAT_FORM"},
     { label: "Barcode", value: "BARCODE"},
-    { label: "Dependent Rule", value: "DEPENDENT_RULE"}
+    { label: "Input Textfield (In Progress)", value: "INPUT_TEXTFIELD"},
+    { label: "Input Dropdown (In Progress)", value: "INPUT_DROPDOWN"},
+    { label: "Dependent Rule (In Progress)", value: "DEPENDENT_RULE"}
   ]
 
   const gridRef = useRef()
@@ -53,14 +53,14 @@ export default function Parsers() {
           <Dropdown.Menu>
             <Dropdown.Item onClick={() => rulePropertiesClickHandler(parserId, rule)}>Rule Properties</Dropdown.Item>
             {(rule.ruleType == 'TEXTFIELD' ||
-              rule.ruleTYpe == 'ANCHORED_TEXTFIELD' ||
+              rule.ruleType == 'ANCHORED_TEXTFIELD' ||
               rule.ruleType == 'TABLE' ||
               rule.ruleType == 'BARCODE') && (
               <>
                 <Dropdown.Item onClick={() => regionSelectorClickHandler(parserId, rule)}>Region Selector</Dropdown.Item>
-                <Dropdown.Item onClick={() => streamEditorClickHandler(parserId, rule)}>Stream Editor</Dropdown.Item>
               </>
             )}
+            <Dropdown.Item onClick={() => streamEditorClickHandler(parserId, rule)}>Stream Editor</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
         &nbsp;
@@ -109,6 +109,10 @@ export default function Parsers() {
 
   const streamEditorClickHandler = (parserId, rule) => {
     router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=streamEditor")
+  }
+
+  const acrobatFormEditorClickHandler = (parserId, rule) => {
+    router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=acrobatFormEditor")
   }
 
   const deleteBtnClickHandler = async (rule) => {
@@ -205,6 +209,8 @@ export default function Parsers() {
             <div className={rulesStyles.agGridDiv + " ag-theme-alpine"} style={{width: "100%", height: "100%", marginTop:20 }}>
               <AgGridReact
                   ref={gridRef}
+
+                  suppressRowTransform
 
                   rowData={rowData}
 
