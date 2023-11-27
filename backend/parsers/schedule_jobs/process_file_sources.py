@@ -69,6 +69,8 @@ def process_file_sources():
                         document_upload_serializer_data["guid"] = str(
                             uuid.uuid4())
 
+                        document_upload_serializer_data["document_type"] = DocumentType.IMPORT.value
+
                         document_upload_serializer_data["document_extension"] = DocumentExtension.PDF.value
 
                         document_upload_serializer_data["filename_without_extension"] = os.path.basename(filename).split(".")[
