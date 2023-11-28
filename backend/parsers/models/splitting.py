@@ -9,7 +9,7 @@ class Splitting(models.Model):
     id = models.AutoField(primary_key=True)
     guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     parser = models.OneToOneField(
-        "Parser", on_delete=models.CASCADE, related_name="parser")
+        "Parser", on_delete=models.CASCADE, related_name="splitting")
     split_type = models.CharField(max_length=255, choices=SplittingType.choices(
     ), null=True, default=SplittingType.NO_SPLIT.value)
     no_first_page_rules_matched_operation_type = models.CharField(

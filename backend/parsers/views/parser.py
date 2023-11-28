@@ -34,7 +34,7 @@ from parsers.models.splitting import Splitting
 from parsers.models.splitting_rule_type import SplittingRuleType
 from parsers.models.splitting_rule import SplittingRule
 
-from parsers.serializers.parser import ParserSerializer, ParserUpdateSerializer
+from parsers.serializers.parser import ParserSerializer, ParserUpdateSerializer, ParserExportSerializer, ParserImportSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.integration import IntegrationSerializer
@@ -130,10 +130,53 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         return Response(SplittingSerializer(splitting).data, status=200)
 
-    @action(detail=True,
+    @action(detail=False,
             methods=['GET'],
-            name='Get All Texts',
-            url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
+            name='Export parser',
+            url_path='(?P<pk>[^/.]+)/export')
+    def export(self, request, pk, *args, **kwargs):
+
+        serializer_class = ParserExportSerializer
+
+        try:
+
+            splitting = Splitting.objects.prefetch_related(
+                "splitting_rules").filter(parser_id=pk)
+            splitting_rules = splitting.splitting_rules
+
+            parser = Parser \
+                .objects \
+                .prefetch_related('sources') \
+                .select_related("ocr") \
+                .select_related("chatbot") \
+                .select_related("open_ai") \
+                .prefetch_related('rules') \
+                .prefetch_related('rules__streams') \
+                .prefetch_related('rules__streams__table_column_separators') \
+                .prefetch_related("preprocessings") \
+                .prefetch_related("integrations") \
+                .prefetch_related("postprocessings") \
+                .select_related("splitting") \
+                .prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
+                    splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
+                    .prefetch_related("splitting_conditions")
+                    .prefetch_related(Prefetch("consecutive_page_splitting_rules",
+                                               queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
+                                                   splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                )) \
+                .get(pk=pk)
+
+            serializer = ParserSerializer(parser)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": "ERROR", "detail": str(e)}, status=400)
+
+    @ action(detail=True,
+             methods=['GET'],
+             name='Get All Texts',
+             url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
     def extract_all_text_in_one_page(self, request, pk, document_id, page_num, *args, **kwargs):
 
         parser = Parser.objects.get(pk=int(pk))
@@ -146,10 +189,10 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         return Response(result, status=200)
 
-    @action(detail=True,
-            methods=['POST'],
-            name='Ask OpenAI about PDF content',
-            url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/ask_openai')
+    @ action(detail=True,
+             methods=['POST'],
+             name='Ask OpenAI about PDF content',
+             url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/ask_openai')
     def ask_openai_about_pdf_content(self, request, pk, document_id, page_num, *args, **kwargs):
 
         parser = Parser.objects.get(pk=int(pk))
@@ -177,8 +220,8 @@ class ParserViewSet(viewsets.ModelViewSet):
                 "Content-Type": "application/json",
                 "api-key": chatbot.open_ai_api_key
             }
-            open_ai_content = question + \
-                " Please return in JSON format.\nInput: " + content_to_be_sent_to_openai
+            open_ai_content = question + " Please return in JSON format.\nInput: " + \
+                content_to_be_sent_to_openai
             json_data = {
                 "messages": [{"role": "user", "content": open_ai_content}],
             }
@@ -216,3 +259,15 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
+
+            """.prefetch_related(Prefetch("splittings",
+                                           queryset=Splitting.objects.prefetch_related(
+                                               Prefetch("splitting_rules", queryset=SplittingRule.objects.filter(
+                                                   splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
+                                                   .prefetch_related("splitting_conditions")
+                                                   .prefetch_related(Prefetch("consecutive_page_splitting_rules",
+                                                                              queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
+                                                                                  splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                                               ))
+                                           )
+                                  )"""

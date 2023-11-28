@@ -43,12 +43,16 @@ export default function Parsers() {
     })
   }
 
-  const addLayoutBtnClickHandler = () => {
+  const addParserBtnClickHandler = () => {
     setAddLayoutForm(
       produce((draft) => {
         draft.show = true
       })
     )
+  }
+
+  const importParserBtnClickHandler = () => {
+    console.log("In Progress")
   }
 
   const  layoutNameChangeHandler = (e) => {
@@ -192,12 +196,14 @@ export default function Parsers() {
     <ParserLayout>
       <h1 className={parserStyles.h1}>Parsers</h1>
       <ul className={parserStyles.parsersUl}>
-        <li className={parserStyles.addParserLi} onClick={() => addLayoutBtnClickHandler()}>
+        <li className={parserStyles.addParserLi} onClick={() => addParserBtnClickHandler()}>
           <div className={parserStyles.parserName}>
             <span>Add New Parser</span>
           </div>
-          <div className={parserStyles.parserActions}>
-            <i className="bi bi-trash"></i>
+        </li>
+        <li className={parserStyles.addParserLi} onClick={() => importParserBtnClickHandler()}>
+          <div className={parserStyles.parserName}>
+            <span>Import Parser</span>
           </div>
         </li>
         <Modal show={addLayoutForm.show} onHide={closeLayoutBtnClickHandler} centered>

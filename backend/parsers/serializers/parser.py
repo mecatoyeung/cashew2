@@ -123,3 +123,13 @@ class ParserUpdateSerializer(ParserSerializer):
         fields = ['id', 'type', 'name', 'ocr',
                   'chatbot', 'open_ai', 'last_modified_at']
         read_only_fields = ['id']
+
+
+class ParserExportSerializer(ParserSerializer):
+
+    pass
+
+
+class ParserImportSerializer(ParserSerializer):
+
+    pass

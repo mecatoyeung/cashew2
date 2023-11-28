@@ -9,7 +9,8 @@ from parsers.models.ocr_image_layer_type import OCRImageLayerType
 
 class OCR(models.Model):
     id = models.AutoField(primary_key=True)
-    parser = models.OneToOneField("Parser", on_delete=models.CASCADE)
+    parser = models.OneToOneField(
+        "Parser", on_delete=models.CASCADE, related_name="ocr")
     guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     ocr_type = models.CharField(max_length=255, choices=OCRType.choices(
     ), null=True, default=OCRType.NO_OCR.value)
