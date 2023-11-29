@@ -1,3 +1,7 @@
+import os
+import shutil
+import glob
+
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,6 +9,9 @@ from rest_framework import status
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
+from parsers.models.queue_status import QueueStatus
+
+from backend import settings
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -64,14 +71,22 @@ class QueueSerializer(serializers.ModelSerializer):
                     document_page.save()
             setattr(instance, attr, value)
 
+        instance.queue_status = QueueStatus.READY.value
         instance.save()
         return instance
 
-    def delete(self, request, pk, format=None):
+    """def delete(self, request, pk, format=None):
+        instance = self.get_object(pk)
+        # delete documents folder first
+        document_folder = os.path.join(
+            settings.MEDIA_ROOT, 'documents', instance.guid)
+        files = glob.glob(document_folder)
+        for f in files:
+            os.remove(f)
+        shutil.rmtree(document_folder)
         # delete document pages first
         DocumentPage.objects.delete(document__queue_id=pk)
         # delete document first
         Document.objects.delete(queue_id=pk)
-        instance = self.get_object(pk)
         instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)"""

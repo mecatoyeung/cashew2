@@ -38,6 +38,7 @@ export default function Parsers() {
         draft.integrationType = response.data.integrationType
         draft.parser = response.data.parser
         draft.xmlPath = response.data.xmlPath
+        draft.template = response.data.template
         draft.pdfIntegrationType = response.data.pdfIntegrationType
         draft.preProcessing = response.data.preProcessing
         draft.postProcessing = response.data.postProcessing

@@ -81,14 +81,10 @@ const OCR = () => {
 
   const getParser = () => {
     service.get("parsers/" + parserId + "/", response => {
+      console.log(response.data)
       setParser(response.data)
     })
   }
-
-  useEffect(() => {
-    if (!router.isReady) return
-    getParser()
-  }, [router.isReady])
 
   const ocrTypeChangeHandler = (e) => {
     let updatedOCR = { ...parser.ocr }
@@ -131,6 +127,7 @@ const OCR = () => {
 
   useEffect(() => {
     if (!router.isReady) return
+    getParser()
   }, [router.isReady])
 
   const { parserId } = router.query

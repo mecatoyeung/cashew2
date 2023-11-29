@@ -9,6 +9,7 @@ class PreProcessingSerializer(serializers.ModelSerializer):
 
         model = PreProcessing
         fields = ['id',
+                  'guid',
                   'pre_processing_type',
                   'name',
                   'parser',

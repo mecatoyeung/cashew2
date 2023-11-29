@@ -72,16 +72,21 @@ const RegionSelector = () => {
     setInitialRegion()
   }, [router.isReady, rule])
 
+  let getParserDocumentsTimer
   useEffect(() => {
     if (parserId == undefined) return
     getParserDocuments()
+    /*getParserDocumentsTimer = setInterval(() => {
+      getParserDocuments();
+    }, 5000);
+    return () => clearInterval(getParserDocumentsTimer);*/
   }, [router.isReady, parserId])
 
   useEffect(() => {
     if (parserId == undefined) return
     if (documentId == 0) return
     getDocumentPageImage()
-  }, [router.isReady, ,documentId, pageNum])
+  }, [router.isReady, ,parserId, documentId, pageNum])
 
   useEffect(() => {
   }, [imageRef])
@@ -311,6 +316,8 @@ const RegionSelector = () => {
   }
 
   const proceedToStreamEditorBtnClickHandler = () => {
+    //clearInterval(getParserDocumentsTimer)
+    console.log("cleared!")
     router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 

@@ -1,3 +1,7 @@
+import os
+import shutil
+import glob
+
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
@@ -12,9 +16,13 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
 
 from parsers.serializers.queue import QueueSerializer
+
+from backend import settings
 
 
 @extend_schema_view(
@@ -66,9 +74,29 @@ class QueueViewSet(viewsets.ModelViewSet):
         """ Return the serializer class for request """
         if self.action == 'list':
             return QueueSerializer
+        elif self.action == 'delete':
+            return QueueSerializer
 
         return self.serializer_class
 
     def perform_create(self, serializer):
         """ Create a new rule. """
         serializer.save()
+
+    def perform_destroy(self, instance):
+
+        # delete documents folder first
+        document = Document.objects.get(queue__id=instance.id)
+        document_folder = os.path.join(
+            settings.MEDIA_ROOT, 'documents', document.guid)
+        """files = glob.glob(document_folder)
+        for f in files:
+            os.remove(f)"""
+        shutil.rmtree(document_folder, ignore_errors=False)
+
+        # delete document pages first
+        DocumentPage.objects.filter(document__queue__id=instance.id).delete()
+        # delete document first
+        Document.objects.filter(queue__id=instance.id).delete()
+
+        return super().perform_destroy(instance)

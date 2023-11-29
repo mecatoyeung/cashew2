@@ -36,8 +36,10 @@ class XMLPage:
                                      page_bbox_str,
                                      re.IGNORECASE
                                      )
-        self.width = Decimal(page_bbox_search.group(3))
-        self.height = Decimal(page_bbox_search.group(4))
+        self.width = document_parser.document.document_pages.get(
+            page_num=page_num).width
+        self.height = document_parser.document.document_pages.get(
+            page_num=page_num).height
         self.text_widths = []
         self.text_heights = []
         self.median_text_width = ASSUMED_TEXT_WIDTH

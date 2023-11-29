@@ -7,31 +7,51 @@ from parsers.models.open_ai import OpenAI
 from parsers.models.splitting import Splitting
 
 from parsers.serializers.rule import RuleSerializer
+from parsers.serializers.source import SourceSerializer
+from parsers.serializers.pre_processing import PreProcessingSerializer
 from parsers.serializers.ocr import OCRSerializer
 from parsers.serializers.chatbot import ChatBotSerializer
+from parsers.serializers.splitting import SplittingSerializer
 from parsers.serializers.open_ai import OpenAISerializer
 from parsers.serializers.splitting import SplittingSerializer
+from parsers.serializers.post_processing import PostProcessingSerializer
 from parsers.serializers.integration import IntegrationSerializer
+
+
+class ParserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Parser
+        fields = ['id', 'type', 'guid', 'name', 'last_modified_at']
+        read_only_fields = ['id']
 
 
 class ParserSerializer(serializers.ModelSerializer):
 
+    sources = SourceSerializer(
+        many=True, required=False, allow_null=False)
+    preprocessings = PreProcessingSerializer(
+        many=True, required=False, allow_null=False)
     ocr = OCRSerializer(
-        many=False, required=True, allow_null=False)
+        many=False, required=True, allow_null=True)
+    splitting = SplittingSerializer(
+        many=False, required=False, allow_null=True)
+    rules = RuleSerializer(many=True, required=False, allow_null=True)
     chatbot = ChatBotSerializer(
-        many=False, required=True, allow_null=False)
+        many=False, required=True, allow_null=True)
     open_ai = OpenAISerializer(
         many=False, required=True, allow_null=False)
+    postprocessings = PostProcessingSerializer(
+        many=True, required=False, allow_null=False)
     integrations = IntegrationSerializer(
         many=True, required=False, allow_null=False)
 
     class Meta:
         model = Parser
-        fields = ['id', 'type', 'name', 'rules', 'ocr', 'chatbot', 'open_ai',
-                  'integrations', 'last_modified_at']
+        fields = ['id', 'type', 'guid', 'name', 'sources', 'preprocessings',
+                  'rules', 'ocr', 'splitting', 'chatbot', 'open_ai',
+                  'postprocessings', 'integrations', 'last_modified_at']
         read_only_fields = ['id']
-
-    rules = RuleSerializer(many=True, required=False, allow_null=True)
 
     def _get_or_create_ocr(self, ocr, parser):
         """ Handle getting or creating ocr as needed. """
@@ -120,7 +140,7 @@ class ParserUpdateSerializer(ParserSerializer):
 
     class Meta:
         model = Parser
-        fields = ['id', 'type', 'name', 'ocr',
+        fields = ['id', 'guid', 'type', 'name', 'ocr',
                   'chatbot', 'open_ai', 'last_modified_at']
         read_only_fields = ['id']
 

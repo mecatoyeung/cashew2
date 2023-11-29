@@ -108,10 +108,6 @@ const Settings = () => {
     getParser()
   }, [router.isReady])
 
-  const exportBtnClickHandler = () => {
-
-  }
-
   const importBtnClickHandler = () => {
 
   }
@@ -122,6 +118,21 @@ const Settings = () => {
 
   const importFileChangeHandler = () => {
 
+  }
+
+  const exportBtnClickHandler = () => {
+    service.get("parsers/" + parserId + "/export/", response => {
+
+      const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+        JSON.stringify(response.data)
+      )}`
+
+      const link = document.createElement("a")
+      link.href = jsonString
+      link.download = "parser-" + parserId + ".json"
+
+      link.click();
+    })
   }
 
   const parserNameChangeHandler = () => {
@@ -254,38 +265,11 @@ const Settings = () => {
         <h1>Settings</h1>
         <Card style={{ width: '100%', marginBottom: 10 }}>
           <Card.Body>
-            <Card.Title>Export / Import</Card.Title>
+            <Card.Title>Export</Card.Title>
             <Card.Text>
               Export and Import this parser to transfer between servers
             </Card.Text>
             <Button variant="primary" style={{ marginRight: 10 }} onClick={exportBtnClickHandler}>Export</Button>
-            <Button variant="primary" onClick={importBtnClickHandler}>Import</Button>
-            <Modal show={importModal.show} onHide={closeImportModalHandler}>
-                <Modal.Header closeButton>
-                  <Modal.Title style={{ color: "red" }}>Warning, all of your parser information (name: {parser && parser.name}) will be erased!</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <Form.Group className="mb-3" controlId="formImportFile">
-                    <Form.Label>Import file</Form.Label>
-                    <Form.Control type="file" onChange={importFileChangeHandler}/>
-                  </Form.Group>
-                  <Form.Group className="mb-3" controlId="formImportFile">
-                    <Form.Label>For safety reason, please re-type the parser name here.</Form.Label>
-                    {!importModal.parserNameMatched && (
-                      <Form.Label style={{ color: "red" }}>Parser name not matched</Form.Label>
-                    )}
-                    <Form.Control onChange={parserNameChangeHandler}/>
-                  </Form.Group>
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button variant="primary" onClick={confirmImportParserBtnClickHandler}>
-                    Import
-                  </Button>
-                  <Button variant="secondary" onClick={closeImportModalHandler}>
-                    Close
-                  </Button>
-                </Modal.Footer>
-              </Modal>
           </Card.Body>
         </Card>
         {/*parser && parser.ocr != null && (

@@ -18,6 +18,7 @@ class RuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rule
         fields = ['id',
+                  'guid',
                   'parser',
                   'name',
                   'rule_type',

@@ -8,6 +8,7 @@ class PostProcessingSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostProcessing
         fields = ['id',
+                  'guid',
                   'post_processing_type',
                   'name',
                   'parser',

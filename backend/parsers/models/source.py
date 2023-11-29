@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from django.utils import timezone
@@ -7,6 +9,7 @@ from parsers.models.parser import Parser
 
 class Source(models.Model):
     id = models.AutoField(primary_key=True)
+    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     name = models.CharField(max_length=255, null=False)
     parser = models.ForeignKey(
         Parser, on_delete=models.CASCADE, related_name='sources')

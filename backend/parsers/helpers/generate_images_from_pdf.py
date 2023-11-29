@@ -5,6 +5,7 @@ from django.db import transaction
 import fitz
 
 import PIL
+from PIL import Image
 
 import numpy as np
 
@@ -35,8 +36,13 @@ def generate_images_from_pdf(document):
                     folder_path, str(page_no) + ".jpg")
                 pix.save(abs_png_path, jpg_quality=80)
 
-                width = pix.width
-                height = pix.height
+                im = Image.open(abs_png_path)
+                im.thumbnail((3508, 3508), Image.Resampling.LANCZOS)
+                im.save(abs_png_path, "JPEG")
+
+                width, height = im.size
+                # width = pix.width
+                # height = pix.height
 
                 # Create document page object in database
                 dp = DocumentPage(

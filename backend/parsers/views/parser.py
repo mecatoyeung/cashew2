@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from rest_framework import (
     viewsets,
@@ -24,22 +25,27 @@ import json
 
 from parsers.models.parser import Parser
 from parsers.models.rule import Rule
+from parsers.models.table_column_separator import TableColumnSeparator
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.source import Source
+from parsers.models.pre_processing import PreProcessing
+from parsers.models.ocr import OCR
 from parsers.models.chatbot import ChatBot
+from parsers.models.open_ai import OpenAI
 from parsers.models.integration import Integration
 from parsers.models.splitting_type import SplittingType
 from parsers.models.splitting import Splitting
 from parsers.models.splitting_rule_type import SplittingRuleType
 from parsers.models.splitting_rule import SplittingRule
+from parsers.models.splitting_condition import SplittingCondition
+from parsers.models.post_processing import PostProcessing
 
-from parsers.serializers.parser import ParserSerializer, ParserUpdateSerializer, ParserExportSerializer, ParserImportSerializer
+from parsers.serializers.parser import ParserSerializer, ParserListSerializer, ParserUpdateSerializer, ParserExportSerializer, ParserImportSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.integration import IntegrationSerializer
 from parsers.serializers.splitting import SplittingSerializer
-
 from parsers.helpers.document_parser import DocumentParser
 
 
@@ -58,15 +64,40 @@ class ParserViewSet(viewsets.ModelViewSet):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
 
+        if self.action == "retrieve":
+            return queryset.filter(
+                user=self.request.user
+            ).prefetch_related('sources') \
+                .select_related("ocr") \
+                .select_related("chatbot") \
+                .select_related("open_ai") \
+                .prefetch_related('rules') \
+                .prefetch_related('rules__table_column_separators') \
+                .prefetch_related('rules__streams') \
+                .prefetch_related("preprocessings") \
+                .prefetch_related("integrations") \
+                .prefetch_related("postprocessings") \
+                .select_related("splitting") \
+                .prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
+                    splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
+                    .prefetch_related("splitting_conditions")
+                    .prefetch_related(Prefetch("consecutive_page_splitting_rules",
+                                               queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
+                                                   splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                ))
+
         return queryset.filter(
             user=self.request.user
         ).prefetch_related("rules") \
             .select_related("chatbot") \
+            .select_related("ocr") \
             .order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
         if self.action == 'list':
+            return ParserListSerializer
+        elif self.action == "retrieve":
             return ParserSerializer
         elif self.action == 'update':
             return ParserUpdateSerializer
@@ -140,43 +171,254 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         try:
 
-            splitting = Splitting.objects.prefetch_related(
-                "splitting_rules").filter(parser_id=pk)
-            splitting_rules = splitting.splitting_rules
+            data = []
+            all_parser_ids = []
+            try:
+                splitting = Splitting.objects.prefetch_related(
+                    "splitting_rules").get(parser__id=pk)
+                splitting_rules = splitting.splitting_rules.all()
+                if len(splitting_rules) > 0:
+                    for splitting_rule in splitting_rules:
+                        if splitting_rule.route_to_parser == None:
+                            continue
+                        all_parser_ids.append(
+                            splitting_rule.route_to_parser.id)
 
-            parser = Parser \
-                .objects \
-                .prefetch_related('sources') \
-                .select_related("ocr") \
-                .select_related("chatbot") \
-                .select_related("open_ai") \
-                .prefetch_related('rules') \
-                .prefetch_related('rules__streams') \
-                .prefetch_related('rules__streams__table_column_separators') \
-                .prefetch_related("preprocessings") \
-                .prefetch_related("integrations") \
-                .prefetch_related("postprocessings") \
-                .select_related("splitting") \
-                .prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
-                    splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
-                    .prefetch_related("splitting_conditions")
-                    .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                               queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                   splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
-                )) \
-                .get(pk=pk)
+            except Splitting.DoesNotExist:
+                pass
 
-            serializer = ParserSerializer(parser)
+            all_parser_ids.append(pk)
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            for parser_id in all_parser_ids:
+                parser = Parser \
+                    .objects \
+                    .prefetch_related('sources') \
+                    .select_related("ocr") \
+                    .select_related("chatbot") \
+                    .select_related("open_ai") \
+                    .prefetch_related('rules') \
+                    .prefetch_related('rules__table_column_separators') \
+                    .prefetch_related('rules__streams') \
+                    .prefetch_related("preprocessings") \
+                    .prefetch_related("integrations") \
+                    .prefetch_related("postprocessings") \
+                    .select_related("splitting") \
+                    .prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
+                        splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
+                        .prefetch_related("splitting_conditions")
+                        .prefetch_related(Prefetch("consecutive_page_splitting_rules",
+                                                   queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
+                                                       splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                    )) \
+                    .get(pk=parser_id)
+
+                serializer = ParserExportSerializer(parser)
+                data.append(serializer.data)
+
+            return Response(data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": "ERROR", "detail": str(e)}, status=400)
 
-    @ action(detail=True,
-             methods=['GET'],
-             name='Get All Texts',
-             url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
+    @action(detail=False,
+            methods=['POST'],
+            name='Import parser',
+            url_path='import')
+    def import_parsers(self, request, *args, **kwargs):
+
+        serializer_class = ParserImportSerializer
+
+        try:
+
+            import_json_file_obj = request.FILES['import_parsers.json']
+
+            json_obj = json.load(import_json_file_obj)
+
+            splitting_parser_ids_mapping = {}
+
+            splitting_parser_counter = 0
+            for parser_json_obj in json_obj:
+
+                splitting_parser_counter += 1
+
+                parser = Parser()
+                parser.guid = parser_json_obj["guid"]
+                parser.type = parser_json_obj["type"]
+                parser.name = parser_json_obj["name"]
+                parser.last_modified_at = datetime.now()
+                parser.user = request.user
+
+                parser.save()
+
+                if splitting_parser_counter < len(json_obj):
+                    splitting_parser_ids_mapping[parser_json_obj["id"]] = parser.id
+
+                for source_json_obj in parser_json_obj["sources"]:
+                    s = Source(
+                        name=source_json_obj["name"],
+                        guid=source_json_obj["guid"],
+                        parser_id=parser.id,
+                        source_path=source_json_obj["sourcePath"],
+                        interval_seconds=source_json_obj["intervalSeconds"],
+                        next_run_time=datetime.now(),
+                        activated=source_json_obj["activated"]
+                    )
+                    s.save()
+
+                for preprocessing_json_obj in parser_json_obj["preprocessings"]:
+                    pp = PreProcessing(
+                        guid=preprocessing_json_obj["guid"],
+                        name=preprocessing_json_obj["name"],
+                        pre_processing_type=preprocessing_json_obj["preProcessingType"],
+                        parser=parser,
+                        step=preprocessing_json_obj["step"]
+                    )
+                    pp.save()
+
+                ocr = OCR()
+                ocr.guid = parser_json_obj["ocr"]["guid"]
+                ocr.parser = parser
+                ocr.ocr_type = parser_json_obj["ocr"]["ocrType"]
+                ocr.google_vision_ocr_api_key = parser_json_obj["ocr"]["googleVisionOcrApiKey"]
+                ocr.paddle_ocr_language = parser_json_obj["ocr"]["paddleOcrLanguage"]
+                ocr.save()
+
+                for rule_json_obj in parser_json_obj["rules"]:
+                    r = Rule(
+                        guid=rule_json_obj["guid"],
+                        parser_id=parser.id,
+                        name=rule_json_obj["name"],
+                        rule_type=rule_json_obj["ruleType"],
+                        pages=rule_json_obj["pages"],
+                        x1=rule_json_obj["x1"],
+                        y1=rule_json_obj["y1"],
+                        x2=rule_json_obj["x2"],
+                        y2=rule_json_obj["y2"],
+                        anchor_text=rule_json_obj["anchorText"],
+                        anchor_x1=rule_json_obj["anchorX1"],
+                        anchor_y1=rule_json_obj["anchorY1"],
+                        anchor_x2=rule_json_obj["anchorX2"],
+                        anchor_y2=rule_json_obj["anchorY2"],
+                        anchor_relative_x1=rule_json_obj["anchorRelativeX1"],
+                        anchor_relative_y1=rule_json_obj["anchorRelativeY1"],
+                        anchor_relative_x2=rule_json_obj["anchorRelativeX2"],
+                        anchor_relative_y2=rule_json_obj["anchorRelativeY2"],
+                        anchor_document=None,
+                        anchor_page_num=rule_json_obj["anchorPageNum"],
+                        last_modified_at=datetime.now()
+                    )
+                    r.save()
+                    for table_column_separator_json_obj in rule_json_obj["tableColumnSeparators"]:
+                        table_column_separator = TableColumnSeparator(
+                            rule=r.id,
+                            x=table_column_separator_json_obj["x"]
+                        )
+                        table_column_separator.save()
+
+                if not parser_json_obj["splitting"] == None:
+
+                    splitting = Splitting()
+                    splitting.guid = parser_json_obj["splitting"]["guid"]
+                    splitting.parser = parser
+                    splitting.split_type = parser_json_obj["splitting"]["splitType"]
+                    splitting.save()
+
+                    for splitting_rule_json_obj in parser_json_obj["splitting"]["splittingRules"]:
+                        splitting_rule = SplittingRule()
+                        splitting_rule.splitting = splitting
+                        splitting_rule.route_to_parser = Parser.objects.get(pk=splitting_parser_ids_mapping[
+                            splitting_rule_json_obj["routeToParser"]])
+                        splitting_rule.splitting_rule_type = splitting_rule_json_obj[
+                            "splittingRuleType"]
+                        splitting_rule.parent_splitting_rule = splitting_rule_json_obj[
+                            "parentSplittingRule"]
+                        splitting_rule.sort_order = splitting_rule_json_obj["sortOrder"]
+                        splitting_rule.save()
+
+                        for splitting_condition_json_obj in splitting_rule_json_obj["splittingConditions"]:
+                            splitting_condition = SplittingCondition()
+                            splitting_condition.rule = r
+                            splitting_condition.splitting_rule = splitting_rule
+                            splitting_condition.operator = splitting_condition_json_obj["operator"]
+                            splitting_condition.value = splitting_condition_json_obj["value"]
+                            splitting_condition.sort_order = splitting_condition_json_obj["sortOrder"]
+                            splitting_condition.save()
+
+                        for consecutive_splitting_rule_json_obj in splitting_rule_json_obj["consecutivePageSplittingRules"]:
+                            consecutive_splitting_rule = SplittingRule()
+                            consecutive_splitting_rule.splitting = splitting
+                            consecutive_splitting_rule.splitting_rule_type = consecutive_splitting_rule_json_obj[
+                                "splittingRuleType"]
+                            consecutive_splitting_rule.parent_splitting_rule = splitting_rule
+                            consecutive_splitting_rule.sort_order = consecutive_splitting_rule_json_obj[
+                                "sortOrder"]
+                            consecutive_splitting_rule.save()
+
+                            for consecutive_splitting_condition_json_obj in consecutive_splitting_rule_json_obj["splittingConditions"]:
+                                consecutive_splitting_condition = SplittingCondition()
+                                consecutive_splitting_condition.rule = r
+                                consecutive_splitting_condition.splitting_rule = consecutive_splitting_rule
+                                consecutive_splitting_condition.operator = consecutive_splitting_condition_json_obj[
+                                    "operator"]
+                                consecutive_splitting_condition.value = consecutive_splitting_condition_json_obj[
+                                    "value"]
+                                consecutive_splitting_condition.sort_order = consecutive_splitting_condition_json_obj[
+                                    "sortOrder"]
+                                consecutive_splitting_condition.save()
+
+                chatbot = ChatBot()
+                chatbot.guid = parser_json_obj["chatbot"]["guid"]
+                chatbot.parser = parser
+                chatbot.chatbot_type = parser_json_obj["chatbot"]["chatbotType"]
+                chatbot.open_ai_resource_name = parser_json_obj["chatbot"]["openAiResourceName"]
+                chatbot.open_ai_api_key = parser_json_obj["chatbot"]["openAiApiKey"]
+                chatbot.open_ai_default_question = parser_json_obj["chatbot"]["openAiDefaultQuestion"]
+                chatbot.save()
+
+                open_ai = OpenAI()
+                open_ai.guid = parser_json_obj["openAi"]["guid"]
+                open_ai.parser = parser
+                open_ai.enabled = parser_json_obj["openAi"]["enabled"]
+                open_ai.open_ai_resource_name = parser_json_obj["openAi"]["openAiResourceName"]
+                open_ai.open_ai_api_key = parser_json_obj["openAi"]["openAiApiKey"]
+                open_ai.save()
+
+                for postprocessing_json_obj in parser_json_obj["postprocessings"]:
+                    pp = PostProcessing(
+                        guid=postprocessing_json_obj["guid"],
+                        name=postprocessing_json_obj["name"],
+                        post_processing_type=postprocessing_json_obj["postProcessingType"],
+                        parser=parser,
+                        redaction_regex=postprocessing_json_obj["redactionRegex"],
+                        step=postprocessing_json_obj["step"]
+                    )
+                    pp.save()
+
+                for integration_json_obj in parser_json_obj["integrations"]:
+                    integration = Integration()
+                    integration.integration_type = integration_json_obj["integrationType"]
+                    integration.name = integration_json_obj["name"]
+                    integration.parser = parser
+                    integration.xml_path = integration_json_obj["xmlPath"]
+                    integration.template = integration_json_obj["template"]
+                    integration.pdf_integration_type = integration_json_obj["pdfIntegrationType"]
+                    integration.pre_processing = integration_json_obj["preProcessing"]
+                    integration.post_processing = integration_json_obj["postProcessing"]
+                    integration.pdf_path = integration_json_obj["pdfPath"]
+                    integration.interval_seconds = integration_json_obj["intervalSeconds"]
+                    integration.next_run_time = datetime.now()
+                    integration.activated = integration_json_obj["activated"]
+                    integration.save()
+
+            return Response({}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": "ERROR", "detail": str(e)}, status=400)
+
+    @action(detail=True,
+            methods=['GET'],
+            name='Get All Texts',
+            url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
     def extract_all_text_in_one_page(self, request, pk, document_id, page_num, *args, **kwargs):
 
         parser = Parser.objects.get(pk=int(pk))
@@ -260,14 +502,12 @@ class ParserViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
 
-            """.prefetch_related(Prefetch("splittings",
-                                           queryset=Splitting.objects.prefetch_related(
-                                               Prefetch("splitting_rules", queryset=SplittingRule.objects.filter(
-                                                   splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
-                                                   .prefetch_related("splitting_conditions")
-                                                   .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                                                              queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                                                  splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
-                                               ))
-                                           )
-                                  )"""
+
+"""prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
+            splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
+            .prefetch_related("splitting_conditions")
+            .prefetch_related(Prefetch("consecutive_page_splitting_rules",
+                                        queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
+                                            splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+        ))
+"""

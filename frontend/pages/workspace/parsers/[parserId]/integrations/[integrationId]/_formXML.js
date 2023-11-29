@@ -100,7 +100,7 @@ export default function XMLForm(props) {
   const templateChangeHandler = (e) => {
     setForm(
       produce((draft) => {
-        draft.tempalte = e.target.value;
+        draft.template = e.target.value;
       })
     )
   }
@@ -114,6 +114,7 @@ export default function XMLForm(props) {
           draft.integrationType = props.integration.integrationType
           draft.parser = props.integration.parser
           draft.xmlPath = props.integration.xmlPath
+          draft.template = props.integration.template
           draft.pdfIntegrationType = props.integration.pdfIntegrationType
           draft.preProcessing = props.integration.preProcessing
           draft.postProcessing = props.integration.postProcessing
@@ -169,12 +170,13 @@ export default function XMLForm(props) {
                     }}
                   />
                 </Form.Group>
+                {console.log(form)}
                 <Form.Group className="col-12" controlId="addForm.sourceName">
                   <Form.Label>XML Editor</Form.Label>
                   <CodeEditor
                     value={form.template}
                     language="js"
-                    placeholder="Please enter template (jinja)."
+                    placeholder="Please enter template"
                     onChange={(e) => templateChangeHandler(e)}
                     padding={15}
                     style={{

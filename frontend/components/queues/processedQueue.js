@@ -44,6 +44,16 @@ const ProcessedQueue = (props) => {
     getQueues()
   }
 
+  const moveToPreProcessingQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "PRE_PROCESSING"
+      queue.queueStatus = "READY"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+    getQueues()
+  }
+
   const moveToOCRQueueClickHandler = async () => {
     for (let i=0; i<selectedQueueIds.length; i++) {
       let queue = queues.find(q => q.id == selectedQueueIds[i])
@@ -54,14 +64,14 @@ const ProcessedQueue = (props) => {
     getQueues()
   }
 
-  const moveToSplitQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(q => q.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queueClass: "SPLIT"
-    })
+  const moveToSplitQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "SPLIT"
+      queue.queueStatus = "READY"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+    getQueues()
   }
 
   const moveToParseQueueClickHandler = () => {
@@ -104,12 +114,13 @@ const ProcessedQueue = (props) => {
   useEffect(() => {
     if (!router.isReady) return
     getParser()
-    getQueues()
+    setQueues(props.queues)
+    /*getQueues()
     const interval = setInterval(() => {
       getQueues()
     }, 5000);
-    return () => clearInterval(interval);
-  }, [router.isReady])
+    return () => clearInterval(interval);*/
+  }, [router.isReady, props.queues])
 
   return (
     <>
@@ -117,6 +128,7 @@ const ProcessedQueue = (props) => {
         <DropdownButton title="Perform Action" className={styles.performActionDropdown}>
           <Dropdown.Item href="#">Download Excel File (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
+          <Dropdown.Item href="#" onClick={moveToPreProcessingQueueClickHandler}>Move to Pre-Processing Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>

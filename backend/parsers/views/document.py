@@ -136,6 +136,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
             last_preprocessing = preprocessings[0]
             abs_png_path = os.path.join(
                 folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".jpg")
+            if not os.path.exists(abs_png_path):
+                abs_png_path = os.path.join(
+                    folder_path, str(page_num) + ".jpg")
 
         image_file = open(abs_png_path, 'rb')
         return_filename = document.guid + str(page_num) + ".jpg"

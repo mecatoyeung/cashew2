@@ -37,6 +37,13 @@ export default function Parsers() {
     errorMessage: ""
   })
 
+  const [importModal , setImportModal] = useState({
+    show: false,
+    selectedFile: null,
+    parserName: "",
+    parserNameMatched: true
+  })
+
   const getParsers = () => {
     service.get("parsers/", (response)=> {
       setParsers(response.data)
@@ -52,7 +59,19 @@ export default function Parsers() {
   }
 
   const importParserBtnClickHandler = () => {
-    console.log("In Progress")
+    setImportModal(
+      produce((draft) => {
+      draft.show = true
+    })
+    )
+  }
+
+  const closeImportModalHandler = () => {
+    setImportModal(
+      produce((draft) => {
+      draft.show = false
+    })
+    )
   }
 
   const  layoutNameChangeHandler = (e) => {
@@ -104,6 +123,34 @@ export default function Parsers() {
         draft.name = e.target.value
       })
     )
+  }
+
+  const importFileChangeHandler = (e) => {
+    setImportModal({
+      ...importModal,
+      selectedFile: e.target.files[0]
+    })
+  }
+
+  const confirmImportParserBtnClickHandler = () => {
+
+    const formData = new FormData()
+
+    formData.append(
+      "importParsers.json",
+      importModal.selectedFile,
+      importModal.selectedFile.name
+    );
+
+    service.post("parsers/import/",
+      formData,
+      response => {
+        setImportModal({
+          ...importModal,
+          show: false
+        })
+        getParsers()
+      })
   }
 
   const trashLayoutNameChangeHandler = (e) => {
@@ -201,11 +248,6 @@ export default function Parsers() {
             <span>Add New Parser</span>
           </div>
         </li>
-        <li className={parserStyles.addParserLi} onClick={() => importParserBtnClickHandler()}>
-          <div className={parserStyles.parserName}>
-            <span>Import Parser</span>
-          </div>
-        </li>
         <Modal show={addLayoutForm.show} onHide={closeLayoutBtnClickHandler} centered>
           <Modal.Header closeButton>
             <Modal.Title>Add Parser</Modal.Title>
@@ -227,6 +269,30 @@ export default function Parsers() {
             </Button>
             <Button variant="primary" onClick={confirmAddLayoutBtnClickHandler}>
               Add
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        <li className={parserStyles.addParserLi} onClick={() => importParserBtnClickHandler()}>
+          <div className={parserStyles.parserName}>
+            <span>Import Parser</span>
+          </div>
+        </li>
+        <Modal show={importModal.show} onHide={closeImportModalHandler}>
+          <Modal.Header closeButton>
+            <Modal.Title style={{ color: "red" }}>Import Parsers (Please note that multiple parsers may be created)</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3" controlId="formImportFile">
+              <Form.Label>Import file</Form.Label>
+              <Form.Control type="file" onChange={importFileChangeHandler}/>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={confirmImportParserBtnClickHandler}>
+              Import
+            </Button>
+            <Button variant="secondary" onClick={closeImportModalHandler}>
+              Close
             </Button>
           </Modal.Footer>
         </Modal>

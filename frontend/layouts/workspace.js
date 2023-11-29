@@ -22,6 +22,7 @@ export default function WorkspaceLayout({ children }) {
   const getParser = () => {
     if (!parserId) return;
     service.get("parsers/" + parserId + "/", (response) => {
+      console.log(response.data)
       setParser(response.data);
     });
   };
@@ -35,7 +36,7 @@ export default function WorkspaceLayout({ children }) {
 
   useEffect(() => {
     getParser()
-  }, [])
+  }, [parserId])
 
   return (
     <>

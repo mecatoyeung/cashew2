@@ -76,7 +76,7 @@ const ImportQueue = (props) => {
   }
 
   const chkQueueChangeHandler = (index, e) => {
-    let updateQueues = [...queues];
+    let updateQueues = [...props.queues];
     updateQueues[index].selected = e.target.checked;
     setQueues(updateQueues);
   }
@@ -183,12 +183,13 @@ const ImportQueue = (props) => {
 
   useEffect(() => {
     getParser();
-    getQueues();
+    setQueues(props.queues)
+    /*getQueues();
     const interval = setInterval(() => {
       getQueues();
     }, 5000);
-    return () => clearInterval(interval);
-  }, [router.isReady]);
+    return () => clearInterval(interval);*/
+  }, [router.isReady, props.queues]);
 
   return (
     <>

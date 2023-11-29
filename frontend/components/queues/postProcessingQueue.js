@@ -95,12 +95,13 @@ const PostProcessingQueue = (props) => {
 
   useEffect(() => {
     getParser()
-    getQueues()
+    setQueues(props.queues)
+    /*getQueues()
     const interval = setInterval(() => {
       getQueues()
     }, 5000);
-    return () => clearInterval(interval);
-  }, [router.isReady])
+    return () => clearInterval(interval);*/
+  }, [router.isReady, props.queues])
 
   return (
     <>

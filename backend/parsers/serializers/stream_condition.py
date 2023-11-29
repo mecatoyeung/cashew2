@@ -11,5 +11,6 @@ class StreamConditionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StreamCondition
-        fields = ['id', 'guid', 'column', 'operator', 'value']
+        fields = ['id', 'guid', 'splitting_rule',
+                  'column', 'operator', 'value']
         read_only_fields = ['id']

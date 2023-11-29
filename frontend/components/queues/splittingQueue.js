@@ -52,11 +52,12 @@ const SplittingQueue = (props) => {
   useEffect(() => {
     if (!router.isReady) return
     getParser()
-    getQueues()
+    setQueues(props.queues)
+    /*getQueues()
     const interval = setInterval(() => {
       getQueues()
-    }, 5000);
-  }, [router.isReady])
+    }, 5000);*/
+  }, [router.isReady, props.queues])
 
   return (
     <>

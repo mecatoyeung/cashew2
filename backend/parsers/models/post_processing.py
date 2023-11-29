@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from parsers.models.post_processing_type import PostProcessingType
@@ -5,6 +7,7 @@ from parsers.models.post_processing_type import PostProcessingType
 
 class PostProcessing(models.Model):
     id = models.AutoField(primary_key=True)
+    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     post_processing_type = models.CharField(
         max_length=255, choices=PostProcessingType.choices())
     name = models.CharField(max_length=255, null=False)

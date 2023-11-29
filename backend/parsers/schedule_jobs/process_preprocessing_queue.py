@@ -6,18 +6,25 @@ from pathlib import Path
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
 from django.utils import timezone
+
+from django_apscheduler.jobstores import DjangoJobStore, register_events
 from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler.jobstores import register_job
+
 from parsers.models.parser import Parser
+from parsers.models.ocr import OCR
+from parsers.models.ocr_type import OCRType
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.models.pre_processing_type import PreProcessingType
 from parsers.models.pre_processing import PreProcessing
+
 from parsers.helpers.detect_orientation import detect_orientation
+from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 from backend.settings import MEDIA_URL
 
