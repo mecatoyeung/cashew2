@@ -11,10 +11,10 @@ const RuleEditor = () => {
 
     const router = useRouter()
 
-    let { type = "ruleProperties" } = router.query
+    let { parserId, type = "ruleProperties" } = router.query
 
     useEffect(() => {
-    }, [router.isReady])
+    }, [router.isReady, parserId])
 
     return (
         <>

@@ -260,7 +260,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                         parser_id=parser.id,
                         source_path=source_json_obj["sourcePath"],
                         interval_seconds=source_json_obj["intervalSeconds"],
-                        next_run_time=datetime.now(),
+                        next_run_time=source_json_obj["nextRunTime"],
                         activated=source_json_obj["activated"]
                     )
                     s.save()
@@ -321,6 +321,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                     splitting.guid = parser_json_obj["splitting"]["guid"]
                     splitting.parser = parser
                     splitting.split_type = parser_json_obj["splitting"]["splitType"]
+                    splitting.activated = parser_json_obj["splitting"]["activated"]
                     splitting.save()
 
                     for splitting_rule_json_obj in parser_json_obj["splitting"]["splittingRules"]:
@@ -406,7 +407,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                     integration.post_processing = integration_json_obj["postProcessing"]
                     integration.pdf_path = integration_json_obj["pdfPath"]
                     integration.interval_seconds = integration_json_obj["intervalSeconds"]
-                    integration.next_run_time = datetime.now()
+                    integration.next_run_time = integration_json_obj["nextRunTime"]
                     integration.activated = integration_json_obj["activated"]
                     integration.save()
 

@@ -139,6 +139,9 @@ const ParserDocuments = () => {
       getPostProcessingQueues()
       getIntegrationQueues()
     }, 5000);
+    return () => {
+      clearTimeout(interval);
+    };
   }, [router.isReady])
 
   return (
