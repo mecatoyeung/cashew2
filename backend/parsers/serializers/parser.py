@@ -40,7 +40,7 @@ class ParserSerializer(serializers.ModelSerializer):
     chatbot = ChatBotSerializer(
         many=False, required=True, allow_null=True)
     open_ai = OpenAISerializer(
-        many=False, required=True, allow_null=False)
+        many=False, required=False, allow_null=True)
     postprocessings = PostProcessingSerializer(
         many=True, required=False, allow_null=False)
     integrations = IntegrationSerializer(
