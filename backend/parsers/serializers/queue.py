@@ -14,7 +14,25 @@ from parsers.models.queue_status import QueueStatus
 from backend import settings
 
 
+class DocumentPageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DocumentPage
+        fields = [
+            'id',
+            'document',
+            'page_num',
+            'width',
+            'height',
+            'ocred',
+            'chatbot_completed'
+        ]
+        read_only_fields = ['id']
+
+
 class DocumentSerializer(serializers.ModelSerializer):
+
+    document_pages = DocumentPageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Document

@@ -157,7 +157,7 @@ const ParserDocuments = () => {
           <Tab id="preProcessingQueue" eventKey="preProcessingQueue" title={"Pre Processing Queue (" + preProcessingQueues.length + ")"}>
             <PreProcessingQueue parserId={parserId} queues={preProcessingQueues} />
           </Tab>
-          <Tab id="dataSplitQueue" eventKey="dataOCRQueue" title={"OCR Queue (" + ocrQueues.length + ")"}>
+          <Tab id="dataOCRQueue" eventKey="dataOCRQueue" title={"OCR Queue (" + ocrQueues.length + ")"}>
             <OCRQueue parserId={parserId} queues={ocrQueues} />
           </Tab>
           <Tab id="dataSplitingQueue" eventKey="dataSplitQueue" title={"Splitting Queue (" + splittingQueues.length + ")"}>

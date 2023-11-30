@@ -184,6 +184,9 @@ CMGjwvxTsr74/f/F95m3TH9x8o0/TU//N+7/D/ScVcA=
     pdfmetrics.registerFont(TTFont('invisible', ttf))
 
 
+doctr_model = None
+
+
 def convert_to_searchable_pdf_doctr(document,
                                     searchable_pdf_path,
                                     document_path,
@@ -233,11 +236,13 @@ def convert_to_searchable_pdf_doctr(document,
 
         os.add_dll_directory(
             r"C:\Program Files\GTK3-Runtime Win64\bin")
-        device = torch.device("cpu")
-        model = ocr_predictor(
-            det_arch='db_mobilenet_v3_large', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
+        global doctr_model
+        if doctr_model == None:
+            device = torch.device("cpu")
+            doctr_model = ocr_predictor(
+                det_arch='db_mobilenet_v3_large', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
         doc = DocumentFile.from_images(working_path + "\\" + filename)
-        result = model(doc)
+        result = doctr_model(doc)
 
         for page in result.pages:
             for block in page.blocks:

@@ -8,6 +8,11 @@ from django.urls import (
 
 from rest_framework.routers import DefaultRouter
 
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
+from parsers.models.source import Source
+
 from .views.parser import ParserViewSet
 from .views.rule import RuleViewSet
 from .views.stream import StreamViewSet
@@ -74,3 +79,16 @@ urlpatterns = [
          name="postprocessings"),
     path('integrations/', include(integrations_router.urls), name="integrations"),
 ]
+
+
+# Set all Queues from In Progress to Ready
+all_sources = Source.objects.filter(is_running=True)
+for source in all_sources:
+    source.is_running = False
+    source.save()
+
+all_in_progress_queues = Queue.objects.filter(
+    queue_status=QueueStatus.IN_PROGRESS.value)
+for queue in all_in_progress_queues:
+    queue.queue_status = QueueStatus.READY.value
+    queue.save()

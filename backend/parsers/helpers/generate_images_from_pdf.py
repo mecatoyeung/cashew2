@@ -48,8 +48,6 @@ def generate_images_from_pdf(document):
                 dp = DocumentPage(
                     document=document,
                     page_num=page_no,
-                    image_file=os.path.join(
-                        'documents/%s/' % (document.guid), str(page_no) + '.' + document.extension),
                     width=width,
                     height=height
                 )

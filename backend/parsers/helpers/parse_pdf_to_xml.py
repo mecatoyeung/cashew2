@@ -25,14 +25,16 @@ def parse_pdf_to_xml(document):
         with fitz.open(source_file_path) as doc:
             for page_idx, page in enumerate(doc):
                 page_num = page_idx + 1
+                document_page = DocumentPage.objects.get(
+                    document_id=document.id, page_num=page_num)
+                if document_page.ocred == True:
+                    continue
 
                 xml = convert_pdf_to_xml(
                     path=source_file_path,
                     pagenos=[page_idx]
                 )
 
-                document_page = DocumentPage.objects.get(
-                    document_id=document.id, page_num=page_num)
                 document_page.xml = xml
                 document_page.ocred = True
                 document_page.save()

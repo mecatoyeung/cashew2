@@ -69,6 +69,11 @@ class Redactor:
 
 def process_postprocessing_queue_job():
 
+    all_in_process_post_processing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.POST_PROCESSING.value, queue_status=QueueStatus.IN_PROGRESS.value)
+    if all_in_process_post_processing_queue_jobs.count() > 0:
+        return
+
     all_ready_postprocessing_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -80,42 +85,50 @@ def process_postprocessing_queue_job():
         .filter(queue_class=QueueClass.POST_PROCESSING.value, queue_status=QueueStatus.READY.value) \
         .all()
     for queue_job in all_ready_postprocessing_queue_jobs:
-        parser = queue_job.parser
-        document = queue_job.document
+
         # Mark the job as in progress
-        # queue_job.queue_class = QueueClass.POST_PROCESSING.value
-        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        # queue_job.save()
+        queue_job.queue_class = QueueClass.POST_PROCESSING.value
+        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+        queue_job.save()
 
-        # Do the job
-        post_processings = PostProcessing.objects.filter(
-            parser_id=parser.id)
+        try:
+            parser = queue_job.parser
+            document = queue_job.document
 
-        for post_processing_index, post_processing in enumerate(post_processings):
+            # Do the job
+            post_processings = PostProcessing.objects.filter(
+                parser_id=parser.id)
 
-            post_processings_type = post_processing.post_processing_type
-            if post_processings_type == PostProcessingType.REDACTION.value:
-                redaction_regex = post_processing.redaction_regex
+            for post_processing_index, post_processing in enumerate(post_processings):
 
-                if post_processing_index == 0:
-                    pdf_input_path = os.path.join(MEDIA_URL, 'documents', document.guid,
-                                                  "ocred.pdf")
-                else:
-                    pdf_input_path = pdf_out_path
+                post_processings_type = post_processing.post_processing_type
+                if post_processings_type == PostProcessingType.REDACTION.value:
+                    redaction_regex = post_processing.redaction_regex
 
-                working_path = os.path.join(
-                    MEDIA_URL, 'documents', document.guid, "post_processed-" + str(post_processing.id))
-                is_working_dir_exist = os.path.exists(working_path)
-                if not is_working_dir_exist:
-                    os.makedirs(working_path)
+                    if post_processing_index == 0:
+                        pdf_input_path = os.path.join(MEDIA_URL, 'documents', document.guid,
+                                                      "ocred.pdf")
+                    else:
+                        pdf_input_path = pdf_out_path
 
-                pdf_out_path = os.path.join(MEDIA_URL, 'documents', document.guid,
-                                            "post_processed-" + str(post_processing.id), "output.pdf")
+                    working_path = os.path.join(
+                        MEDIA_URL, 'documents', document.guid, "post_processed-" + str(post_processing.id))
+                    is_working_dir_exist = os.path.exists(working_path)
+                    if not is_working_dir_exist:
+                        os.makedirs(working_path)
 
-                redactor = Redactor(redaction_regex,
-                                    pdf_input_path,
-                                    pdf_out_path)
-                redactor.redaction()
+                    pdf_out_path = os.path.join(MEDIA_URL, 'documents', document.guid,
+                                                "post_processed-" + str(post_processing.id), "output.pdf")
+
+                    redactor = Redactor(redaction_regex,
+                                        pdf_input_path,
+                                        pdf_out_path)
+                    redactor.redaction()
+
+        except Exception as e:
+            queue_job.queue_class = QueueClass.POST_PROCESSING.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
 
         # Mark the job as completed
         # queue_job.queue_status = QueueStatus.COMPLETED.value
@@ -129,7 +142,7 @@ def process_postprocessing_queue_job():
 
 def postprocessing_queue_scheduler_start():
     scheduler = BackgroundScheduler(
-        {'apscheduler.job_defaults.max_instances': 1})
+        {'apscheduler.job_defaults.max_instances': 5})
     # scheduler.add_jobstore(DjangoJobStore(), "postprocessing_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_postprocessing_queue_job, 'interval', seconds=5)

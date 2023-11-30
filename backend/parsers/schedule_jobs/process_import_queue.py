@@ -14,6 +14,11 @@ import sys
 
 def process_import_queue_job():
 
+    all_in_process_import_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.IMPORT.value, queue_status=QueueStatus.IN_PROGRESS.value)
+    if all_in_process_import_queue_jobs.count() > 0:
+        return
+
     all_ready_import_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -45,7 +50,7 @@ def process_import_queue_job():
 
 def import_queue_scheduler_start():
     scheduler = BackgroundScheduler(
-        {'apscheduler.job_defaults.max_instances': 1})
+        {'apscheduler.job_defaults.max_instances': 5})
     # scheduler.add_jobstore(DjangoJobStore(), "import_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_import_queue_job, 'interval', seconds=5)

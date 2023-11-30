@@ -1,13 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 
+
 import moment from 'moment'
 
 import Table from 'react-bootstrap/Table'
 import Form from 'react-bootstrap/Form'
+import Button from 'react-bootstrap/Button'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 import Dropdown from 'react-bootstrap/Dropdown'
-import Button from 'react-bootstrap/Button'
 
 import service from "../../service"
 
@@ -42,7 +43,17 @@ const OCRQueue = (props) => {
   useEffect(() => {
     if (!router.isReady) return
     getParser()
-    setQueues(props.queues)
+    let queues = props.queues
+    for (let i=0; i<queues.length; i++) {
+      let queue = queues[i]
+      let ocredCount = 0
+      for (let j=0; j<queue.document.documentPages.length; j++) {
+        let documentPage = queue.document.documentPages[j]
+        if (documentPage.ocred) ocredCount++
+      } 
+      queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (OCRed " + ocredCount + " of " + queue.document.documentPages.length + ")"
+    }
+    setQueues(queues)
     /*getQueues()
     const interval = setInterval(() => {
       getQueues()
@@ -86,6 +97,7 @@ const OCRQueue = (props) => {
               </tr>
             </thead>
             <tbody>
+              {console.log(queues)}
               {queues && queues.map((queue, queueIndex) => {
                 return (
                   <tr key={queueIndex}>
@@ -98,7 +110,7 @@ const OCRQueue = (props) => {
                         style={{padding: 0}}
                       />
                     </td>
-                    <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td className={styles.tdGrow}>{queue.document.description}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

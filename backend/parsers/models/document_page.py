@@ -6,7 +6,6 @@ class DocumentPage(models.Model):
     document = models.ForeignKey(
         "Document", null=True, related_name='document_pages', on_delete=models.CASCADE)
     page_num = models.IntegerField()
-    image_file = models.FileField(null=True, max_length=1023)
     width = models.IntegerField()
     height = models.IntegerField()
     xml = models.TextField(

@@ -16,6 +16,7 @@ class Source(models.Model):
     source_path = models.CharField(max_length=1023, null=False)
     interval_seconds = models.IntegerField()
     next_run_time = models.DateTimeField(null=False, default=timezone.now)
+    is_running = models.BooleanField(default=False)
     activated = models.BooleanField(default=True)
 
     class Meta:

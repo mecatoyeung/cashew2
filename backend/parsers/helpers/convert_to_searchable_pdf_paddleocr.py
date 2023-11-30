@@ -29,6 +29,9 @@ from xml.etree.ElementTree import SubElement
 from .convert_pdf_to_xml import convert_pdf_to_xml
 
 
+paddle_model = None
+
+
 class StdoutWrapper:
     """
     Wrapper around stdout that ensures 'bytes' data is decoded
@@ -340,9 +343,11 @@ def convert_to_searchable_pdf_paddleocr(document,
 
         # paddle ocr
         # need to run only once to download and load model into memory
-        ocr = PaddleOCR(use_angle_cls=True, lang=lang)
+        global paddle_model
+        if paddle_model == None:
+            paddle_model = PaddleOCR(use_angle_cls=True, lang=lang)
         img_path = os.path.join(working_path, filename)
-        result = ocr.ocr(img_path, cls=True)
+        result = paddle_model.ocr(img_path, cls=True)
 
         im = Image.open(img_path).convert('RGB')
 

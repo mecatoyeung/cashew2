@@ -26,6 +26,11 @@ from ..helpers.stream_processor import StreamProcessor
 
 def process_parsing_queue_job():
 
+    all_in_process_parsing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.PARSING.value, queue_status=QueueStatus.IN_PROGRESS.value)
+    if all_in_process_parsing_queue_jobs.count() > 0:
+        return
+
     all_ready_parsing_queue_jobs = Queue.objects \
         .select_related("document") \
         .prefetch_related(Prefetch(
@@ -37,56 +42,65 @@ def process_parsing_queue_job():
         .filter(queue_class=QueueClass.PARSING.value, queue_status=QueueStatus.READY.value) \
         .all()
     for queue_job in all_ready_parsing_queue_jobs:
-        parser = queue_job.parser
-        document = queue_job.document
 
         # Mark the job as in progress
-        # queue_job.queue_class = QueueClass.PARSING.value
-        # queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        # queue_job.save()
-
-        # Do the job
-        rules = Rule.objects.filter(parser_id=parser.id)
-        parsed_result = []
-        document_parser = DocumentParser(parser, document)
-        for rule in rules:
-            extracted = document_parser.extract(rule)
-            stream_processor = StreamProcessor(rule)
-            processed_streams = stream_processor.process(extracted)
-
-            if rule.rule_type == RuleType.TEXTFIELD.value or \
-                rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value or \
-                rule.rule_type == RuleType.BARCODE.value or \
-                    rule.rule_type == RuleType.ACROBAT_FORM.value:
-                if processed_streams[-1]["data"] == None:
-                    processed_streams[-1]["data"] = ""
-                else:
-                    processed_streams[-1]["data"] = " ".join(
-                        processed_streams[-1]["data"])
-
-            parsed_result.append({
-                "rule": {
-                    "id": rule.id,
-                    "name": rule.name,
-                    "type": processed_streams[-1]["type"]
-                },
-                "extracted": extracted,
-                "streamed": processed_streams[-1]["data"]
-            })
-
-        queue_job.parsed_result = json.dumps(parsed_result)
-
-        # Mark the job as completed
-
-        # Mark the job as preprocessing in progress
-        queue_job.queue_class = QueueClass.POST_PROCESSING.value
-        queue_job.queue_status = QueueStatus.READY.value
+        queue_job.queue_class = QueueClass.PARSING.value
+        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
         queue_job.save()
+
+        try:
+
+            parser = queue_job.parser
+            document = queue_job.document
+
+            # Do the job
+            rules = Rule.objects.filter(parser_id=parser.id)
+            parsed_result = []
+            document_parser = DocumentParser(parser, document)
+            for rule in rules:
+                extracted = document_parser.extract(rule)
+                stream_processor = StreamProcessor(rule)
+                processed_streams = stream_processor.process(extracted)
+
+                if rule.rule_type == RuleType.TEXTFIELD.value or \
+                    rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value or \
+                    rule.rule_type == RuleType.BARCODE.value or \
+                        rule.rule_type == RuleType.ACROBAT_FORM.value:
+                    if processed_streams[-1]["data"] == None:
+                        processed_streams[-1]["data"] = ""
+                    else:
+                        processed_streams[-1]["data"] = " ".join(
+                            processed_streams[-1]["data"])
+
+                parsed_result.append({
+                    "rule": {
+                        "id": rule.id,
+                        "name": rule.name,
+                        "type": processed_streams[-1]["type"]
+                    },
+                    "extracted": extracted,
+                    "streamed": processed_streams[-1]["data"]
+                })
+
+            queue_job.parsed_result = json.dumps(parsed_result)
+
+            # Mark the job as completed
+
+            # Mark the job as preprocessing in progress
+            queue_job.queue_class = QueueClass.POST_PROCESSING.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+
+        except Exception as e:
+            queue_job.queue_class = QueueClass.PARSING.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+            raise e
 
 
 def parsing_queue_scheduler_start():
     scheduler = BackgroundScheduler(
-        {'apscheduler.job_defaults.max_instances': 1})
+        {'apscheduler.job_defaults.max_instances': 5})
     # scheduler.add_jobstore(DjangoJobStore(), "parsing_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_parsing_queue_job, 'interval', seconds=5)
