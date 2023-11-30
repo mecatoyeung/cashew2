@@ -1,6 +1,7 @@
 """
 URL mappings for the recipe app.
 """
+import sys
 from django.urls import (
     path,
     include,
@@ -26,6 +27,13 @@ from .views.splitting_rule import SplittingRuleViewSet
 from .views.chatbot import ChatBotViewSet
 from .views.post_processing import PostProcessingViewSet
 from .views.integration import IntegrationViewSet
+
+
+def running_migration(argv):
+    for arg in argv:
+        if "makemigrations" in arg or "migrate" in arg:
+            return True
+    return False
 
 
 parsers_router = DefaultRouter()
@@ -81,14 +89,15 @@ urlpatterns = [
 ]
 
 
-# Set all Queues from In Progress to Ready
-all_sources = Source.objects.filter(is_running=True)
-for source in all_sources:
-    source.is_running = False
-    source.save()
+if not running_migration(sys.argv):
+    # Set all Queues from In Progress to Ready
+    all_sources = Source.objects.filter(is_running=True)
+    for source in all_sources:
+        source.is_running = False
+        source.save()
 
-all_in_progress_queues = Queue.objects.filter(
-    queue_status=QueueStatus.IN_PROGRESS.value)
-for queue in all_in_progress_queues:
-    queue.queue_status = QueueStatus.READY.value
-    queue.save()
+    all_in_progress_queues = Queue.objects.filter(
+        queue_status=QueueStatus.IN_PROGRESS.value)
+    for queue in all_in_progress_queues:
+        queue.queue_status = QueueStatus.READY.value
+        queue.save()

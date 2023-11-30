@@ -121,7 +121,7 @@ const AIChat = () => {
     setChatHistories(produce(draft => {
       draft.length = 0
     }))
-    if (parser && parser.chatbot.openAiDefaultQuestion.trim().length > 0) {
+    if (parser && parser.chatbot && parser.chatbot.openAiDefaultQuestion && parser.chatbot.openAiDefaultQuestion.trim().length > 0) {
       chatTextSendHandler(parser.chatbot.openAiDefaultQuestion)
     }
   }
