@@ -43,7 +43,7 @@ export default function ParserLayout({
               <div className="col-8 col-md-8">
                 <nav className={workspaceLayoutStyles.nav}>
                   <ul>
-                    <li>Welcome, Cato Yeung!</li>
+                    <li>Welcome!</li>
                     <li>
                       <Button className="btn" onClick={logoutBtnClickHandler}>Logout</Button>
                     </li>
@@ -68,7 +68,7 @@ export default function ParserLayout({
             <div className="row">
               <div className="col-sm">
                 <div className={workspaceLayoutStyles.copyright}>
-                  2023 @ Sonik Global Limited. All rights reserved.
+                  2023. All rights reserved.
                 </div>
               </div>
             </div>

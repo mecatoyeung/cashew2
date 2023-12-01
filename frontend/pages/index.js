@@ -135,7 +135,7 @@ export default function Home() {
               <div className="row">
                 <div className="col-sm">
                   <div className={homeStyles.copyright}>
-                    2023 @ Sonik Global Limited. All rights reserved.
+                    2023. All rights reserved.
                   </div>
                 </div>
               </div>

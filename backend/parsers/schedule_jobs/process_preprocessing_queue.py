@@ -23,7 +23,7 @@ from parsers.models.document_page import DocumentPage
 from parsers.models.pre_processing_type import PreProcessingType
 from parsers.models.pre_processing import PreProcessing
 
-from parsers.helpers.detect_orientation import detect_orientation
+from parsers.helpers.detect_orientation_opencv import detect_orientation_opencv
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 from backend.settings import MEDIA_URL
@@ -69,8 +69,8 @@ def process_preprocessing_queue_job():
                 pre_processings_type = pre_processing.pre_processing_type
                 if pre_processings_type == PreProcessingType.ORIENTATION_DETECTION.value:
 
-                    detect_orientation(document, pre_processing,
-                                       last_pre_processing)
+                    detect_orientation_opencv(document, pre_processing,
+                                              last_pre_processing)
 
                 last_pre_processing = pre_processing
 

@@ -5,8 +5,11 @@ import os
 import shutil
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
+import pytesseract
 
 from backend.settings import MEDIA_URL
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 
 def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
@@ -40,13 +43,14 @@ def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
         im = cv2.imread(new_preprocessed_image_path)
         img_gray = cv2.imread(new_preprocessed_image_path,
                               cv2.IMREAD_GRAYSCALE)
+        cropped_gray = crop_image_center(img_gray)
 
-        (thresh, im_bw) = cv2.threshold(img_gray, 128,
+        (thresh, im_bw) = cv2.threshold(cropped_gray, 128,
                                         255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Let numpy do the heavy lifting for converting pixels to pure black or white
         thresh = 127
-        bw = cv2.threshold(img_gray, thresh, 255, cv2.THRESH_BINARY)[1]
+        bw = cv2.threshold(cropped_gray, thresh, 255, cv2.THRESH_BINARY)[1]
 
         # Pixel range is 0...255, 256/2 = 128
         bw[bw < 128] = 0    # Black
@@ -72,7 +76,6 @@ def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
             # Image has best rotation
             if score <= min(scores):
                 # Save the rotatied image
-                print('found optimal rotation')
                 # best_rotation = img.copy()
                 best_rotation_angle = angle
             # k = display_data(img, row_sums, buffer)
@@ -82,13 +85,22 @@ def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
 
         # Flip image and try again
 
-        result = rotate_without_crop(im, best_rotation_angle)
+        """result = rotate_without_crop(im, best_rotation_angle)
         result_flipped = rotate_without_crop(im, best_rotation_angle + 180)
 
         if (top_bot_margin_ratio(result) < top_bot_margin_ratio(result_flipped)):
             best_rotation_angle = best_rotation_angle
         else:
-            best_rotation_angle = best_rotation_angle + 180
+            best_rotation_angle = best_rotation_angle + 180"""
+
+        if best_rotation_angle == 0 or best_rotation_angle == 180 or best_rotation_angle == 360:
+            try:
+                osd = pytesseract.image_to_osd(
+                    im, output_type='dict')
+            except Exception as e:
+                osd = {"orientation": 0}
+                raise e
+            best_rotation_angle = osd["orientation"]
 
         rotated_im = rotate_without_crop(im, best_rotation_angle)
 
@@ -100,6 +112,22 @@ def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
     output_pdf_path = os.path.join(
         documents_folder_path, "pre_processed-" + str(preprocessing.id), "output.pdf")
     convert_images_to_pdf(image_paths, output_pdf_path)
+
+
+def crop_image_center(image):
+    center = image.shape
+    h = center[0]
+    w = center[1]
+    if h > w:
+        x = 0
+        y = h/2 - w/2
+        cropped_image = image[int(y):int(y+w), int(x):int(x+w)]
+    else:
+        x = w/2 - h/2
+        y = 0
+        cropped_image = image[int(y):int(y+h), int(x):int(x+h)]
+
+    return cropped_image
 
 
 def convert_images_to_pdf(images, output_file_path):

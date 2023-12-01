@@ -640,7 +640,7 @@ const AIChat = () => {
             <div className="row" style={{ padding: "0 10px" }}>
               <div className="col-sm" style={{ padding: "10px" }}>
                 <div className={styles.copyright}>
-                  2023 @ Sonik Global Limited. All rights reserved.
+                  2023. All rights reserved.
                 </div>
               </div>
             </div>

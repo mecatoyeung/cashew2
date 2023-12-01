@@ -121,7 +121,7 @@ const RuleProperties = () => {
           </div>
         </div>
         <div className={styles.copyrightWrapper}>
-          Copyright by Sonik Global @ 2022
+          Copyright @ 2022
         </div>
         {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && (
           <div className={styles.confirmBtnWrapper}>
