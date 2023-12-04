@@ -41,9 +41,13 @@ def process_integration_queue_job():
     for queue_job in all_ready_integration_queue_jobs:
 
         # Mark the job as in progress
-        queue_job.queue_class = QueueClass.INTEGRATION.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
+        try:
+            queue_job.queue_class = QueueClass.INTEGRATION.value
+            queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+            queue_job.save()
+        except:
+            queue_job.delete()
+            continue
 
         try:
 
