@@ -75,7 +75,18 @@ const PreProcessingQueue = (props) => {
 
   useEffect(() => {
     getParser()
-    setQueues(props.queues)
+    let queues = props.queues
+    for (let i=0; i<queues.length; i++) {
+      let queue = queues[i]
+      console.log(queue)
+      let preprocessedCount = 0
+      for (let j=0; j<queue.document.documentPages.length; j++) {
+        let documentPage = queue.document.documentPages[j]
+        if (documentPage.preprocessed) preprocessedCount++
+      } 
+      queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (Pre-processed " + preprocessedCount + " of " + queue.document.documentPages.length + ")"
+    }
+    setQueues(queues)
   }, [router.isReady, props.queues])
 
   return (
@@ -126,7 +137,7 @@ const PreProcessingQueue = (props) => {
                         style={{padding: 0}}
                       />
                     </td>
-                    <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td className={styles.tdGrow}>{queue.document.description}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

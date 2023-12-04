@@ -64,7 +64,7 @@ const ProcessedQueue = (props) => {
     getQueues()
   }
 
-  const moveToSplitQueueClickHandler = async () => {
+  const moveToSplittingQueueClickHandler = async () => {
     for (let i=0; i<selectedQueueIds.length; i++) {
       let queue = queues.find(q => q.id == selectedQueueIds[i])
       queue.queueClass = "SPLIT"
@@ -74,13 +74,23 @@ const ProcessedQueue = (props) => {
     getQueues()
   }
 
-  const moveToParseQueueClickHandler = () => {
+  const moveToParsingQueueClickHandler = () => {
     let documentIds = queues
       .filter(q => q.selected == true)
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
       queueClass: "PARSING"
+    })
+  }
+
+  const moveToIntegrationQueueClickHandler = () => {
+    let documentIds = queues
+      .filter(q => q.selected == true)
+      .map(d => d.document.id)
+    service.put("documents/change-queue-class/", {
+      documents: documentIds,
+      queueClass: "INTEGRATION"
     })
   }
 
@@ -130,9 +140,9 @@ const ProcessedQueue = (props) => {
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={moveToPreProcessingQueueClickHandler}>Move to Pre-Processing Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToSplittingQueueClickHandler}>Move to Split Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToParsingQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToIntegrationQueueClickHandler}>Move to Integration Queue</Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={deleteQueueClickHandler}>Delete Queues and Documents</Dropdown.Item>
         </DropdownButton>

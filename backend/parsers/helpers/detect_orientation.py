@@ -75,15 +75,15 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
     image_paths = []
 
     for page_idx in range(document.total_page_num):
-        page_no = page_idx + 1
-        png_path = os.path.join(str(page_no) + ".jpg")
+        page_num = page_idx + 1
+        png_path = os.path.join(str(page_num) + ".jpg")
         new_preprocessed_image_path = os.path.join(working_path, png_path)
         if last_preprocessing == None:
             last_preprocessed_image_path = os.path.join(
-                documents_folder_path, str(page_no) + ".jpg")
+                documents_folder_path, str(page_num) + ".jpg")
         else:
             last_preprocessed_image_path = os.path.join(
-                documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_no) + ".jpg")
+                documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".jpg")
         shutil.copy(last_preprocessed_image_path, new_preprocessed_image_path)
 
         im = cv2.imread(new_preprocessed_image_path)

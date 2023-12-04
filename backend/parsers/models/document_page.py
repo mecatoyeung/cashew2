@@ -11,7 +11,9 @@ class DocumentPage(models.Model):
     xml = models.TextField(
         default="<?xml version=\"1.0\" encoding=\"utf-8\" ?>")
     hocr = models.TextField()
+    preprocessed = models.BooleanField(null=False, blank=False, default=False)
     ocred = models.BooleanField(null=False, blank=False, default=False)
+    postprocessed = models.BooleanField(null=False, blank=False, default=False)
     chatbot_completed = models.BooleanField(
         null=False, blank=False, default=False)
 

@@ -9,6 +9,7 @@ from rest_framework import status
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
+from parsers.models.queue import QueueClass
 from parsers.models.queue_status import QueueStatus
 
 from backend import settings
@@ -24,7 +25,9 @@ class DocumentPageSerializer(serializers.ModelSerializer):
             'page_num',
             'width',
             'height',
+            'preprocessed',
             'ocred',
+            'postprocessed',
             'chatbot_completed'
         ]
         read_only_fields = ['id']
@@ -81,11 +84,23 @@ class QueueSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             if attr == "document":
                 continue
-            if attr == "queue_class" and value == "OCR":
+            if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.save()
+            if attr == "queue_class" and value == QueueClass.OCR.value:
                 document_pages = DocumentPage.objects.filter(
                     document__queue__id=instance.pk)
                 for document_page in document_pages:
                     document_page.ocred = False
+                    document_page.save()
+            if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.postprocessed = False
                     document_page.save()
             setattr(instance, attr, value)
 

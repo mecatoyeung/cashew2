@@ -29,11 +29,11 @@ def generate_images_from_pdf(document):
         magnify = fitz.Matrix(zoom, zoom)
         with fitz.open(abs_pdf_path) as doc:  # open document
             for page_idx, page in enumerate(doc):
-                page_no = page_idx + 1
+                page_num = page_idx + 1
                 # render page to an image
                 pix = page.get_pixmap(matrix=magnify)
                 abs_png_path = os.path.join(
-                    folder_path, str(page_no) + ".jpg")
+                    folder_path, str(page_num) + ".jpg")
                 pix.save(abs_png_path, jpg_quality=80)
 
                 im = Image.open(abs_png_path)
@@ -47,7 +47,7 @@ def generate_images_from_pdf(document):
                 # Create document page object in database
                 dp = DocumentPage(
                     document=document,
-                    page_num=page_no,
+                    page_num=page_num,
                     width=width,
                     height=height
                 )
