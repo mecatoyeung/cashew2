@@ -104,7 +104,7 @@ def process_ocr_queue_job():
             queue_job.queue_class = QueueClass.OCR.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            raise e
+            print(e)
 
 
 def process_no_ocr_queue_job():
@@ -168,7 +168,7 @@ def process_no_ocr_queue_job():
             queue_job.queue_class = QueueClass.OCR.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            raise e
+            print(e)
 
 
 def ocr_queue_scheduler_start():

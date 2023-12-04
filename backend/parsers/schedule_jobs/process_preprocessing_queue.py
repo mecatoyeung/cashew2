@@ -86,7 +86,7 @@ def process_preprocessing_queue_job():
             queue_job.queue_class = QueueClass.PRE_PROCESSING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            raise e
+            print(e)
 
 
 def preprocessing_queue_scheduler_start():

@@ -170,4 +170,4 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return Response({"completed": page_completed}, status=200)
 
         except Exception as e:
-            raise e
+            print(e)

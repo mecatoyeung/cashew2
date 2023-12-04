@@ -93,7 +93,7 @@ def process_file_sources():
                                         pdf.pages)
                                     file.close()
                             except Exception as e:
-                                raise e
+                                print(e)
 
                             document_upload_serializer = DocumentUploadSerializer(
                                 data=document_upload_serializer_data)
@@ -103,7 +103,7 @@ def process_file_sources():
 
                         except Exception as e:
 
-                            raise e
+                            print(e)
 
                         finally:
 
@@ -117,7 +117,7 @@ def process_file_sources():
         except Exception as e:
             file_source.is_running = False
             file_source.save()
-            raise e
+            print(e)
 
 
 def file_source_scheduler_start():

@@ -42,4 +42,4 @@ def parse_pdf_to_xml(document):
             document.total_page_num = len(doc)
             document.save()
     except Exception as e:
-        raise e
+        print(e)

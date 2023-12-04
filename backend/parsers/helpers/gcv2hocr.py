@@ -210,7 +210,7 @@ def fromResponse(resp, file_name, width, height, baseline_tolerance=2, **kwargs)
                                             block_id) + "_" + str(paragraph_id)+"_" + str(line_id), box=box)
                                         par.content.append(curline)
         except Exception as e:
-            raise e
+            print(e)
     return page
 
 
