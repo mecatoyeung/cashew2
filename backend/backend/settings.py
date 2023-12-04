@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'false') == 'true'
 
-ALLOWED_HOSTS = ['localhost', "cashew.catoyeung.com"]
+ALLOWED_HOSTS = ["*"]
 ALLOWED_HOSTS.extend(
     filter(
         None,

@@ -51,13 +51,13 @@ class Service {
     document.location = path
   }
 
-  async get(path, callback) {
-    return await this.service.get(path).then(
+  get(path, callback) {
+    return this.service.get(path).then(
       (response) => callback(response)
     );
   }
 
-  async getFile(path, callback) {
+  getFile(path, callback) {
     let service = axios.create({
       baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
       responseType: "arraybuffer",
@@ -70,13 +70,13 @@ class Service {
       }
       return config
     })
-    return await service.get(path).then(
+    return service.get(path).then(
       (response) => callback(response)
     );
   }
 
-  async patch(path, payload, callback) {
-    return await this.service.request({
+  patch(path, payload, callback) {
+    return this.service.request({
       method: 'PATCH',
       url: path,
       responseType: 'json',
@@ -84,8 +84,8 @@ class Service {
     }).then((response) => callback(response));
   }
 
-  async post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
-    return await this.service.request({
+  post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
+    return this.service.request({
       method: 'POST',
       url: path,
       responseType: 'json',
@@ -100,8 +100,8 @@ class Service {
     });
   }
 
-  async put(path, payload, callback, errorCallback = null) {
-    return await this.service.request({
+  put(path, payload, callback, errorCallback = null) {
+    return this.service.request({
       method: 'PUT',
       url: path,
       responseType: 'json',
@@ -114,8 +114,8 @@ class Service {
     });
   }
 
-  async update(path, payload, callback, errorCallback = null) {
-    return await this.service.request({
+  update(path, payload, callback, errorCallback = null) {
+    return this.service.request({
       method: 'UPDATE',
       url: path,
       responseType: 'json',
@@ -128,8 +128,8 @@ class Service {
     });
   }
 
-  async delete (path, callback, errorCallback = null) {
-    return await this.service.request({
+  delete (path, callback, errorCallback = null) {
+    return this.service.request({
       method: 'DELETE',
       url: path,
       responseType: 'json'
