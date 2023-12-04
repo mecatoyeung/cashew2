@@ -140,6 +140,12 @@ def process_integration_queue_job():
             queue_job.queue_status = QueueStatus.COMPLETED.value
             queue_job.save()
 
+        except Exception as e:
+            queue_job.queue_class = QueueClass.INTEGRATION.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+
+        try:
             # Delete documents after integration
             if document.document_type == DocumentType.IMPORT.value:
                 document_folder = os.path.join(
@@ -147,11 +153,8 @@ def process_integration_queue_job():
                 shutil.rmtree(document_folder)
                 queue_job.delete()
                 Document.objects.filter(pk=document.id).delete()
-
-        except Exception as e:
-            queue_job.queue_class = QueueClass.INTEGRATION.value
-            queue_job.queue_status = QueueStatus.READY.value
-            queue_job.save()
+        except:
+            pass
 
 
 def integration_queue_scheduler_start():
