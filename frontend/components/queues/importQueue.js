@@ -347,12 +347,12 @@ const ImportQueue = (props) => {
                         />
                       </td>
                       <td className={styles.tdGrow}>
-                        {queue.document.filename_without_extension +
+                        {queue.document.filenameWithoutExtension +
                           "." +
                           queue.document.extension}
                       </td>
                       <td className={styles.tdNoWrap}>
-                        {moment(queue.document.last_modified_at).format(
+                        {moment(queue.document.lastModifiedAt).format(
                           "YYYY-MM-DD hh:mm:ss a"
                         )}
                       </td>

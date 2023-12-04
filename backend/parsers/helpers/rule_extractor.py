@@ -639,6 +639,7 @@ class RuleExtractor:
 
         im = cv2.imread(full_png_path)
         h, w, c = im.shape
+        ret, bw_im = cv2.threshold(im, 127, 255, cv2.THRESH_BINARY)
 
         crop_x1 = int(xml_rule.region.x1 / xml_page.region.x2
                       * w)
@@ -648,7 +649,7 @@ class RuleExtractor:
                       xml_page.region.y2 * h)
         crop_y2 = int((xml_page.region.y2 - xml_rule.region.y1) /
                       xml_page.region.y2 * h)
-        cropped_im = im[crop_y1:crop_y2, crop_x1:crop_x2]
+        cropped_im = bw_im[crop_y1:crop_y2, crop_x1:crop_x2]
 
         detectedBarcodes = [decoded.data.decode('utf-8')
                             for decoded in decode(cropped_im)]

@@ -15,6 +15,9 @@ from parsers.models.document_extension import DocumentExtension
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue import Queue
+from parsers.models.queue_status import QueueStatus
+from parsers.models.pre_processing import PreProcessing
+from parsers.models.parser import Parser
 
 from parsers.serializers.queue import QueueSerializer
 from parsers.serializers.document_page import DocumentPageSerializer, DocumentPageDetailSerializer
@@ -99,9 +102,24 @@ class DocumentUploadSerializer(DocumentSerializer):
 
         document.save()
 
+        parser = Parser.objects.get(id=document.parser_id)
+        # Create queue object in database
+        q = Queue()
+        q.queue_status = QueueStatus.READY.value
+        q.parser = parser
+        q.document = document
+        q.queue_class = QueueClass.IMPORT.value
+        q.save()
+
         upload_document(document, file)
         generate_images_from_pdf(document)
-        create_queue_when_upload_document(document)
+        # create_queue_when_upload_document(document)
+        pre_processings = PreProcessing.objects.filter(parser_id=q.parser.id)
+        if pre_processings.count() > 0:
+            q.queue_class = QueueClass.PRE_PROCESSING.value
+        else:
+            q.queue_class = QueueClass.OCR.value
+        q.save()
 
         return document
 
