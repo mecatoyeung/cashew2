@@ -136,7 +136,7 @@ class RuleExtractor:
                 else:
                     num_of_spaces_to_be_prepend = math.floor(
                         (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
-                    spaces = " " * num_of_spaces_to_be_prepend
+                    spaces = " " * num_of_spaces_to_be_prepend + 1
                     text_in_current_row = text_in_current_row + spaces + text_to_add
 
                 # if it is the last textline or next textline is a new line, push current row to textlines_in_rows

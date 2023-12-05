@@ -47,7 +47,7 @@ jinja2>=3.1.2,<3.2
 natsort>=8.4.0,<9.0
 
 paddleocr>=2.7.0.3,<2.8
-paddlepaddle-gpu>=2.5.2,<2.6
+paddlepaddle>=2.5.2,<2.6
 
 six>=1.16.0,<1.17
 APScheduler>=3.10.4,<3.11

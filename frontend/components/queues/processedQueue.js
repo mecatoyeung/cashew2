@@ -139,10 +139,10 @@ const ProcessedQueue = (props) => {
           <Dropdown.Item href="#">Download Excel File (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={moveToPreProcessingQueueClickHandler}>Move to Pre-Processing Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
+          {/*<Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToSplittingQueueClickHandler}>Move to Split Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParsingQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToIntegrationQueueClickHandler}>Move to Integration Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToIntegrationQueueClickHandler}>Move to Integration Queue</Dropdown.Item>*/}
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={deleteQueueClickHandler}>Delete Queues and Documents</Dropdown.Item>
         </DropdownButton>

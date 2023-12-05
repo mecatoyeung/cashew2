@@ -47,6 +47,8 @@ class XMLPage:
 
     def load_all_textlines(self):
 
+        self.textlines = []
+
         root = ET.fromstring(self.xml.replace('\n', ''))
         textline_elements = root.findall('.//textline')
 
@@ -210,6 +212,9 @@ class XMLPage:
             return -1
 
         self.textlines = insertionSort(self.textlines)
+
+        if self.textlines == None:
+            self.textlines = []
 
         return
 
