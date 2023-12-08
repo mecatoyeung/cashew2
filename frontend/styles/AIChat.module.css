@@ -166,6 +166,10 @@
 	background-color: lightyellow;
 }
 
+.talkKeyToValue {
+  overflow-wrap: break-word;
+}
+
 .border{
   border: 3px solid #666;
 }

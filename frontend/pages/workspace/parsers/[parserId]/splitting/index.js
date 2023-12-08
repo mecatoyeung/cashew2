@@ -454,7 +454,7 @@ const Splitting = () => {
                                   </div>
                                   <div className={styles.consecutivePageSplittingRouter}>
                                     <span className={styles.consecutivePageSplittingRouteTo}>route to: </span>
-                                    <span className={styles.consecutivePageSplittingParser}>Invoice</span>
+                                    <span className={styles.consecutivePageSplittingParser}>{allParsers.find(p => p.id == firstPageSplittingRule.routeToParser).name}</span>
                                     <span className={styles.consecutivePageSplittingAsFirstPage}> as <span style={{textDecoration: "underline"}}>consecutive page</span></span>
                                   </div>
                                   <div className={styles.consecutivePageSplittingActions}>

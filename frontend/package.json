@@ -34,6 +34,7 @@
     "rehype-prism-plus": "^1.6.3",
     "rehype-rewrite": "^4.0.0",
     "sass": "^1.63.6",
+    "untruncate-json": "^0.0.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

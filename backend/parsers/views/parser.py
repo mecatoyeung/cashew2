@@ -12,6 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from django.http import StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication
 
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -32,6 +35,7 @@ from parsers.models.source import Source
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.chatbot import ChatBot
+from parsers.models.chatbot_type import ChatBotType
 from parsers.models.open_ai import OpenAI
 from parsers.models.integration import Integration
 from parsers.models.splitting_type import SplittingType
@@ -49,12 +53,19 @@ from parsers.serializers.splitting import SplittingSerializer
 from parsers.helpers.document_parser import DocumentParser
 
 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return
+
+
 class ParserViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = ParserSerializer
     queryset = Parser.objects.all()
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    """authentication_classes = [
+        TokenAuthentication]
+    permission_classes = [IsAuthenticated]"""
 
     def _params_to_ints(self, qs):
         """ Convert a list of strings to integers. """
@@ -432,10 +443,10 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         return Response(result, status=200)
 
-    @ action(detail=True,
-             methods=['POST'],
-             name='Ask OpenAI about PDF content',
-             url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/ask_openai')
+    @action(detail=True,
+            methods=['POST'],
+            name='Ask OpenAI about PDF content',
+            url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/ask_chatbot')
     def ask_openai_about_pdf_content(self, request, pk, document_id, page_num, *args, **kwargs):
 
         parser = Parser.objects.get(pk=int(pk))
@@ -451,64 +462,98 @@ class ParserViewSet(viewsets.ModelViewSet):
         if question == "":
             return Response("Please ask me with meaningful questions.", status=200)
 
-        content_to_be_sent_to_openai = "\n".join(
-            document_parser.extract_all_text_in_all_pages())
+        if chatbot.chatbot_type == ChatBotType.OPEN_AI.value:
 
-        content_to_be_sent_to_openai = re.sub(
-            ' +', '\n', content_to_be_sent_to_openai)
+            content_to_be_sent_to_openai = "\n".join(
+                document_parser.extract_all_text_in_all_pages())
 
-        try:
+            content_to_be_sent_to_openai = re.sub(
+                ' +', '\n', content_to_be_sent_to_openai)
 
-            headers = {
-                "Content-Type": "application/json",
-                "api-key": chatbot.open_ai_api_key
-            }
-            open_ai_content = question + " Please return in JSON format.\nInput: " + \
-                content_to_be_sent_to_openai
-            json_data = {
-                "messages": [{"role": "user", "content": open_ai_content}],
-            }
+            try:
 
-            response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
-                                     data=json.dumps(json_data), headers=headers)
-            if response.status_code == 400:
-                raise Exception(response.json()["error"]["message"])
-            response_dict = json.loads(
-                response.json()["choices"][0]["message"]['content'].replace("Output:", ""))
+                headers = {
+                    "Content-Type": "application/json",
+                    "api-key": chatbot.open_ai_api_key
+                }
+                open_ai_content = question + " Please return in JSON format.\nInput: " + \
+                    content_to_be_sent_to_openai
+                json_data = {
+                    "messages": [{"role": "user", "content": open_ai_content}],
+                }
 
-            """response_dict = {
-                "Document No": "12345",
-                "Document Date": "11 Dec 2023",
-                "Item Table": [
-                    {
-                        "Item Description": "Car",
-                        "Quantity": 123,
-                        "Amount": 123.00
-                    },
-                    {
-                        "Item Description": "Ship",
-                        "Quantity": 234,
-                        "Amount": 234.00
-                    },
-                    {
-                        "Item Description": "Airplane",
-                        "Quantity": 345,
-                        "Amount": 345.00
+                response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
+                                         data=json.dumps(json_data), headers=headers)
+                if response.status_code == 400:
+                    raise Exception(response.json()["error"]["message"])
+                response_dict = json.loads(
+                    response.json()["choices"][0]["message"]['content'].replace("Output:", ""))
+
+                """response_dict = {
+                    "Document No": "12345",
+                    "Document Date": "11 Dec 2023",
+                    "Item Table": [
+                        {
+                            "Item Description": "Car",
+                            "Quantity": 123,
+                            "Amount": 123.00
+                        },
+                        {
+                            "Item Description": "Ship",
+                            "Quantity": 234,
+                            "Amount": 234.00
+                        },
+                        {
+                            "Item Description": "Airplane",
+                            "Quantity": 345,
+                            "Amount": 345.00
+                        }
+                    ]
+                }"""
+
+                return Response(response_dict, status=200)
+
+            except Exception as e:
+                return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
+
+        elif chatbot.chatbot_type == ChatBotType.ON_PREMISE_AI.value:
+
+            try:
+
+                content_to_be_sent_to_openai = "\n".join(
+                    document_parser.extract_all_text_in_all_pages())
+                chatbot_content = question + " Please return in JSON format.\nInput: " + \
+                    content_to_be_sent_to_openai
+
+                def generate_response(content):
+                    s = requests.Session()
+                    headers = {}
+                    payload = {
+                        "model": "gpt-3.5-turbo",
+                        "messages": [{"role": "user", "content": content}],
+                        "stream": True,
+                        "temperature": 0.7
                     }
-                ]
-            }"""
+                    with s.post(chatbot.base_url,
+                                headers=headers,
+                                json=payload,
+                                stream=True) as resp:
 
-            return Response(response_dict, status=200)
+                        for line in resp.iter_lines():
+                            if line:
+                                try:
+                                    line = line.decode("utf-8")
+                                    if line.startswith("data: "):
+                                        line = line.replace('data: ', '', 1)
+                                    print(line)
+                                    json_line = json.loads(line)
+                                    data = json_line["choices"][0]["delta"]["content"]
+                                    yield data
+                                except:
+                                    pass
 
-        except Exception as e:
-            return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
+                return StreamingHttpResponse(
+                    generate_response(chatbot_content), status=200, content_type='text/event-stream')
 
-
-"""prefetch_related(Prefetch("splitting__splitting_rules", queryset=SplittingRule.objects.filter(
-            splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
-            .prefetch_related("splitting_conditions")
-            .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                        queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                            splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
-        ))
-"""
+            except Exception as e:
+                raise e

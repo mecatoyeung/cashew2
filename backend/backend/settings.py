@@ -31,12 +31,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'changeme')
 DEBUG = os.environ.get('DEBUG', 'false') == 'true'
 
 ALLOWED_HOSTS = ["*"]
-ALLOWED_HOSTS.extend(
+"""ALLOWED_HOSTS.extend(
     filter(
         None,
         os.environ.get('ALLOWED_HOSTS', '').split(','),
     )
-)
+)"""
 
 # Application definition
 
@@ -63,8 +63,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -200,6 +200,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = ["*"]
 
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",

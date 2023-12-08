@@ -15,7 +15,8 @@ class ChatBotSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatBot
         fields = ['id', 'guid', 'chatbot_type',
-                  'open_ai_resource_name', 'open_ai_api_key', 'open_ai_default_question']
+                  'open_ai_resource_name', 'open_ai_api_key', 'open_ai_default_question',
+                  'base_url']
         read_only_fields = ['id']
 
     def create(self, validated_data):

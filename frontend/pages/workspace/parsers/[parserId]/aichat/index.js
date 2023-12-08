@@ -26,6 +26,8 @@ import Select from 'react-select'
 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
+import untruncateJson from "untruncate-json"
+
 const ExcelJS = require('exceljs')
 
 const FileSaver = require('file-saver')
@@ -49,11 +51,15 @@ const AIChat = () => {
 
   const [textlines, setTextlines] = useState([])
 
+  const [currentChatUuid, setCurrentChatUuid] = useState("")
+
   const [chatHistories, setChatHistories] = useState([])
 
   const [chatText, setChatText] = useState("")
 
   const [chatIsLoading, setChatIsLoading] = useState(false)
+
+  /*const [chatData, setChatData] = useState("")*/
 
   const [parserDocuments, setParserDocuments] = useState([])
 
@@ -166,41 +172,145 @@ const AIChat = () => {
     }
   }
 
-  const chatTextSendHandler = (chatText) => {
+  const chatTextSendHandler = async (chatText) => {
     setChatIsLoading(true)
     setChatText("")
-    addChatHistory(
+    
+
+    /*addOrSetChatHistory(
       {
         uuid: uuidv4(),
         from: "staff",
         chat: chatText
       }
-    )
-    service.post("parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_openai/", {
-      "question": chatText
-    }, response => {
-      setChatIsLoading(false)
-      addChatHistory({
+    )*/
+
+    let updatedChatHistories = [...chatHistories]
+
+    updatedChatHistories.push({
+        uuid: uuidv4(),
+        from: "staff",
+        chat: chatText
+      })
+    updatedChatHistories.push({
         uuid: uuidv4(),
         from: "machine",
-        chat: response.data
+        chat: ""
       })
-    }, error => {
-      console.error(error)
-      setChatIsLoading(false)
-      addChatHistory({
-        uuid: uuidv4(),
-        from: "machine",
-        chat: { "Error": error.response.data }
+
+    setChatHistories(updatedChatHistories)
+        
+    let chatData = ""
+
+    fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        question: chatText
       })
+    }).then(async (response) => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        try {
+          const { value, done } = await reader.read();
+          if (done) {
+            setChatIsLoading(false);
+            break;
+          }
+
+          const decodedChunk = decoder.decode(value, { stream: true })
+
+          chatData = `${chatData}${decodedChunk}`
+
+          console.log(chatData)
+          console.log(chatHistories)
+
+          updatedChatHistories = updatedChatHistories.map((chatHisory, chatHisoryIndex) => {   
+            if(chatHisoryIndex == (updatedChatHistories.length - 1)){
+                const updatedChatHistory = {...chatHisory}
+                updatedChatHistory.chat = JSON.parse(untruncateJson(chatData))
+                console.log(updatedChatHistory)
+                return updatedChatHistory;
+            }
+            return chatHisory
+          })
+
+          setChatHistories(updatedChatHistories)
+        } catch {
+
+          console.error(chatHistories)
+
+        }
+      }
     })
+
+    /*service.post(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", 
+      {
+        "question": chatText
+      },
+      async (response) => {
+        if (!response.ok || !response.body) {
+          throw response.statusText;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        console.log("hello")
+
+        while (true) {
+          const { value, done } = await reader.read();
+          console.log(value)
+          if (done) {
+            setChatIsLoading(false);
+            break;
+          }
+
+          const decodedChunk = decoder.decode(value, { stream: true });
+          setChatData(prevValue => {
+            let currentValue = `${prevValue}${decodedChunk}`
+            console.log(currentValue)
+            try {
+              addOrSetChatHistory({
+                uuid: uuid,
+                from: "machine",
+                chat: JSON.parse(untruncateJson(currentValue))
+              })
+            } catch (e) {
+              raise(e)
+            }
+            return currentValue
+          });
+        }
+      },
+      (errorResponse) => {
+        console.log(errorResponse)
+      },
+      {
+        responseType: 'stream',
+        'Access-Control-Allow-Origin': '*'
+      },
+    )*/
+
   }
 
-  const addChatHistory = (chatHistory) => {
-    setChatHistories(produce(draft => {
-      draft.push(chatHistory)
-    }))
-  }
+  /*const addOrSetChatHistory = (chatHistory) => {
+    if (chatHistories.filter(h => h.uuid == chatHistory.uuid).length > 0) {
+      setChatHistories(produce(draft => {
+        ch = draft.find(h => h.uuid == chatHistory.uuid)
+        ch.chat = chatHistory.chat
+      }))
+    } else {
+      setChatHistories(produce(draft => {
+        draft.push(chatHistory)
+      }))
+    }
+    
+  }*/
 
   const downloadExcelBtnClickHandler = async () => {
     if (chatHistories.filter(ch => ch.from == "machine").length == 0) return
@@ -551,10 +661,115 @@ const AIChat = () => {
                             </div>
                           </div>
                         )}
+                        {console.log(chatHistory)}
                         {chatHistory.from == "machine" && (
                           <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
                             <div className={styles.talktext}>
-                              {Object.entries(chatHistory.chat)
+                              {Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key) => {
+                                console.log(chatHistory.chat[key])
+                                 if (typeof chatHistory.chat[key] === 'string') {
+                                  console.log("attr")
+                                  return (
+                                    <div className={styles.talkKeyToValue}>{key}: {chatHistory.chat[key]}</div>
+                                  )
+                                } else if (Array.isArray(chatHistory.chat[key])) {
+                                  console.log("table")
+                                  let tableJSON = chatHistory.chat[key]
+                                  if (tableJSON.length > 0) {
+                                    return (
+                                      <div className="talk-table-div" key={key}>
+                                        <p>{key}: </p>
+                                        <table className="talk-table">
+                                          <thead>
+                                            <tr>
+                                              {Object.keys(tableJSON[0]).map((tableKey) => {
+                                                console.log(tableKey)
+                                                return (
+                                                  <th>{tableKey}</th>
+                                                )
+                                              })}
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {tableJSON.map((tableRow) => {
+                                              let tableRowObjectKeys = Object.keys(tableRow)
+                                              if (tableRowObjectKeys.length > 0) {
+                                                return (
+                                                  <tr>
+                                                    {tableRowObjectKeys.map(tableRowObjectKey => (
+                                                      <td>{tableRow[tableRowObjectKey]}</td>
+                                                    ))}
+                                                  </tr>
+                                                )
+                                              } else {
+                                                return (
+                                                  <tr></tr>
+                                                )
+                                              }
+                                            })}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )
+                                  }
+                                } else if (!Array.isArray(chatHistory.chat[key]) && typeof chatHistory.chat[key] === 'object') {
+                                  console.log("object")
+                                  let objectJSON = chatHistory.chat[key]
+                                  console.log("Object: ", objectJSON)
+                                  let objectsHtml = (<></>)
+                                  if (Object.keys(objectJSON).length > 0) {
+                                    objectsHtml = Object.keys(objectJSON).map((objectKey) => {
+                                      console.log(objectKey, ": ", objectJSON[objectKey])
+                                      if (typeof objectJSON[objectKey] === 'string') {
+                                        return (
+                                          <div className={styles.talkKeyToValue}>{objectKey}: {objectJSON[objectKey]}</div>
+                                        )
+                                      } else if (Array.isArray(objectJSON[objectKey])){
+                                        let tableJSON = objectJSON[objectKey]
+                                        if (tableJSON.length > 0) {
+                                          return (
+                                            <div className="talk-table-div" key={key}>
+                                              <p>{key}: </p>
+                                              <table className="talk-table">
+                                                <thead>
+                                                  <tr>
+                                                    {Object.keys(tableJSON[0]).map((tableKey) => {
+                                                      console.log(tableKey)
+                                                      return (
+                                                        <th>{tableKey}</th>
+                                                      )
+                                                    })}
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  {tableJSON.map((tableRow) => {
+                                                    let tableRowObjectKeys = Object.keys(tableRow)
+                                                    if (tableRowObjectKeys.length > 0) {
+                                                      return (
+                                                        <tr>
+                                                          {tableRowObjectKeys.map(tableRowObjectKey => (
+                                                            <td>{tableRow[tableRowObjectKey]}</td>
+                                                          ))}
+                                                        </tr>
+                                                      )
+                                                    } else {
+                                                      return (
+                                                        <tr></tr>
+                                                      )
+                                                    }
+                                                  })}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          )
+                                        }
+                                      }
+                                      
+                                    })
+                                  }
+                                  return objectsHtml
+                                } 
+                              {/*Object.entries(chatHistory.chat)
                                 .map(([chatKey, chatValue]) => {
                                   console.log(chatKey, chatValue)
                                   if (!Array.isArray(chatValue)) {
@@ -597,7 +812,8 @@ const AIChat = () => {
                                     }
                                   }
                                 })
-                              }
+                              */}
+                              })}
                             </div>
                           </div>
                         )}

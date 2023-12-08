@@ -81,6 +81,10 @@ const chatBotOptions = [
   {
     label: "Open AI",
     value: "OPEN_AI"
+  },
+  {
+    label: "On Premise AI",
+    value: "ON_PREMISE_AI"
   }
 ]
 
@@ -210,6 +214,15 @@ const Settings = () => {
     })
   }
 
+  const chatbotBaseUrlChangeHandler = (e) => {
+    let updatedChatbot = { ...parser.chatbot }
+    updatedChatbot.baseUrl = e.target.value
+    setParser({
+      ...parser,
+      chatbot: updatedChatbot
+    })
+  }
+
   const openAIEnabledChangeHandler = (e) => {
     let updatedOpenAi = { ...parser.openAi }
     updatedOpenAi.enabled = e.target.checked
@@ -272,43 +285,6 @@ const Settings = () => {
             <Button variant="primary" style={{ marginRight: 10 }} onClick={exportBtnClickHandler}>Export</Button>
           </Card.Body>
         </Card>
-        {/*parser && parser.ocr != null && (
-          <Card style={{ width: '100%', marginBottom: 10 }}>
-            <Card.Body>
-              <Card.Title>OCR</Card.Title>
-              <Form.Group className="mb-3" controlId="formOCRType">
-                <Select
-                  options={ocrOptions}
-                  value={ocrOptions.find(oo => oo.value == parser.ocr.ocrType)}
-                  onChange={(e) => ocrTypeChangeHandler(e)}
-                  menuPlacement="auto"
-                  menuPosition="fixed" />
-              </Form.Group>
-              {parser.ocr.ocrType == "GOOGLE_VISION" && (
-                <>
-                  <Form.Group className="mb-3" controlId="formGoogleVisionOcrApiKey">
-                    <Form.Label>Google Vision OCR API KEY</Form.Label>
-                    <Form.Control onChange={googleVisionOcrApiKeyChangeHandler} value={parser.ocr.googleVisionOcrApiKey}/>
-                  </Form.Group>
-                </>
-              )}
-              {parser.ocr.ocrType == "PADDLE_OCR" && (
-                <>
-                  <Form.Group className="mb-3" controlId="formPaddleOcrApiKey">
-                    <Form.Label>Paddle OCR Language</Form.Label>
-                    <Select
-                      options={paddleOCRLangOptions}
-                      value={paddleOCRLangOptions.find(oo => oo.value == parser.ocr.paddleOcrLanguage)}
-                      onChange={(e) => paddleOCRLanguageChangeHandler(e)}
-                      menuPlacement="auto"
-                      menuPosition="fixed" />
-                  </Form.Group>
-                </>
-              )}
-              <Button variant="primary" onClick={ocrSaveBtnClickHandler}>Save</Button>
-            </Card.Body>
-          </Card>
-              )*/}
         {parser && parser.chatbot != null && (
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>
@@ -334,6 +310,14 @@ const Settings = () => {
                   <Form.Group className="mb-3" controlId="formChatbotOpenAIDefaultQuestion">
                     <Form.Label>Open AI Default Question</Form.Label>
                     <Form.Control onChange={chatbotOpenAIDefaultQuestionChangeHandler} value={parser.chatbot.openAiDefaultQuestion}/>
+                  </Form.Group>
+                </>
+              )}
+              {parser.chatbot.chatbotType == "ON_PREMISE_AI" && (
+                <>
+                  <Form.Group className="mb-3" controlId="formChatbotBaseUrl">
+                    <Form.Label>Base Url</Form.Label>
+                    <Form.Control onChange={chatbotBaseUrlChangeHandler} value={parser.chatbot.baseUrl}/>
                   </Form.Group>
                 </>
               )}

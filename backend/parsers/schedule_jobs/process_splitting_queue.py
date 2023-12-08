@@ -304,7 +304,9 @@ def process_splitting_queue_job():
                                 new_document_page.height = document_page.height
                                 new_document_page.xml = document_page.xml
                                 new_document_page.document_id = new_document.id
-                                new_document_page.ocred = True
+                                new_document_page.preprocessed = False
+                                new_document_page.ocred = False
+                                new_document_page.postprocessed = False
                                 new_document_page.chatbot_completed = False
 
                                 document_page_file_path = os.path.join(
