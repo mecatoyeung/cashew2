@@ -551,7 +551,7 @@ const AIChat = () => {
           <main className={styles.main + " d-flex flex-column"}>
             <div
               className="row d-flex flex-grow-1"
-              style={{ padding: 0, margin: 0, flexDirection: "row", height: 480 }}
+              style={{ padding: 0, margin: 0, flexDirection: "row", height: "60%" }}
             >
               <div
                 className="col-12 col-md-6 d-flex"
