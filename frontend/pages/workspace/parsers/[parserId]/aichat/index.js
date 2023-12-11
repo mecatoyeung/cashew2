@@ -78,6 +78,8 @@ const AIChat = () => {
   const [isResizing, setIsResizing] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState("50%")
 
+  const chatMessagesRef = useRef(null);
+
   const getParser = () => {
     service.get("parsers/" + parserId + "/", response => {
       setParser(response.data)
@@ -241,6 +243,7 @@ const AIChat = () => {
             })
 
             setChatHistories(updatedChatHistories)
+
           } catch {
 
             console.error(chatHistories)
@@ -442,6 +445,11 @@ const AIChat = () => {
     if (!router.isReady) return
     refreshChatHistories()
   }, [router.isReady, documentId])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    chatMessagesRef.current?.scrollIntoView({behavior: 'smooth'})
+  }, [router.isReady, chatHistories])
 
   useEffect(() => {
     window.addEventListener("mousemove", resize);
@@ -812,7 +820,7 @@ const AIChat = () => {
                   </div>
                 )}
                 <div className={styles.actions}>
-                  <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={downloadExcelBtnClickHandler}>Download as Excel</Button>
+                  <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={downloadExcelBtnClickHandler} ref={chatMessagesRef}>Download as Excel</Button>
                   {document && document.documentPages.find(dp => dp.pageNum == pageNum).chatbotCompleted && (
                     <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={markAsIncompletedBtnClickHandler}>Mark as incompleted</Button>
                   )}
