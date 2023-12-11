@@ -187,6 +187,9 @@ h2.accordion-header {
 
 .react-transform-wrapper {
   cursor: grab;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: unset !important;
 }
 
 .react-transform-component {

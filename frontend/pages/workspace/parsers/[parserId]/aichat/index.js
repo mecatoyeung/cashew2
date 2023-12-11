@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 import Head from "next/head"
 
@@ -27,6 +27,8 @@ import Select from 'react-select'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
 import untruncateJson from "untruncate-json"
+
+
 
 const ExcelJS = require('exceljs')
 
@@ -59,8 +61,6 @@ const AIChat = () => {
 
   const [chatIsLoading, setChatIsLoading] = useState(false)
 
-  /*const [chatData, setChatData] = useState("")*/
-
   const [parserDocuments, setParserDocuments] = useState([])
 
   const [changeDocumentModal, setChangeDocumentModal] = useState({
@@ -73,6 +73,10 @@ const AIChat = () => {
   const [imageRef, setImageRef] = useState()
 
   const [showDocumentPagePreview, setShowDocumentPagePreview] = useState(true)
+
+  const sidebarRef = useRef(null)
+  const [isResizing, setIsResizing] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState("50%")
 
   const getParser = () => {
     service.get("parsers/" + parserId + "/", response => {
@@ -175,15 +179,6 @@ const AIChat = () => {
   const chatTextSendHandler = async (chatText) => {
     setChatIsLoading(true)
     setChatText("")
-    
-
-    /*addOrSetChatHistory(
-      {
-        uuid: uuidv4(),
-        from: "staff",
-        chat: chatText
-      }
-    )*/
 
     let updatedChatHistories = [...chatHistories]
 
@@ -195,168 +190,130 @@ const AIChat = () => {
     updatedChatHistories.push({
         uuid: uuidv4(),
         from: "machine",
-        chat: ""
+        chat: "",
+        export_xlsx: true
       })
 
     setChatHistories(updatedChatHistories)
         
     let chatData = ""
 
-    fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        question: chatText
-      })
-    }).then(async (response) => {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        try {
-          const { value, done } = await reader.read();
-          if (done) {
-            setChatIsLoading(false);
-            break;
-          }
-
-          const decodedChunk = decoder.decode(value, { stream: true })
-
-          chatData = `${chatData}${decodedChunk}`
-
-          console.log(chatData)
-          console.log(chatHistories)
-
-          updatedChatHistories = updatedChatHistories.map((chatHisory, chatHisoryIndex) => {   
-            if(chatHisoryIndex == (updatedChatHistories.length - 1)){
-                const updatedChatHistory = {...chatHisory}
-                updatedChatHistory.chat = JSON.parse(untruncateJson(chatData))
-                console.log(updatedChatHistory)
-                return updatedChatHistory;
-            }
-            return chatHisory
-          })
-
-          setChatHistories(updatedChatHistories)
-        } catch {
-
-          console.error(chatHistories)
-
-        }
-      }
-    })
-
-    /*service.post(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", 
-      {
-        "question": chatText
-      },
-      async (response) => {
-        if (!response.ok || !response.body) {
-          throw response.statusText;
-        }
-
+    try {
+      fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          question: chatText
+        })
+      }).then(async (response) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
-        console.log("hello")
-
         while (true) {
-          const { value, done } = await reader.read();
-          console.log(value)
-          if (done) {
-            setChatIsLoading(false);
-            break;
-          }
-
-          const decodedChunk = decoder.decode(value, { stream: true });
-          setChatData(prevValue => {
-            let currentValue = `${prevValue}${decodedChunk}`
-            console.log(currentValue)
-            try {
-              addOrSetChatHistory({
-                uuid: uuid,
-                from: "machine",
-                chat: JSON.parse(untruncateJson(currentValue))
-              })
-            } catch (e) {
-              raise(e)
+          try {
+            const { value, done } = await reader.read();
+            if (done) {
+              setChatIsLoading(false);
+              break;
             }
-            return currentValue
-          });
+
+            const decodedChunk = decoder.decode(value, { stream: true })
+
+            chatData = `${chatData}${decodedChunk}`
+
+            updatedChatHistories = updatedChatHistories.map((chatHisory, chatHisoryIndex) => {   
+              if(chatHisoryIndex == (updatedChatHistories.length - 1)){
+                  const updatedChatHistory = {...chatHisory}
+                  try {
+                    updatedChatHistory.chat = JSON.parse(untruncateJson(chatData))
+                  } catch {
+                    updatedChatHistory.chat = { "message": chatData}
+                  }
+                  return updatedChatHistory;
+              }
+              return chatHisory
+            })
+
+            setChatHistories(updatedChatHistories)
+          } catch {
+
+            console.error(chatHistories)
+
+          }
         }
-      },
-      (errorResponse) => {
-        console.log(errorResponse)
-      },
-      {
-        responseType: 'stream',
-        'Access-Control-Allow-Origin': '*'
-      },
-    )*/
+      })
+    } catch(error) {
+      console.error(error)
+      updatedChatHistories = updatedChatHistories.map((chatHisory, chatHisoryIndex) => {   
+        if(chatHisoryIndex == (updatedChatHistories.length - 1)){
+            const updatedChatHistory = {...chatHisory}
+            updatedChatHistory.chat = {
+              "Error": "Seems we are encountering network errors. Please try again. If problem persists, please contact system administrator."
+            }
+            return updatedChatHistory;
+        }
+        return chatHisory
+      })
 
-  }
-
-  /*const addOrSetChatHistory = (chatHistory) => {
-    if (chatHistories.filter(h => h.uuid == chatHistory.uuid).length > 0) {
-      setChatHistories(produce(draft => {
-        ch = draft.find(h => h.uuid == chatHistory.uuid)
-        ch.chat = chatHistory.chat
-      }))
-    } else {
-      setChatHistories(produce(draft => {
-        draft.push(chatHistory)
-      }))
+      setChatHistories(updatedChatHistories)
     }
     
-  }*/
+  }
 
   const downloadExcelBtnClickHandler = async () => {
     if (chatHistories.filter(ch => ch.from == "machine").length == 0) return
 
     const workbook = new ExcelJS.Workbook()
-    const metadataWorksheet = workbook.addWorksheet('Metadata');
 
-    let latestMachineResponse = chatHistories.filter(ch => ch.from == "machine").slice(-1)[0].chat
-    let rowIndex = 0
-    Object.entries(latestMachineResponse)
-      .map(([key, value]) => {
-        if (!Array.isArray(value)) {
-          let rowValues = []
-          rowValues[1] = key
-          rowValues[2] = value
-          metadataWorksheet.addRow(rowValues)
-        } else {
-          let itemTableName = key
-          let itemTableRows = value
-          if (itemTableRows.length > 0) {
-            let itemTableSheet = workbook.addWorksheet(itemTableName)
+    let latestMachineResponses = chatHistories.filter(ch => ch.from == "machine" && ch.export_xlsx)
+    
+
+    for (let i=0; i<latestMachineResponses.length; i++) {
+      let chatCounter = i + 1
+      let rowIndex = 0
+      let latestMachineResponse = latestMachineResponses[i].chat
+      let metadataWorksheet = workbook.addWorksheet(chatCounter + ". " + 'Metadata')
+      Object.entries(latestMachineResponse)
+        .map(([key, value]) => {
+          if (!Array.isArray(value)) {
             let rowValues = []
-            let itemTableColIndex = 1
-            Object.entries(itemTableRows[0])
-            .map(([tableKey, tableValue]) => {
-              rowValues[itemTableColIndex] = tableKey
-              itemTableColIndex++
-            })
-            itemTableSheet.addRow(rowValues)
-            
-            
-            for (let j=0; j<itemTableRows.length; j++) {
-              let itemTableRow = itemTableRows[j]
-              rowValues = []
-
-              itemTableColIndex = 1
-              Object.entries(itemTableRow)
+            rowValues[1] = key
+            rowValues[2] = value
+            metadataWorksheet.addRow(rowValues)
+          } else {
+            let itemTableName = key
+            let itemTableRows = value
+            if (itemTableRows.length > 0) {
+              let itemTableSheet = workbook.addWorksheet(chatCounter + ". " + itemTableName)
+              let rowValues = []
+              let itemTableColIndex = 1
+              Object.entries(itemTableRows[0])
               .map(([tableKey, tableValue]) => {
-                rowValues[itemTableColIndex] = tableValue
+                rowValues[itemTableColIndex] = tableKey
                 itemTableColIndex++
               })
               itemTableSheet.addRow(rowValues)
+              
+              
+              for (let j=0; j<itemTableRows.length; j++) {
+                let itemTableRow = itemTableRows[j]
+                rowValues = []
+
+                itemTableColIndex = 1
+                Object.entries(itemTableRow)
+                .map(([tableKey, tableValue]) => {
+                  rowValues[itemTableColIndex] = tableValue
+                  itemTableColIndex++
+                })
+                itemTableSheet.addRow(rowValues)
+              }
             }
           }
-        }
-    })
+      })
+    }
+    
     const buffer = await workbook.xlsx.writeBuffer()
     FileSaver.saveAs(new Blob([buffer]), "Cashew AI Chatbot Result.xlsx")
   }
@@ -433,6 +390,27 @@ const AIChat = () => {
     })
   }
 
+  const startResizing = useCallback((mouseDownEvent) => {
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (mouseMoveEvent) => {
+      if (isResizing) {
+        console.log(mouseMoveEvent)
+        setSidebarWidth(
+          mouseMoveEvent.clientX -
+            sidebarRef.current.getBoundingClientRect().left
+        );
+      }
+    },
+    [isResizing]
+  );
+
   useEffect(() => {
     if (!router.isReady) return
   }, [router.isReady])
@@ -458,6 +436,15 @@ const AIChat = () => {
     if (!router.isReady) return
     refreshChatHistories()
   }, [router.isReady, documentId])
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
 
   return (
     <>
@@ -549,306 +536,301 @@ const AIChat = () => {
           <hr className={styles.headerHr} />
           <main className={styles.main + " d-flex flex-column"}>
             <div
-              className={
-                styles.sideNavContainerDiv + " d-flex flex-grow-1"
-              }
+              className="row d-flex flex-grow-1"
+              style={{ padding: 0, margin: 0, flexDirection: "row", height: 480 }}
             >
               <div
-                className="row d-flex flex-grow-1"
-                style={{ padding: 0, margin: 0, flexDirection: "row" }}
+                className="col-12 col-md-6 d-flex"
+                style={{ position: "relative", paddingLeft: 0, paddingRight: 0, width: sidebarWidth, overflow: "hidden", borderRight: "3px solid #000", borderRight: "3px solid #000", height: "100%" }}
+                ref={sidebarRef}
               >
-                <div
-                  className="col-12 col-md-2 d-flex"
-                  style={{ position: "relative", paddingLeft: 0, paddingRight: 0, width: showDocumentPagePreview ? 480 : 0, overflow: "auto", borderRight: "3px solid #000", borderRight: "3px solid #000", maxHeight: "calc(100vh - 121px)" }}
-                >
-                  {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length > 0 && (
-                    <TransformWrapper 
-                      className="my-react-transform-component"
-                      wheel={{disabled: true}}
-                      initialScale={0.3}
-                      minScale={0.2} maxScale={1} maxPositionY={0}
-                      centerZoomedOut={false} customTransform={(x, y, scale) => {
-                        const a = scale;
-                        const b = 0;
-                        const c = 0;
-                        const d = scale;
-                        const tx = x;
-                        const ty = y;
-                        return `matrix3d(${a}, ${b}, 0, 0, ${c}, ${d}, 0, 0, 0, 0, 1, 0, ${tx}, 40, 0, 1)`;
-                      }}> 
-                      {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
-                        <>
-                          <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
-                            <Button className={styles.toolsBtn} onClick={() => zoomIn()}>Zoom in</Button>
-                            <Button className={styles.toolsBtn} onClick={() => zoomOut()}>Zoom out</Button>
-                            <Button className={styles.toolsBtn} onClick={() => resetTransform()}>Reset</Button>
-                            <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
-                            <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
-                            <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
-                          </div>
-                          <TransformComponent>
-                            <img className={styles.documentPageImg} src={imageUri} ref={imageRef}/>
-                          </TransformComponent>
-                        </>
-                      )}
-                    </TransformWrapper>
-                  )}
-                  {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length <= 0 && (
-                    <TransformWrapper 
-                      className="my-react-transform-component"
-                      wheel={{disabled: true}}
-                      minScale={0.2} maxScale={1} maxPositionY={0}
-                      centerZoomedOut={false}> 
-                      {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
-                        <>
-                          <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
-                            <Button className={styles.toolsBtn} onClick={() => zoomIn()}>Zoom in</Button>
-                            <Button className={styles.toolsBtn} onClick={() => zoomOut()}>Zoom out</Button>
-                            <Button className={styles.toolsBtn} onClick={() => resetTransform()}>Reset</Button>
-                            <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
-                            <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
-                            <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
-                          </div>
-                          <TransformComponent>
-
-                          </TransformComponent>
-                          <div style={{ width: 100, height: 100, margin: "auto" }}>This page is undergoing OCR. Please wait...</div>
-                        </>
-                      )}
-                    </TransformWrapper>
-                  )}
-                </div>
-                <div
-                  className="col-12 col-md-10 flex-grow-1"
-                  style={{
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    paddingBottom: 0,
-                    maxHeight: "calc(100vh - 121px)",
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "calc(100vw - 500px)",
-                  }}
-                >
-                  <div className={styles.pageText}>
-                    <div className={styles.streamTableDiv}>
-                          <table className={styles.streamTable}>
-                            <tbody>
-                              {textlines.map((row, rowIndex) => {
-                                return (
-                                  <tr key={rowIndex}>
-                                    <td>{row}</td>
-                                  </tr>
-                                )
-                              })}
-                            </tbody>
-                          </table>
+                {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length > 0 && (
+                  <TransformWrapper 
+                    className="my-react-transform-component"
+                    initialScale={0.3}
+                    minScale={0.2} maxScale={1}
+                    centerZoomedOut={false} customTransform={(x, y, scale) => {
+                      console.log(x, y, scale)
+                      const a = scale;
+                      const b = 0;
+                      const c = 0;
+                      const d = scale;
+                      const tx = x;
+                      const ty = y;
+                      return `matrix3d(${a}, ${b}, 0, 0, ${c}, ${d}, 0, 0, 0, 0, 1, 0, ${tx}, ${ty}, 0, 1)`;
+                    }}> 
+                    {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                      <>
+                        <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
+                          <Button className={styles.toolsBtn} onClick={() => zoomIn()}>Zoom in</Button>
+                          <Button className={styles.toolsBtn} onClick={() => zoomOut()}>Zoom out</Button>
+                          <Button className={styles.toolsBtn} onClick={() => resetTransform()}>Reset</Button>
+                          <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
+                          <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
+                          <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
                         </div>
-                  </div>
-                  <div className={styles.chatMessages}>
-                    <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
-                      <div className={styles.talktext}>
-                        <p>Ask me anything about this page.</p>
-                      </div>
-                    </div>
-                    {chatHistories && chatHistories.map((chatHistory, chatHistoryIndex) => 
-                      <div key={chatHistory.uuid}>
-                        {console.log(chatHistories)}
-                        {chatHistory.from == "staff" && (
-                          <div className={[styles.talkBubble, styles.triRight, styles.border, styles.btmRightIn, "right"].join(" ")}>
-                            <div className={styles.talktext}>
-                              <p>{chatHistory.chat}</p>
-                            </div>
+                        <TransformComponent>
+                          <div style={{marginTop: 150}}>
+                            <img className={styles.documentPageImg} src={imageUri} ref={imageRef}/>
                           </div>
-                        )}
-                        {console.log(chatHistory)}
-                        {chatHistory.from == "machine" && (
-                          <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
-                            <div className={styles.talktext}>
-                              {Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key) => {
-                                console.log(chatHistory.chat[key])
-                                 if (typeof chatHistory.chat[key] === 'string') {
-                                  console.log("attr")
-                                  return (
-                                    <div className={styles.talkKeyToValue}>{key}: {chatHistory.chat[key]}</div>
-                                  )
-                                } else if (Array.isArray(chatHistory.chat[key])) {
-                                  console.log("table")
-                                  let tableJSON = chatHistory.chat[key]
-                                  if (tableJSON.length > 0) {
-                                    return (
-                                      <div className="talk-table-div" key={key}>
-                                        <p>{key}: </p>
-                                        <table className="talk-table">
-                                          <thead>
-                                            <tr>
-                                              {Object.keys(tableJSON[0]).map((tableKey) => {
-                                                console.log(tableKey)
-                                                return (
-                                                  <th>{tableKey}</th>
-                                                )
-                                              })}
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {tableJSON.map((tableRow) => {
-                                              let tableRowObjectKeys = Object.keys(tableRow)
-                                              if (tableRowObjectKeys.length > 0) {
-                                                return (
-                                                  <tr>
-                                                    {tableRowObjectKeys.map(tableRowObjectKey => (
-                                                      <td>{tableRow[tableRowObjectKey]}</td>
-                                                    ))}
-                                                  </tr>
-                                                )
-                                              } else {
-                                                return (
-                                                  <tr></tr>
-                                                )
-                                              }
-                                            })}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    )
-                                  }
-                                } else if (!Array.isArray(chatHistory.chat[key]) && typeof chatHistory.chat[key] === 'object') {
-                                  console.log("object")
-                                  let objectJSON = chatHistory.chat[key]
-                                  console.log("Object: ", objectJSON)
-                                  let objectsHtml = (<></>)
-                                  if (Object.keys(objectJSON).length > 0) {
-                                    objectsHtml = Object.keys(objectJSON).map((objectKey) => {
-                                      console.log(objectKey, ": ", objectJSON[objectKey])
-                                      if (typeof objectJSON[objectKey] === 'string') {
-                                        return (
-                                          <div className={styles.talkKeyToValue}>{objectKey}: {objectJSON[objectKey]}</div>
-                                        )
-                                      } else if (Array.isArray(objectJSON[objectKey])){
-                                        let tableJSON = objectJSON[objectKey]
-                                        if (tableJSON.length > 0) {
-                                          return (
-                                            <div className="talk-table-div" key={key}>
-                                              <p>{key}: </p>
-                                              <table className="talk-table">
-                                                <thead>
-                                                  <tr>
-                                                    {Object.keys(tableJSON[0]).map((tableKey) => {
-                                                      console.log(tableKey)
-                                                      return (
-                                                        <th>{tableKey}</th>
-                                                      )
-                                                    })}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {tableJSON.map((tableRow) => {
-                                                    let tableRowObjectKeys = Object.keys(tableRow)
-                                                    if (tableRowObjectKeys.length > 0) {
-                                                      return (
-                                                        <tr>
-                                                          {tableRowObjectKeys.map(tableRowObjectKey => (
-                                                            <td>{tableRow[tableRowObjectKey]}</td>
-                                                          ))}
-                                                        </tr>
-                                                      )
-                                                    } else {
-                                                      return (
-                                                        <tr></tr>
-                                                      )
-                                                    }
-                                                  })}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          )
-                                        }
-                                      }
-                                      
-                                    })
-                                  }
-                                  return objectsHtml
-                                } 
-                              {/*Object.entries(chatHistory.chat)
-                                .map(([chatKey, chatValue]) => {
-                                  console.log(chatKey, chatValue)
-                                  if (!Array.isArray(chatValue)) {
-                                    return (
-                                      <div className={styles.talkKeyToValue} key={chatKey}>
-                                        {chatKey}: {chatValue}
-                                      </div>
-                                    )
-                                  } else {
-                                    let itemTableName = chatKey
-                                    let itemTableRows = chatValue
-                                    if (itemTableRows.length > 0) {
+                        </TransformComponent>
+                      </>
+                    )}
+                  </TransformWrapper>
+                )}
+                {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length <= 0 && (
+                  <TransformWrapper 
+                    className="my-react-transform-component"
+                    wheel={{disabled: true}}
+                    minScale={0.2} maxScale={1} maxPositionY={0}
+                    centerZoomedOut={false}> 
+                    {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                      <>
+                        <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
+                          <Button className={styles.toolsBtn} onClick={() => zoomIn()}>Zoom in</Button>
+                          <Button className={styles.toolsBtn} onClick={() => zoomOut()}>Zoom out</Button>
+                          <Button className={styles.toolsBtn} onClick={() => resetTransform()}>Reset</Button>
+                          <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
+                          <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
+                          <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
+                        </div>
+                        <TransformComponent>
+
+                        </TransformComponent>
+                        <div style={{ width: 100, height: 100, margin: "auto" }}>This page is undergoing OCR. Please wait...</div>
+                      </>
+                    )}
+                  </TransformWrapper>
+                )}
+              </div>
+              <div className={styles.sidebarResizer} onMouseDown={startResizing}></div>
+              <div className={styles.pageText}>
+                <div className={styles.streamTableDiv}>
+                  <table className={styles.streamTable}>
+                    <tbody>
+                      {textlines.map((row, rowIndex) => {
+                        return (
+                          <tr key={rowIndex}>
+                            <td>{row.replace(/ /g, '\u00a0')}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div className="d-flex flex-grow-1"
+                style={{ padding: 0, margin: 0, flexDirection: "column", overflowY: "hidden" }}>
+              <div className={styles.chatMessages}>
+                <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
+                  <div className={styles.talktext}>
+                    <p>Ask me anything about this document.</p>
+                  </div>
+                </div>
+                {chatHistories && chatHistories.map((chatHistory, chatHistoryIndex) => 
+                  <div key={chatHistory.uuid}>
+                    {chatHistory.from == "staff" && (
+                      <div className={[styles.talkBubble, styles.triRight, styles.border, styles.btmRightIn, "right"].join(" ")}>
+                        <div className={styles.talktext}>
+                          <p>{chatHistory.chat}</p>
+                        </div>
+                      </div>
+                    )}
+                    {chatHistory.from == "machine" && (
+                      <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
+                        <div className={styles.talkActionDiv}>
+                          <Form.Check
+                            type="checkbox"
+                            checked={chatHistory.export_xlsx}
+                            onChange={() => {
+                              setChatHistories(chatHistories.map((ch, chIndex) => {
+                                if (chIndex == chatHistoryIndex) {
+                                  return {...ch, export_xlsx: !ch.export_xlsx}
+                                } else {
+                                  return {...ch}
+                                }
+                              }))
+                            }}
+                          />
+                        </div>
+                        <div className={styles.talktext}>
+                          {Array.isArray(chatHistory.chat) && chatHistory.chat.length > 0 && (
+                            <div className="talk-table-div" key={key}>
+                              <table className="talk-table">
+                                <thead>
+                                  <tr>
+                                    {Object.keys(chatHistory.chat[0]).map((tableKey, tableKeyIndex) => {
+                                      console.log(tableKey)
                                       return (
-                                        <div className="talk-table-div" key={itemTableName}>
-                                          <p>{itemTableName}: </p>
+                                        <th key={tableKeyIndex}>{tableKey}</th>
+                                      )
+                                    })}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {chatHistory.chat.map((tableRow, tableRowIndex) => {
+                                    let tableRowObjectKeys = Object.keys(tableRow)
+                                    if (tableRowObjectKeys.length > 0) {
+                                      return (
+                                        <tr key={tableRowIndex}>
+                                          {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                                            <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                                          ))}
+                                        </tr>
+                                      )
+                                    } else {
+                                      return (
+                                        <tr key={tableRowIndex}></tr>
+                                      )
+                                    }
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                          {!Array.isArray(chatHistory.chat) && Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key, keyIndex) => {
+                            if (typeof chatHistory.chat[key] === 'string') {
+                              return (
+                                <div className={styles.talkKeyToValue} key={keyIndex}>{key}: {chatHistory.chat[key]}</div>
+                              )
+                            } else if (Array.isArray(chatHistory.chat[key])) {
+                              if (Array.isArray(chatHistory.chat[key]) && chatHistory.chat[key].length > 0) {
+                                let tableJSON = chatHistory.chat[key]
+                                if (typeof tableJSON[0] === 'string') {
+                                  return (
+                                    <div key={keyIndex}>
+                                      {tableJSON.map((data, dataIndex) => (
+                                        <div className={styles.talkKeyToValue} key={dataIndex}>{key}: {data}</div>
+                                      ))}
+                                    </div>
+                                  )
+                                } else {
+                                  return (
+                                    <div className="talk-table-div" key={keyIndex}>
+                                      <p>{key}: </p>
+                                      <table className="talk-table">
+                                        <thead>
+                                          <tr>
+                                            {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
+                                              return (
+                                                <th key={tableKeyIndex}>{tableKey}</th>
+                                              )
+                                            })}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {tableJSON.map((tableRow, tableRowIndex) => {
+                                            let tableRowObjectKeys = Object.keys(tableRow)
+                                            if (tableRowObjectKeys.length > 0) {
+                                              return (
+                                                <tr key={tableRowIndex}>
+                                                  {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                                                    <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                                                  ))}
+                                                </tr>
+                                              )
+                                            } else {
+                                              return (
+                                                <tr key={tableRowIndex}></tr>
+                                              )
+                                            }
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )
+                                }
+                              }
+                            } else if (!Array.isArray(chatHistory.chat[key]) && typeof chatHistory.chat[key] === 'object') {
+                              let objectJSON = chatHistory.chat[key]
+                              let objectsHtml = (<></>)
+                              if (Object.keys(objectJSON).length > 0) {
+                                objectsHtml = Object.keys(objectJSON).map((objectKey, objectKeyIndex) => {
+                                  console.log(objectKey, ": ", objectJSON[objectKey])
+                                  if (typeof objectJSON[objectKey] === 'string') {
+                                    return (
+                                      <div key={objectKeyIndex} className={styles.talkKeyToValue}>{objectKey}: {objectJSON[objectKey]}</div>
+                                    )
+                                  } else if (Array.isArray(objectJSON[objectKey])){
+                                    let tableJSON = objectJSON[objectKey]
+                                    if (tableJSON.length > 0) {
+                                      return (
+                                        <div className="talk-table-div" key={key}>
+                                          <p>{key}: </p>
                                           <table className="talk-table">
                                             <thead>
                                               <tr>
-                                                {Object.entries(itemTableRows[0]).map(
-                                                  ([itemTableRowThKey, itemTableRowThValue]) => {
-                                                    return (<th key={itemTableRowThKey}>{itemTableRowThKey}</th>)
-                                                  }
-                                                )}
+                                                {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
+                                                  console.log(tableKey)
+                                                  return (
+                                                    <th key={tableKeyIndex}>{tableKey}</th>
+                                                  )
+                                                })}
                                               </tr>
                                             </thead>
                                             <tbody>
-                                              {itemTableRows.map((itemTableRow, itemTableRowIndex) => (
-                                                <tr key={JSON.stringify(itemTableRow)}>
-                                                  {Object.entries(itemTableRow).map(
-                                                    ([itemTableRowTdKey, itemTableRowTdValue]) => {
-                                                      return (<td key={itemTableRowTdKey}>{itemTableRowTdValue}</td>)
-                                                    }
-                                                  )}
-                                                </tr>
-                                              ))}
+                                              {tableJSON.map((tableRow, tableRowIndex) => {
+                                                let tableRowObjectKeys = Object.keys(tableRow)
+                                                if (tableRowObjectKeys.length > 0) {
+                                                  return (
+                                                    <tr key={tableRowIndex}>
+                                                      {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                                                        <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                                                      ))}
+                                                    </tr>
+                                                  )
+                                                } else {
+                                                  return (
+                                                    <tr key={tableRowIndex}></tr>
+                                                  )
+                                                }
+                                              })}
                                             </tbody>
                                           </table>
                                         </div>
                                       )
                                     }
                                   }
+                                  
                                 })
-                              */}
-                              })}
-                            </div>
-                          </div>
-                        )}
+                              }
+                              return objectsHtml
+                            } 
+                          })}
+                        </div>
                       </div>
                     )}
-                    <div className={styles.actions}>
-                      <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={downloadExcelBtnClickHandler}>Download as Excel</Button>
-                      {document && document.documentPages.find(dp => dp.pageNum == pageNum).chatbotCompleted && (
-                        <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={markAsIncompletedBtnClickHandler}>Mark as incompleted</Button>
-                      )}
-                      {document && !document.documentPages.find(dp => dp.pageNum == pageNum).chatbotCompleted && (
-                        <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={markAsCompletedBtnClickHandler}>Mark as completed</Button>
-                      )}
-                    </div>
                   </div>
-                  <div className={styles.chatTextfield}>
-                    <Form.Control
-                      type="text"
-                      id="chatTextfield"
-                      style={{ "borderRadius": 0, "resize": "none" }}
-                      placeholder={chatIsLoading ? "Sending to Open AI. Please wait..." : "Ask me anything..."}
-                      as="textarea"
-                      row="2"
-                      value={chatText}
-                      disabled={chatIsLoading}
-                      onChange={chatTextChangeHandler}
-                      onKeyDown={chatTextKeyDownHandler}
-                    />
-                    <Button style={{ borderRadius: 0}} onClick={() => chatTextSendHandler(chatText)}>Send</Button>
-                  </div>
+                )}
+                <div className={styles.actions}>
+                  <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={downloadExcelBtnClickHandler}>Download as Excel</Button>
+                  {document && document.documentPages.find(dp => dp.pageNum == pageNum).chatbotCompleted && (
+                    <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={markAsIncompletedBtnClickHandler}>Mark as incompleted</Button>
+                  )}
+                  {document && !document.documentPages.find(dp => dp.pageNum == pageNum).chatbotCompleted && (
+                    <Button style={{marginLeft: 10, marginBottom: 10, marginTop: 10, whiteSpace: "nowrap"}} onClick={markAsCompletedBtnClickHandler}>Mark as completed</Button>
+                  )}
                 </div>
               </div>
-                <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "none" : "block"}} onClick={() => toggleDocumentPagePreviewHandler()}>Show</Button>
-                <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "block" : "none"}} onClick={() => toggleDocumentPagePreviewHandler()}>Hide</Button>
+              <div className={styles.chatTextfield}>
+                <Form.Control
+                  type="text"
+                  id="chatTextfield"
+                  style={{ "borderRadius": 0, "resize": "none" }}
+                  placeholder={chatIsLoading ? "Sending to Open AI. Please wait..." : "Ask me anything..."}
+                  as="textarea"
+                  row="2"
+                  value={chatText}
+                  disabled={chatIsLoading}
+                  onChange={chatTextChangeHandler}
+                  onKeyDown={chatTextKeyDownHandler}
+                />
+                <Button style={{ borderRadius: 0}} onClick={() => chatTextSendHandler(chatText)}>Send</Button>
+              </div>
             </div>
+            <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "none" : "block"}} onClick={() => toggleDocumentPagePreviewHandler()}>Show</Button>
+            <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "block" : "none"}} onClick={() => toggleDocumentPagePreviewHandler()}>Hide</Button>
           </main>
         </>
         <footer className={styles.footer}>

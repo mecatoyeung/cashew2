@@ -134,8 +134,10 @@ class RuleExtractor:
 
                 # else, calculate spaces to prepend from previous textline
                 else:
+                    # num_of_spaces_to_be_prepend = math.floor(
+                    # (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
                     num_of_spaces_to_be_prepend = math.floor(
-                        (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
+                        (current_textline.region.x1 - previous_textline.region.x2) / prev_text_width)
                     spaces = " " * (num_of_spaces_to_be_prepend + 1)
                     text_in_current_row = text_in_current_row + spaces + text_to_add
 

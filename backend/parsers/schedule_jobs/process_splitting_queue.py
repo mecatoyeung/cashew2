@@ -26,6 +26,7 @@ from parsers.models.document import Document
 from parsers.models.document_type import DocumentType
 from parsers.models.document_extension import DocumentExtension
 from parsers.models.document_page import DocumentPage
+from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.chatbot_type import ChatBotType
@@ -309,8 +310,20 @@ def process_splitting_queue_job():
                                 new_document_page.postprocessed = False
                                 new_document_page.chatbot_completed = False
 
-                                document_page_file_path = os.path.join(
-                                    media_folder_path, "documents", str(document.guid), str(accumulated_page_num) + ".jpg")
+                                preprocessings = PreProcessing.objects.order_by(
+                                    "step").filter(parser_id=document.parser.id)
+
+                                if len(preprocessings) == 0:
+                                    document_page_file_path = os.path.join(
+                                        media_folder_path, "documents", str(document.guid), str(accumulated_page_num) + ".jpg")
+                                else:
+                                    last_preprocessing = preprocessings[0]
+                                    document_page_file_path = os.path.join(
+                                        media_folder_path, "documents", str(document.guid), "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".jpg")
+                                    if not os.path.exists(document_page_file_path):
+                                        document_page_file_path = os.path.join(
+                                            media_folder_path, "documents", str(document.guid), str(accumulated_page_num) + ".jpg")
+
                                 new_document_page_image_file = os.path.join(
                                     media_folder_path, "documents", new_document.guid, str(new_document_page_num_counter) + ".jpg")
                                 shutil.copyfile(

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+import traceback
 
 from rest_framework import (
     viewsets,
@@ -480,6 +481,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                     content_to_be_sent_to_openai
                 json_data = {
                     "messages": [{"role": "user", "content": open_ai_content}],
+                    "temperature": 0.2
                 }
 
                 response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
@@ -511,9 +513,12 @@ class ParserViewSet(viewsets.ModelViewSet):
                     ]
                 }"""
 
-                return Response(response_dict, status=200)
+                return StreamingHttpResponse(
+                    json.dumps(response_dict), status=200,
+                    content_type='text/event-stream')
 
             except Exception as e:
+                print(traceback.format_exc())
                 return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
 
         elif chatbot.chatbot_type == ChatBotType.ON_PREMISE_AI.value:
@@ -546,14 +551,18 @@ class ParserViewSet(viewsets.ModelViewSet):
                                     if line.startswith("data: "):
                                         line = line.replace('data: ', '', 1)
                                     print(line)
+                                    if line == None:
+                                        continue
                                     json_line = json.loads(line)
                                     data = json_line["choices"][0]["delta"]["content"]
                                     yield data
                                 except:
+                                    print(traceback.format_exc())
                                     pass
 
                 return StreamingHttpResponse(
                     generate_response(chatbot_content), status=200, content_type='text/event-stream')
 
             except Exception as e:
-                raise e
+                print(traceback.format_exc())
+                pass

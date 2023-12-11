@@ -338,7 +338,7 @@ const Splitting = () => {
         <Card style={{ width: '100%', marginBottom: 10 }}>
           <Card.Body>
             {splitting && splitting.splittingRules.map((firstPageSplittingRule, firstPageSplittingRuleIndex) => (
-            <Card style={{ width: '100%', marginBottom: 10 }}>
+            <Card style={{ width: '100%', marginBottom: 10 }} key={firstPageSplittingRuleIndex}>
               <Card.Body>
                 <Card.Title>
                   First Page Splitting&nbsp;
@@ -402,7 +402,7 @@ const Splitting = () => {
                     {firstPageSplittingRule.consecutivePageSplittingRules && 
                       firstPageSplittingRule.consecutivePageSplittingRules.map((consecutivePageSplittingRule, consecutivePageSplittingRuleIndex) => {
                       return (
-                        <>
+                        <div key={consecutivePageSplittingRuleIndex}>
                           {consecutivePageSplittingRuleIndex > 0 && (
                             <p style={{textAlign: "center", margin: 10}}>or</p>
                           )}
@@ -414,7 +414,7 @@ const Splitting = () => {
                                     {consecutivePageSplittingRule && consecutivePageSplittingRule.splittingConditions.map((consecutivePageSplittingCondition, consecutiveSplittingConditionIndex) => {
                                       if (consecutiveSplittingConditionIndex == 0) {
                                         return (
-                                          <>
+                                          <div key={consecutiveSplittingConditionIndex}>
                                             <div className={styles.consecutivePageSplittingCondition}>
                                               <span className={styles.consecutivePageSplittingIf}>If</span>
                                               <span className={styles.consecutivePageSplittingRuleName}>
@@ -428,7 +428,7 @@ const Splitting = () => {
                                               )}
                                             </div>
                                             <br/>
-                                          </>
+                                          </div>
                                         )
                                       } else {
                                         return (
@@ -466,7 +466,7 @@ const Splitting = () => {
                               </fieldset>
                             </Card.Body>
                           </Card>
-                        </>
+                        </div>
                       )
                     })}
                     <div className={styles.consecutivePageSplittingActions}>
