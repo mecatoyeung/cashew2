@@ -127,10 +127,7 @@ const AIChat = () => {
   }
 
   const refreshChatHistories = () => {
-    console.log("hello")
-    setChatHistories(produce(draft => {
-      draft.length = 0
-    }))
+    setChatHistories([])
     if (parser && parser.chatbot && parser.chatbot.openAiDefaultQuestion && parser.chatbot.openAiDefaultQuestion.trim().length > 0) {
       chatTextSendHandler(parser.chatbot.openAiDefaultQuestion)
     }
@@ -190,7 +187,7 @@ const AIChat = () => {
     updatedChatHistories.push({
         uuid: uuidv4(),
         from: "machine",
-        chat: "",
+        chat: { "Message": "Loading..." },
         export_xlsx: true
       })
 
@@ -199,7 +196,7 @@ const AIChat = () => {
     let chatData = ""
 
     try {
-      fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", {
+      await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "parsers/" + parserId + "/documents/" + documentId + "/pages/" + pageNum + "/ask_chatbot/", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json'
@@ -208,6 +205,12 @@ const AIChat = () => {
           question: chatText
         })
       }).then(async (response) => {
+
+        if (!response.ok) {
+          console.error(response)
+          throw new Error(`${response.status} ${response.statusText}`);
+        }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -228,7 +231,8 @@ const AIChat = () => {
                   const updatedChatHistory = {...chatHisory}
                   try {
                     updatedChatHistory.chat = JSON.parse(untruncateJson(chatData))
-                  } catch {
+                  } catch(error) {
+                    console.error(error)
                     updatedChatHistory.chat = { "message": chatData}
                   }
                   return updatedChatHistory;
@@ -258,6 +262,7 @@ const AIChat = () => {
       })
 
       setChatHistories(updatedChatHistories)
+      setChatIsLoading(false);
     }
     
   }
@@ -380,6 +385,7 @@ const AIChat = () => {
   }
 
   const selectedDocumentChangeHandler = (e) => {
+    setChatHistories([])
     router.push({
       pathname,
       query: {
@@ -541,7 +547,7 @@ const AIChat = () => {
             >
               <div
                 className="col-12 col-md-6 d-flex"
-                style={{ position: "relative", paddingLeft: 0, paddingRight: 0, width: sidebarWidth, overflow: "hidden", borderRight: "3px solid #000", borderRight: "3px solid #000", height: "100%" }}
+                style={{ position: "relative", paddingLeft: 0, paddingRight: 0, width: sidebarWidth, overflow: "hidden", borderRight: "3px solid #000", height: "100%" }}
                 ref={sidebarRef}
               >
                 {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length > 0 && (
@@ -621,7 +627,7 @@ const AIChat = () => {
               </div>
             </div>
             <div className="d-flex flex-grow-1"
-                style={{ padding: 0, margin: 0, flexDirection: "column", overflowY: "hidden" }}>
+                style={{ padding: 0, margin: 0, flexDirection: "column", overflowY: "hidden", borderTop: "2px solid #000" }}>
               <div className={styles.chatMessages}>
                 <div className={[styles.talkBubble, styles.triRight, styles.round, styles.btmLeft].join(" ")}>
                   <div className={styles.talktext}>
@@ -690,7 +696,9 @@ const AIChat = () => {
                             </div>
                           )}
                           {!Array.isArray(chatHistory.chat) && Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key, keyIndex) => {
-                            if (typeof chatHistory.chat[key] === 'string') {
+                            if (typeof chatHistory.chat === 'string') {
+                              <div className={styles.talkKeyToValue}>{chatHistory.chat[key]}</div>
+                            } else if (typeof chatHistory.chat[key] === 'string') {
                               return (
                                 <div className={styles.talkKeyToValue} key={keyIndex}>{key}: {chatHistory.chat[key]}</div>
                               )
@@ -818,7 +826,7 @@ const AIChat = () => {
                   type="text"
                   id="chatTextfield"
                   style={{ "borderRadius": 0, "resize": "none" }}
-                  placeholder={chatIsLoading ? "Sending to Open AI. Please wait..." : "Ask me anything..."}
+                  placeholder={chatIsLoading ? "Please wait..." : "Ask me anything..."}
                   as="textarea"
                   row="2"
                   value={chatText}
@@ -829,8 +837,8 @@ const AIChat = () => {
                 <Button style={{ borderRadius: 0}} onClick={() => chatTextSendHandler(chatText)}>Send</Button>
               </div>
             </div>
-            <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "none" : "block"}} onClick={() => toggleDocumentPagePreviewHandler()}>Show</Button>
-            <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "block" : "none"}} onClick={() => toggleDocumentPagePreviewHandler()}>Hide</Button>
+            {/*<Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "none" : "block"}} onClick={() => toggleDocumentPagePreviewHandler()}>Show</Button>
+            <Button style={{position: "absolute", bottom: 71, left: 5, display: showDocumentPagePreview ? "block" : "none"}} onClick={() => toggleDocumentPagePreviewHandler()}>Hide</Button>*/}
           </main>
         </>
         <footer className={styles.footer}>

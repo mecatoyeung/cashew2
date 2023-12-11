@@ -488,8 +488,29 @@ class ParserViewSet(viewsets.ModelViewSet):
                                          data=json.dumps(json_data), headers=headers)
                 if response.status_code == 400:
                     raise Exception(response.json()["error"]["message"])
-                response_dict = json.loads(
-                    response.json()["choices"][0]["message"]['content'].replace("Output:", ""))
+                try:
+                    s = response.json()["choices"][0]["message"]['content'].replace(
+                        "Output:", "")
+                    while True:
+                        try:
+                            # try to parse...
+                            response_dict = json.loads(s)
+                            break                    # parsing worked -> exit loop
+                        except Exception as e:
+                            # "Expecting , delimiter: line 34 column 54 (char 1158)"
+                            # position of unexpected character after '"'
+                            unexp = int(re.findall(
+                                r'\(char (\d+)\)', str(e))[0])
+                            # position of unescaped '"' before that
+                            second_unesc = s.rfind(r'"', 0, unexp)
+                            first_unesc = s.rfind(r'"', 0, second_unesc)
+                            s = s[:first_unesc] + s[second_unesc+3:]
+
+                except:
+                    print(traceback.format_exc())
+                    response_dict = {
+                        "Message": "Encountered errors. Please try again or contact system administrator."
+                    }
 
                 """response_dict = {
                     "Document No": "12345",

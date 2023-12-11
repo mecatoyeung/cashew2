@@ -185,6 +185,7 @@
   padding: 1em;
 	text-align: left;
   line-height: 1.5em;
+  min-height: 40px;
 }
 .talktext p {
   -webkit-margin-before: 0em;
@@ -268,8 +269,8 @@
 }
 
 .sidebarResizer {
-  width: 5px;
-  background: #c1c3c5;
+  width: 3px;
+  background: #000;
   cursor: col-resize;
 }
 
