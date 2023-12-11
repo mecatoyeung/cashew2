@@ -852,7 +852,7 @@ const AIChat = () => {
         <footer className={styles.footer}>
           <div style={{ width: "100%", padding: "0 10px" }}>
             <div className="row" style={{ padding: "0 10px" }}>
-              <div className="col-sm" style={{ padding: "10px" }}>
+              <div className="col-sm" style={{ padding: "5px" }}>
                 <div className={styles.copyright}>
                   2023. All rights reserved.
                 </div>
