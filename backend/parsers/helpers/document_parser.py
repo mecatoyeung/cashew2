@@ -8,8 +8,8 @@ from parsers.helpers.get_document_nos_from_range import get_document_nos_from_ra
 from parsers.helpers.rule_extractor import RuleExtractor
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(5.0)
-ASSUMED_TEXT_HEIGHT = Decimal(10.0)
+ASSUMED_TEXT_WIDTH = Decimal(0.5)
+ASSUMED_TEXT_HEIGHT = Decimal(1.0)
 
 
 class DocumentParser:
@@ -65,7 +65,9 @@ class DocumentParser:
                             textlines_in_rows.append("")
                     # if it is not the first line and there is a line difference between current line and previous line,
                     # add empty lines between them
-                    elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
+                    else:
+                        if current_textline.region.y2 == None:
+                            continue
                         num_of_empty_lines_to_be_prepend = math.floor(
                             (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
                         for i in range(num_of_empty_lines_to_be_prepend):

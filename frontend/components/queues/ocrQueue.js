@@ -21,6 +21,7 @@ const OCRQueue = (props) => {
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
+  const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
   const getParser = () => {
     if (!props.parserId) return
@@ -40,6 +41,42 @@ const OCRQueue = (props) => {
     })
   }
 
+  const stopOCRClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "OCR"
+      queue.queueStatus = "STOPPED"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+  }
+
+  const chkQueueChangeHandler = (e, queue) => {
+    if (e.target.checked) {
+      if (!selectedQueueIds.includes(queue.id)) {
+        setSelectedQueueIds([...selectedQueueIds, queue.id])
+      }
+    } else {
+      let updatedSelectedQueueIds = [...selectedQueueIds]
+      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      if (index !== -1) {
+        updatedSelectedQueueIds.splice(index, 1);
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    }
+  }
+
+  const chkAllChangeHandler = (e) => {
+    if (e.target.checked) {
+      let updatedSelectedQueueIds = []
+      for (let i=0; i<queues.length; i++) {
+        updatedSelectedQueueIds.push(queues[i].id)
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    } else {
+      setSelectedQueueIds([])
+    }
+  }
+
   useEffect(() => {
     if (!router.isReady) return
     getParser()
@@ -54,10 +91,6 @@ const OCRQueue = (props) => {
       queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (OCRed " + ocredCount + " of " + queue.document.documentPages.length + ")"
     }
     setQueues(queues)
-    /*getQueues()
-    const interval = setInterval(() => {
-      getQueues()
-    }, 5000);*/
   }, [router.isReady, props.queues])
 
   return (
@@ -66,10 +99,10 @@ const OCRQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
+          <Dropdown.Item onClick={() => stopOCRClickHandler()}>Stop OCR and Move to Processed Queue</Dropdown.Item>
           <Dropdown.Item href="#">Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -88,16 +121,17 @@ const OCRQueue = (props) => {
                   <Form.Check
                     type="checkbox"
                     label=""
+                    onChange={chkAllChangeHandler}
                     style={{padding: 0}}
                   />
                 </th>
-                <th colSpan={2}>
-
-                </th>
+                <th>Document Name</th>
+                <th>Document Type</th>
+                <th>Queue Status</th>
+                <th>Last Modified At</th>
               </tr>
             </thead>
             <tbody>
-              {console.log(queues)}
               {queues && queues.map((queue, queueIndex) => {
                 return (
                   <tr key={queueIndex}>
@@ -105,12 +139,14 @@ const OCRQueue = (props) => {
                       <Form.Check
                         type="checkbox"
                         label=""
-                        checked={queue.selected}
-                        onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        checked={selectedQueueIds.filter(x => x == queue.id).length > 0}
+                        onChange={(e) => chkQueueChangeHandler(e, queue)}
                         style={{padding: 0}}
                       />
                     </td>
                     <td className={styles.tdGrow}>{queue.document.description}</td>
+                    <td>{queue.document.documentType}</td>
+                    <td>{queue.queueStatus}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

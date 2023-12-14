@@ -15,6 +15,7 @@ class ChatBot(models.Model):
     open_ai_resource_name = models.CharField(
         max_length=1024, null=True, blank=True)
     open_ai_api_key = models.CharField(max_length=1024, null=True)
+    open_ai_deployment = models.CharField(max_length=1024, null=True)
     open_ai_default_question = models.CharField(max_length=1024, null=True)
     base_url = models.CharField(max_length=1024, null=True)
 

@@ -15,6 +15,7 @@ class OpenAIStreamProcessor(StreamBase):
             "open_ai").get(pk=stream.rule.parser_id)
         self.resource_name = parser.open_ai.open_ai_resource_name
         self.api_key = parser.open_ai.open_ai_api_key
+        self.deployment = parser.open_ai.open_ai_deployment
 
     def process(self, input):
 
@@ -30,7 +31,7 @@ class OpenAIStreamProcessor(StreamBase):
             "messages": [{"role": "user", "content": open_ai_content}],
         }
 
-        response = requests.post('https://' + self.resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
+        response = requests.post('https://' + self.resource_name + '.openai.azure.com/openai/deployments/' + self.deployment + '/chat/completions?api-version=2023-05-15',
                                  data=json.dumps(json_data), headers=headers)
         response_dict = json.loads(
             response.json()["choices"][0]["message"]['content'])

@@ -2,6 +2,7 @@
 import sys
 import os
 from pathlib import Path
+import traceback
 
 from django.db.models import Prefetch
 
@@ -79,14 +80,32 @@ def process_preprocessing_queue_job():
             # queue_job.save()
 
             # Mark the job as preprocessing in progress
+            updated_queue_job = Queue.objects.get(pk=queue_job.id)
+            if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
+                continue
             queue_job.queue_class = QueueClass.OCR.value
             queue_job.queue_status = QueueStatus.READY.value
+            document_pages = document.document_pages.all()
+            for document_page in document_pages:
+                document_page.ocred = False
+                document_page.save()
             queue_job.save()
         except Exception as e:
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.PRE_PROCESSING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            print(e)
+
+
+def process_stopped_preprocessing_queue_job():
+
+    all_stopped_preprocessing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.PRE_PROCESSING.value, queue_status=QueueStatus.STOPPED.value)
+
+    for queue_job in all_stopped_preprocessing_queue_jobs:
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
+        queue_job.save()
 
 
 def preprocessing_queue_scheduler_start():
@@ -95,6 +114,8 @@ def preprocessing_queue_scheduler_start():
     # scheduler.add_jobstore(DjangoJobStore(), "preprocessing_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_preprocessing_queue_job, 'interval', seconds=5)
+    scheduler.add_job(process_stopped_preprocessing_queue_job,
+                      'interval', seconds=5)
     # register_events(scheduler)
     scheduler.start()
     print("Processing Pre-processing Queue", file=sys.stdout)

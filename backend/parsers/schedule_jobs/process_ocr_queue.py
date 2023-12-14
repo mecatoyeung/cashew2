@@ -20,6 +20,7 @@ import sys
 import os
 from pathlib import Path
 import shutil
+import traceback
 from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
 from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
 from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
@@ -89,22 +90,21 @@ def process_ocr_queue_job():
                                                     documents_path,
                                                     preprocessings=preprocessings,
                                                     lang=ocr.paddle_ocr_language)
-            """elif ocr.ocr_type == OCRType.NO_OCR.value:
-                parse_pdf_to_xml(document)
-                source_file_path = os.path.join(
-                    documents_path, 'source_file.pdf')
-                shutil.copy(source_file_path,
-                            searchable_pdf_path)"""
+
+            # Mark the job as preprocessing in progress
+            updated_queue_job = Queue.objects.get(pk=queue_job.id)
+            if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
+                continue
 
             # Mark the job as preprocessing in progress
             queue_job.queue_class = QueueClass.SPLITTING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
         except Exception as e:
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.OCR.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            print(e)
 
 
 def process_no_ocr_queue_job():
@@ -161,14 +161,28 @@ def process_no_ocr_queue_job():
                             searchable_pdf_path)
 
             # Mark the job as preprocessing in progress
+            updated_queue_job = Queue.objects.get(pk=queue_job.id)
+            if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
+                continue
             queue_job.queue_class = QueueClass.SPLITTING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
         except Exception as e:
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.OCR.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
-            print(e)
+
+
+def process_stopped_ocr_queue_job():
+
+    all_stopped_ocr_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.OCR.value, queue_status=QueueStatus.STOPPED.value)
+
+    for queue_job in all_stopped_ocr_queue_jobs:
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
+        queue_job.save()
 
 
 def ocr_queue_scheduler_start():
@@ -178,6 +192,7 @@ def ocr_queue_scheduler_start():
     # run this job every 60 seconds
     scheduler.add_job(process_ocr_queue_job, 'interval', seconds=5)
     scheduler.add_job(process_no_ocr_queue_job, 'interval', seconds=5)
+    scheduler.add_job(process_stopped_ocr_queue_job, 'interval', seconds=5)
     # register_events(scheduler)
     scheduler.start()
     print("Processing OCR Queue", file=sys.stdout)

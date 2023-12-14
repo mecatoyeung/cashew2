@@ -243,10 +243,13 @@ const AIChat = () => {
             })
 
             setChatHistories(updatedChatHistories)
+            console.log("updatedChatHistories: ", updatedChatHistories)
 
-          } catch {
+          } catch(error) {
 
-            console.error(chatHistories)
+            console.error(error)
+            console.log(chatHistories)
+            setChatIsLoading(false);
 
           }
         }

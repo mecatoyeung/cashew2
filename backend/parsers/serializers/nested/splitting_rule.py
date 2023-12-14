@@ -6,14 +6,29 @@ from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_condition import SplittingCondition
 
 
+class SplittingConditionSerializer(serializers.ModelSerializer):
+    """ Serializer for splitting rules. """
+    sort_order = serializers.IntegerField(required=False)
+    value = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = SplittingCondition
+        fields = ['id', 'splitting_rule',
+                  'operator', 'value', 'sort_order']
+        read_only_fields = ['id']
+
+
 class SplittingRuleSerializer(serializers.ModelSerializer):
     """ Serializer for splitting rules. """
     sort_order = serializers.IntegerField(required=False)
+    splitting_conditions = SplittingConditionSerializer(
+        many=True, required=False)
 
     class Meta:
         model = SplittingRule
         fields = ['id', 'splitting', 'route_to_parser', 'splitting_rule_type', 'parent_splitting_rule',
-                  'sort_order']
+                  'sort_order', 'splitting_conditions']
         read_only_fields = ['id']
 
     def _get_or_create_splitting_conditions(self, splitting_conditions, splitting_rule):

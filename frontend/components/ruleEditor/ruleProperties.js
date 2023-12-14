@@ -77,7 +77,7 @@ const RuleProperties = () => {
   }
 
   const proceedToRegionSelectorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId)
+    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   return (

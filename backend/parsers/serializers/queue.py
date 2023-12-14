@@ -68,6 +68,7 @@ class QueueSerializer(serializers.ModelSerializer):
             'document',
             'parser',
             'queue_class',
+            'queue_status',
             'input_result',
             'parsed_result',
         ]
@@ -80,10 +81,24 @@ class QueueSerializer(serializers.ModelSerializer):
         return queue
 
     def update(self, instance, validated_data):
+        # new_queue_class = validated_data.get("queue_class", None)
+        # new_queue_status = validated_data.get("queue_status", None)
+        # if instance.queue_status == QueueStatus.IN_PROGRESS.value and new_queue_status == QueueStatus.READY.value:
+        #    instance.queue_status = QueueStatus.STOPPED.value
+        #    instance.save()
+        #    return instance
         """ Update queue. """
         for attr, value in validated_data.items():
             if attr == "document":
                 continue
+            if attr == "queue_class" and value == QueueClass.PROCESSED.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
             if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
                 document_pages = DocumentPage.objects.filter(
                     document__queue__id=instance.pk)
@@ -107,7 +122,6 @@ class QueueSerializer(serializers.ModelSerializer):
                     document_page.save()
             setattr(instance, attr, value)
 
-        instance.queue_status = QueueStatus.READY.value
         instance.save()
         return instance
 

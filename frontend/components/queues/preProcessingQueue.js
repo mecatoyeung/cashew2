@@ -33,7 +33,7 @@ const PreProcessingQueue = (props) => {
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
-  const [selectedIds, setSelectedIds] = useState([])
+  const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
   const [showUploadDocumentsModal, setShowUploadDocumentsModal] = useState(false)
   const closeUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(false);
@@ -42,12 +42,6 @@ const PreProcessingQueue = (props) => {
   const uploadDocumentsBtnClickHandler = () => {
     setDroppedFiles([])
     openUploadDocumentsModalHandler()
-  }
-
-  const chkQueueChangeHandler = (index, e) => {
-    let updateQueues = [...queues]
-    updateQueues[index].selected = e.target.checked
-    setQueues(updateQueues)
   }
 
   const getParser = () => {
@@ -73,6 +67,42 @@ const PreProcessingQueue = (props) => {
     })
   }
 
+  const stopPrePocessessingClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "PRE_PROCESSING"
+      queue.queueStatus = "STOPPED"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+  }
+
+  const chkQueueChangeHandler = (e, queue) => {
+    if (e.target.checked) {
+      if (!selectedQueueIds.includes(queue.id)) {
+        setSelectedQueueIds([...selectedQueueIds, queue.id])
+      }
+    } else {
+      let updatedSelectedQueueIds = [...selectedQueueIds]
+      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      if (index !== -1) {
+        updatedSelectedQueueIds.splice(index, 1);
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    }
+  }
+
+  const chkAllChangeHandler = (e) => {
+    if (e.target.checked) {
+      let updatedSelectedQueueIds = []
+      for (let i=0; i<queues.length; i++) {
+        updatedSelectedQueueIds.push(queues[i].id)
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    } else {
+      setSelectedQueueIds([])
+    }
+  }
+
   useEffect(() => {
     getParser()
     let queues = props.queues
@@ -95,6 +125,7 @@ const PreProcessingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
+          <Dropdown.Item onClick={() => stopPrePocessessingClickHandler()}>Stop Pre-Processing and Move to Processed Queue</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>
@@ -116,12 +147,14 @@ const PreProcessingQueue = (props) => {
                   <Form.Check
                     type="checkbox"
                     label=""
+                    onChange={chkAllChangeHandler}
                     style={{padding: 0}}
                   />
                 </th>
-                <th colSpan={2}>
-
-                </th>
+                <th>Document Name</th>
+                <th>Document Type</th>
+                <th>Queue Status</th>
+                <th>Last Modified At</th>
               </tr>
             </thead>
             <tbody>
@@ -132,12 +165,14 @@ const PreProcessingQueue = (props) => {
                       <Form.Check
                         type="checkbox"
                         label=""
-                        checked={queue.selected}
-                        onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        checked={selectedQueueIds.filter(x => x == queue.id).length > 0}
+                        onChange={(e) => chkQueueChangeHandler(e, queue)}
                         style={{padding: 0}}
                       />
                     </td>
                     <td className={styles.tdGrow}>{queue.document.description}</td>
+                    <td>{queue.document.documentType}</td>
+                    <td>{queue.queueStatus}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

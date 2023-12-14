@@ -33,7 +33,7 @@ const PostProcessingQueue = (props) => {
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
-  const [selectedIds, setSelectedIds] = useState([])
+  const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
   const [showUploadDocumentsModal, setShowUploadDocumentsModal] = useState(false)
   const closeUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(false);
@@ -50,7 +50,8 @@ const PostProcessingQueue = (props) => {
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
-      queue_class: "SPLIT"
+      queue_class: "SPLIT",
+      queue_status: "READY"
     })
   }
 
@@ -60,14 +61,9 @@ const PostProcessingQueue = (props) => {
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
-      queue_class: "PARSING"
+      queue_class: "PARSING",
+      queue_status: "READY"
     })
-  }
-
-  const chkQueueChangeHandler = (index, e) => {
-    let updateQueues = [...queues]
-    updateQueues[index].selected = e.target.checked
-    setQueues(updateQueues)
   }
 
   const getParser = () => {
@@ -93,14 +89,55 @@ const PostProcessingQueue = (props) => {
     })
   }
 
+  const stopPostProcessingClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "POST_PROCESSING"
+      queue.queueStatus = "STOPPED"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+  }
+
+  const chkQueueChangeHandler = (e, queue) => {
+    if (e.target.checked) {
+      if (!selectedQueueIds.includes(queue.id)) {
+        setSelectedQueueIds([...selectedQueueIds, queue.id])
+      }
+    } else {
+      let updatedSelectedQueueIds = [...selectedQueueIds]
+      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      if (index !== -1) {
+        updatedSelectedQueueIds.splice(index, 1);
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    }
+  }
+
+  const chkAllChangeHandler = (e) => {
+    if (e.target.checked) {
+      let updatedSelectedQueueIds = []
+      for (let i=0; i<queues.length; i++) {
+        updatedSelectedQueueIds.push(queues[i].id)
+      }
+      setSelectedQueueIds(updatedSelectedQueueIds)
+    } else {
+      setSelectedQueueIds([])
+    }
+  }
+
   useEffect(() => {
     getParser()
-    setQueues(props.queues)
-    /*getQueues()
-    const interval = setInterval(() => {
-      getQueues()
-    }, 5000);
-    return () => clearInterval(interval);*/
+    let queues = props.queues
+    for (let i=0; i<queues.length; i++) {
+      let queue = queues[i]
+      let postprocessedCount = 0
+      for (let j=0; j<queue.document.documentPages.length; j++) {
+        let documentPage = queue.document.documentPages[j]
+        if (documentPage.postprocessed) postprocessedCount++
+      } 
+      queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (Post-Processed " + postprocessedCount + " of " + queue.document.documentPages.length + ")"
+    }
+    setQueues(queues)
   }, [router.isReady, props.queues])
 
   return (
@@ -109,6 +146,7 @@ const PostProcessingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
+          <Dropdown.Item onClick={() => stopPostProcessingClickHandler()}>Stop Post-Processing and Move to Processed Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
@@ -132,12 +170,13 @@ const PostProcessingQueue = (props) => {
                   <Form.Check
                     type="checkbox"
                     label=""
+                    onChange={chkAllChangeHandler}
                     style={{padding: 0}}
                   />
                 </th>
-                <th colSpan={2}>
-
-                </th>
+                <th>Document Name</th>
+                <th>Document Type</th>
+                <th>Last Modified At</th>
               </tr>
             </thead>
             <tbody>
@@ -148,12 +187,13 @@ const PostProcessingQueue = (props) => {
                       <Form.Check
                         type="checkbox"
                         label=""
-                        checked={queue.selected}
-                        onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        checked={selectedQueueIds.filter(x => x == queue.id).length > 0}
+                        onChange={(e) => chkQueueChangeHandler(e, queue)}
                         style={{padding: 0}}
                       />
                     </td>
-                    <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td className={styles.tdGrow}>{queue.document.description}</td>
+                    <td>{queue.document.documentType}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

@@ -1,9 +1,11 @@
 from enum import Enum
 
+
 class QueueStatus(Enum):
 
     READY = "READY"
     IN_PROGRESS = "IN_PROGRESS"
+    STOPPED = "STOPPED"
     COMPLETED = "COMPLETED"
     TERMINATED_AFTER_TRIAL = "TERMINATED_AFTER_TRIAL"
 

@@ -9,6 +9,7 @@ import io
 import re
 import sys
 import zlib
+import math
 
 from lxml import etree, html
 from PIL import Image
@@ -20,6 +21,10 @@ from reportlab.pdfgen.canvas import Canvas
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from bidi.algorithm import get_display
+
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
 
 from paddleocr import PaddleOCR, draw_ocr
 from xml.etree import ElementTree as ET
@@ -243,14 +248,30 @@ def add_text_layer(pdf, image, height, dpi):
             # if there are no words elements present,
             # we switch to lines as elements
             xpath_elements = '.'
-        for word in line.xpath(xpath_elements):
+        """for word in line.xpath(xpath_elements):
             rawtext = word.text_content().strip()
             box = p1.search(word.attrib['title']).group(1).split()
             box = [float(i) for i in box]
             font_height = box[3] - box[1]
+            font_width = pdf.stringWidth(rawtext, 'invisible', 24)
+            if font_width <= 0:
+                continue
+            text = pdf.beginText()
+            text.setTextRenderMode(3)  # double invisible
+            text.setFont('invisible', font_height)
+            text.setTextOrigin(box[0] * 72 / dpi, height - box[3] * 72 / dpi)
+            box_width = (box[2] - box[0]) * 72 / dpi
+            text.setHorizScale(100.0 * box_width / font_width)
+            rawtext = get_display(rawtext)
+            text.textLine(rawtext)
+            pdf.drawText(text)"""
+        for word in line.xpath(xpath_elements):
+            rawtext = word.text_content().strip()
             font_width = pdf.stringWidth(rawtext, 'invisible', 7)
             if font_width <= 0:
                 continue
+            box = p1.search(word.attrib['title']).group(1).split()
+            box = [float(i) for i in box]
             text = pdf.beginText()
             text.setTextRenderMode(3)  # double invisible
             text.setFont('invisible', 7)
@@ -336,6 +357,16 @@ def convert_to_searchable_pdf_paddleocr(document,
 
     document_pages = list(document.document_pages.order_by("page_num"))
     for document_page in document_pages:
+        # Check if Pre-Processing has been stopped
+        queue = Queue.objects.get(
+            document_id=document.id
+        )
+        if queue.queue_status == QueueStatus.STOPPED.value:
+            queue.queue_class = QueueClass.PROCESSED.value
+            queue.queue_status = QueueStatus.COMPLETED.value
+            queue.save()
+            break
+
         if document_page.ocred:
             continue
 

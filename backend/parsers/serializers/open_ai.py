@@ -9,11 +9,13 @@ class OpenAISerializer(serializers.ModelSerializer):
         required=False, allow_null=True, allow_blank=True)
     open_ai_api_key = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
+    open_ai_deployment = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = OpenAI
         fields = ['id', 'guid', 'parser_id', 'enabled',
-                  'open_ai_resource_name', 'open_ai_api_key']
+                  'open_ai_resource_name', 'open_ai_api_key', 'open_ai_deployment']
         read_only_fields = ['id']
 
     def create(self, validated_data):

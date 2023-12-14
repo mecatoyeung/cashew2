@@ -101,3 +101,10 @@ if not running_migration(sys.argv):
     for queue in all_in_progress_queues:
         queue.queue_status = QueueStatus.READY.value
         queue.save()
+
+    all_stopped_queues = Queue.objects.filter(
+        queue_status=QueueStatus.STOPPED.value)
+    for queue in all_stopped_queues:
+        queue.queue_class = QueueClass.PROCESSED.value
+        queue.queue_status = QueueStatus.COMPLETED.value
+        queue.save()

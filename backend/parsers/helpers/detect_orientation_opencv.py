@@ -8,6 +8,9 @@ from reportlab.pdfgen.canvas import Canvas
 import pytesseract
 
 from parsers.models.document_page import DocumentPage
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
 
 from backend.settings import MEDIA_URL
 
@@ -28,6 +31,16 @@ def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
     image_paths = []
 
     for page_idx in range(document.total_page_num):
+        # Check if Pre-Processing has been stopped
+        queue = Queue.objects.get(
+            document_id=document.id
+        )
+        if queue.queue_status == QueueStatus.STOPPED.value:
+            queue.queue_class = QueueClass.PROCESSED.value
+            queue.queue_status = QueueStatus.READY.value
+            queue.save()
+            break
+
         page_num = page_idx + 1
         document_page = DocumentPage.objects.get(
             document_id=document.id, page_num=page_num)

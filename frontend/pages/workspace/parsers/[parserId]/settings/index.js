@@ -205,6 +205,15 @@ const Settings = () => {
     })
   }
 
+  const chatbotOpenAIDeploymentChangeHandler = (e) => {
+    let updatedChatbot = { ...parser.chatbot }
+    updatedChatbot.openAiDeployment = e.target.value
+    setParser({
+      ...parser,
+      chatbot: updatedChatbot
+    })
+  }
+
   const chatbotOpenAIDefaultQuestionChangeHandler = (e) => {
     let updatedChatbot = { ...parser.chatbot }
     updatedChatbot.openAiDefaultQuestion = e.target.value
@@ -244,6 +253,15 @@ const Settings = () => {
   const openAIApiKeyChangeHandler = (e) => {
     let updatedOpenAi = { ...parser.openAi }
     updatedOpenAi.openAiApiKey = e.target.value
+    setParser({
+      ...parser,
+      openAi: updatedOpenAi
+    })
+  }
+
+  const openAIDeploymentChangeHandler = (e) => {
+    let updatedOpenAi = { ...parser.openAi }
+    updatedOpenAi.openAiDeployment = e.target.value
     setParser({
       ...parser,
       openAi: updatedOpenAi
@@ -307,6 +325,10 @@ const Settings = () => {
                     <Form.Label>Open AI API KEY</Form.Label>
                     <Form.Control onChange={chatbotOpenAIApiKeyChangeHandler} value={parser.chatbot.openAiApiKey}/>
                   </Form.Group>
+                  <Form.Group className="mb-3" controlId="formChatbotOpenAIDeployment">
+                    <Form.Label>Open AI Deplyment</Form.Label>
+                    <Form.Control onChange={chatbotOpenAIDeploymentChangeHandler} value={parser.chatbot.openAiDeployment}/>
+                  </Form.Group>
                   <Form.Group className="mb-3" controlId="formChatbotOpenAIDefaultQuestion">
                     <Form.Label>Open AI Default Question</Form.Label>
                     <Form.Control onChange={chatbotOpenAIDefaultQuestionChangeHandler} value={parser.chatbot.openAiDefaultQuestion}/>
@@ -345,6 +367,10 @@ const Settings = () => {
               <Form.Group className="mb-3" controlId="formOpenAIApiKey">
                 <Form.Label>Open AI API KEY</Form.Label>
                 <Form.Control onChange={openAIApiKeyChangeHandler} value={parser.openAi.openAiApiKey}/>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOpenAIDeployment">
+                <Form.Label>Open AI Deployment</Form.Label>
+                <Form.Control onChange={openAIDeploymentChangeHandler} value={parser.openAi.openAiDeployment}/>
               </Form.Group>
               <Button variant="primary" onClick={openAISaveBtnClickHandler}>Save</Button>
             </Card.Body>

@@ -23,6 +23,10 @@ from PIL import Image
 
 import natsort
 
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
+
 from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
 from parsers.helpers.gcv2hocr import fromResponse
 
@@ -225,6 +229,16 @@ def convert_to_searchable_pdf_gcv(document,
 
     document_pages = list(document.document_pages.order_by("page_num"))
     for document_page in document_pages:
+        # Check if Pre-Processing has been stopped
+        queue = Queue.objects.get(
+            document_id=document.id
+        )
+        if queue.queue_status == QueueStatus.STOPPED.value:
+            queue.queue_class = QueueClass.PROCESSED.value
+            queue.queue_status = QueueStatus.COMPLETED.value
+            queue.save()
+            break
+
         if document_page.ocred:
             continue
         filename = str(document_page.page_num) + ".jpg"

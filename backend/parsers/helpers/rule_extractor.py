@@ -31,8 +31,8 @@ from parsers.helpers.calculate_separator_regions import calculate_separator_regi
 from django.conf import settings
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(0.75)
-ASSUMED_TEXT_HEIGHT = Decimal(1.5)
+ASSUMED_TEXT_WIDTH = Decimal(0.5)
+ASSUMED_TEXT_HEIGHT = Decimal(1.0)
 
 
 class RuleExtractor:
@@ -89,18 +89,23 @@ class RuleExtractor:
 
             xml_rule = XMLRule(xml_page, self.rule)
 
-            textlines_in_rows = []
-
             # Get All Textlines within Area
             textlines_within_area = []
             for textline in xml_page.textlines:
                 if xml_rule.region.overlaps(textline.region) and textline.text != "":
                     textlines_within_area.append(textline)
 
+            textlines_in_rows = []
+            # Organize Textlines in Row by Row
+            # textlines_in_current_row = []
+            # while len(textlines_within_area) > 0:
+            #    current_textline = textlines_within_area.pop(0)
+
             text_in_current_row = ""
             prev_text_width = xml_page.median_text_width
             first_textline_in_row = None
             while len(textlines_within_area) > 0:
+
                 current_textline = textlines_within_area.pop(0)
 
                 text_to_add = ""
@@ -121,7 +126,8 @@ class RuleExtractor:
                             textlines_in_rows.append("")
                     # if it is not the first line and there is a line difference between current line and previous line,
                     # add empty lines between them
-                    elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
+                    # elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
+                    else:
                         num_of_empty_lines_to_be_prepend = math.floor(
                             (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
                         for i in range(num_of_empty_lines_to_be_prepend):
@@ -134,10 +140,10 @@ class RuleExtractor:
 
                 # else, calculate spaces to prepend from previous textline
                 else:
-                    # num_of_spaces_to_be_prepend = math.floor(
-                    # (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
                     num_of_spaces_to_be_prepend = math.floor(
-                        (current_textline.region.x1 - previous_textline.region.x2) / prev_text_width)
+                        (current_textline.region.x1 - xml_rule.region.x1) / prev_text_width) - len(text_in_current_row)
+                    # num_of_spaces_to_be_prepend = math.floor(
+                    #    (current_textline.region.x1 - previous_textline.region.x2) / prev_text_width)
                     spaces = " " * (num_of_spaces_to_be_prepend + 1)
                     text_in_current_row = text_in_current_row + spaces + text_to_add
 
@@ -275,7 +281,7 @@ class RuleExtractor:
                                 textlines_in_rows.append("")
                         # if it is not the first line and there is a line difference between current line and previous line,
                         # add empty lines between them
-                        elif not first_textline_in_row.region.is_in_same_line(current_textline.region):
+                        else:
                             num_of_empty_lines_to_be_prepend = math.floor(
                                 (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
                             for i in range(num_of_empty_lines_to_be_prepend):
@@ -437,9 +443,10 @@ class RuleExtractor:
 
                 textlines_organized_in_columns.append(textlines_within_area)
 
-        median_of_text_widths = statistics.median(text_widths)
+        # median_of_text_widths = statistics.median(text_widths)
         median_of_text_widths = ASSUMED_TEXT_WIDTH
-        median_of_text_heights = statistics.median(text_heights)
+        # median_of_text_heights = statistics.median(text_heights)
+        median_of_text_heights = ASSUMED_TEXT_HEIGHT
 
         textlines_organized_in_rows = []
         toppest_textline = None
@@ -588,18 +595,20 @@ class RuleExtractor:
             text_in_rows.append(text_in_current_row)
 
         # Add empty rows after data
-        y_difference = textline.region.y1 - xml_rule.region.y1
-        number_of_empty_lines_to_be_added = math.floor(
-            y_difference / median_of_text_heights)
-        for empty_line_index in range(number_of_empty_lines_to_be_added):
-            empty_line = []
-            for empty_line_column_index in range(len(textlines_organized_in_row)):
-                x_difference = separator_regions[empty_line_column_index].x2 - \
-                    separator_regions[empty_line_column_index].x1
-                number_of_spaces_in_empty_line_column = math.floor(
-                    x_difference / median_of_text_widths)
-                empty_line.append(" " * number_of_spaces_in_empty_line_column)
-            text_in_rows.append(empty_line)
+        if 'textline' in locals() and textline.region.y1 != None:
+            y_difference = textline.region.y1 - xml_rule.region.y1
+            number_of_empty_lines_to_be_added = math.floor(
+                y_difference / median_of_text_heights)
+            for empty_line_index in range(number_of_empty_lines_to_be_added):
+                empty_line = []
+                for empty_line_column_index in range(len(textlines_organized_in_row)):
+                    x_difference = separator_regions[empty_line_column_index].x2 - \
+                        separator_regions[empty_line_column_index].x1
+                    number_of_spaces_in_empty_line_column = math.floor(
+                        x_difference / median_of_text_widths)
+                    empty_line.append(
+                        " " * number_of_spaces_in_empty_line_column)
+                text_in_rows.append(empty_line)
 
         header = []
         for header_index in range(len(separator_regions)):

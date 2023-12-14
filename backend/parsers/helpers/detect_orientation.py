@@ -9,6 +9,9 @@ import cv2
 
 from PIL import Image
 
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
 from backend.settings import MEDIA_URL
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -75,6 +78,16 @@ def detect_orientation(document, preprocessing, last_preprocessing=None):
     image_paths = []
 
     for page_idx in range(document.total_page_num):
+        # Check if Pre-Processing has been stopped
+        queue = Queue.objects.get(
+            document_id=document.id
+        )
+        if queue.queue_status == QueueStatus.STOPPED.value:
+            queue.queue_class = QueueClass.PROCESSED.value
+            queue.queue_status = QueueStatus.READY.value
+            queue.save()
+            break
+
         page_num = page_idx + 1
         png_path = os.path.join(str(page_num) + ".jpg")
         new_preprocessed_image_path = os.path.join(working_path, png_path)

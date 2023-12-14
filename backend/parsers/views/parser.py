@@ -164,9 +164,8 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         splitting = Splitting.objects.prefetch_related(Prefetch(
             "splitting_rules",
-            queryset=SplittingRule.objects.filter(
+            queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
                 splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
-            .prefetch_related("splitting_conditions")
             .prefetch_related(
                 Prefetch("consecutive_page_splitting_rules",
                          queryset=SplittingRule.objects.prefetch_related("splitting_conditions"))))).get(parser_id=pk)
@@ -484,7 +483,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                     "temperature": 0.2
                 }
 
-                response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/gpt-35/chat/completions?api-version=2023-05-15',
+                response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/' + chatbot.open_ai_deployment + '/chat/completions?api-version=2023-05-15',
                                          data=json.dumps(json_data), headers=headers)
                 if response.status_code == 400:
                     raise Exception(response.json()["error"]["message"])

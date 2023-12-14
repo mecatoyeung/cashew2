@@ -5,6 +5,9 @@ import fitz
 
 from parsers.models.ocr import OCR
 from parsers.models.document_page import DocumentPage
+from parsers.models.queue import Queue
+from parsers.models.queue_class import QueueClass
+from parsers.models.queue_status import QueueStatus
 from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
 
 from django.db import transaction
@@ -24,6 +27,16 @@ def parse_pdf_to_xml(document):
 
         with fitz.open(source_file_path) as doc:
             for page_idx, page in enumerate(doc):
+
+                queue = Queue.objects.get(
+                    document_id=document.id
+                )
+                if queue.queue_status == QueueStatus.STOPPED.value:
+                    queue.queue_class = QueueClass.PROCESSED.value
+                    queue.queue_status = QueueStatus.READY.value
+                    queue.save()
+                    break
+
                 page_num = page_idx + 1
                 document_page = DocumentPage.objects.get(
                     document_id=document.id, page_num=page_num)

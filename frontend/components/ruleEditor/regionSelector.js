@@ -119,7 +119,7 @@ const RegionSelector = () => {
         pd.name = pd.filenameWithoutExtension + "." + pd.extension + " (Page " + ocredPagesCount + " of " + pd.totalPageNum + ")"
       }
       setParserDocuments(parserDocuments)
-      if (parserDocuments.length > 0) {
+      if (parserDocuments.length > 0 && documentId == 0) {
         selectedDocumentChangeHandler({
           target: {
             value: parserDocuments[0].id
@@ -477,7 +477,7 @@ const RegionSelector = () => {
       )}
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId)}>Back to Rule Properties</Button>
+          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
         </div>
         <div className={styles.copyrightWrapper}>
           Copyright @ 2022

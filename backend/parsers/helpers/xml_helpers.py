@@ -12,7 +12,7 @@ from .path_helper import xml_path
 from parsers.helpers.is_chinese import is_chinese
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(0.50)
+ASSUMED_TEXT_WIDTH = Decimal(0.5)
 ASSUMED_TEXT_HEIGHT = Decimal(1.0)
 
 
@@ -31,13 +31,19 @@ class XMLPage:
         root = ET.fromstring(self.xml.replace('\n', ''))
 
         page_el = root.find('.//page')
-        page_bbox_str = page_el.attrib['bbox']
-        page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                     page_bbox_str,
-                                     re.IGNORECASE
-                                     )
-        self.width = Decimal(page_bbox_search.group(3))
-        self.height = Decimal(page_bbox_search.group(4))
+        if page_el != None:
+            page_bbox_str = page_el.attrib['bbox']
+            page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
+                                         page_bbox_str,
+                                         re.IGNORECASE
+                                         )
+            self.width = Decimal(page_bbox_search.group(3))
+            self.height = Decimal(page_bbox_search.group(4))
+        else:
+            self.width = document_parser.document.document_pages.get(
+                page_num=page_num).width
+            self.height = document_parser.document.document_pages.get(
+                page_num=page_num).height
         self.text_widths = []
         self.text_heights = []
         self.median_text_width = ASSUMED_TEXT_WIDTH
@@ -177,14 +183,10 @@ class XMLPage:
                     text = XMLText()
                     text.text = " "
 
-                    text.region.x1 = Decimal(text_bbox_search.group(
-                        1)) / self.width * Decimal(100.00)
-                    text.region.y1 = Decimal(text_bbox_search.group(
-                        2)) / self.height * Decimal(100.00)
-                    text.region.x2 = Decimal(text_bbox_search.group(
-                        3)) / self.width * Decimal(100.00)
-                    text.region.y2 = Decimal(text_bbox_search.group(
-                        4)) / self.height * Decimal(100.00)
+                    text.region.x1 = prev_text.region.x2
+                    text.region.y1 = prev_text.region.y1
+                    text.region.x2 = prev_text.region.x2 + prev_text.region.x2 - prev_text.region.x1
+                    text.region.y2 = prev_text.region.y2
 
                     textline.text_elements.append(text)
 
@@ -218,20 +220,27 @@ class XMLPage:
                 key = arr[i]
                 j = i-1
                 # Move elements greater than key one position ahead
-                while j >= 0 and compare(key, arr[j]) > 0:
+                while j >= 0 and compare(key, arr[j], arr[:j]) > 0:
                     arr[j+1] = arr[j]  # Shift elements to the right
                     j -= 1
                 arr[j+1] = key
+                pass
 
             return arr
 
-        def compare(a, b):
+        def compare(a, b, arr_before):
             if a.region.x1 == None or a.region.x2 == None or a.region.y1 == None or a.region.y2 == None:
                 return 0
             if b.region.x1 == None or b.region.x2 == None or b.region.y1 == None or b.region.y2 == None:
                 return 0
 
+            if a.text == 'Good Receipt Note Range' or b.text == 'Good Receipt Note Range':
+                pass
+
             if (a.region.is_in_same_line(b.region)):
+                for item_before in arr_before:
+                    if a.region.is_in_same_column(item_before.region):
+                        return -1
                 if a.region.x1 < b.region.x1:
                     return 1
                 elif a.region.x2 < b.region.x2:
@@ -294,6 +303,17 @@ class XMLRegion:
         if self.y2 >= (another_region.y2) and (self.y1) <= another_region.y1:
             return True
         if (self.y2) <= another_region.y2 and self.y1 >= (another_region.y1):
+            return True
+        return False
+
+    def is_in_same_column(self, another_region):
+        if self.x1 <= another_region.x2 and self.x1 >= (another_region.x1) and self.x2 >= (another_region.x2):
+            return True
+        if (self.x1) <= another_region.x1 and (self.x2) <= another_region.x2 and self.x2 >= another_region.x1:
+            return True
+        if self.x2 >= (another_region.x2) and (self.x1) <= another_region.x1:
+            return True
+        if (self.x2) <= another_region.x2 and self.x1 >= (another_region.x1):
             return True
         return False
 

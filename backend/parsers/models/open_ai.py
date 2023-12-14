@@ -11,6 +11,8 @@ class OpenAI(models.Model):
     enabled = models.BooleanField(null=False, default=False)
     open_ai_resource_name = models.CharField(
         max_length=1024, null=True, blank=True)
+    open_ai_deployment = models.CharField(
+        max_length=1024, null=True, blank=True)
     open_ai_api_key = models.CharField(max_length=1024, null=True, blank=True)
 
     class Meta:

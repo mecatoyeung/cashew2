@@ -16,7 +16,7 @@ from django.contrib.auth import get_user_model
 
 from core.models import Profile
 
-from rest_auth.registration.serializers  import RegisterSerializer
+from rest_auth.registration.serializers import RegisterSerializer
 
 try:
     from allauth.account import app_settings as allauth_settings
@@ -29,6 +29,7 @@ try:
     from allauth.socialaccount.providers.base import AuthProcess
 except ImportError:
     raise ImportError("allauth needs to be added to INSTALLED_APPS.")
+
 
 class MyRegisterSerializer(rest_auth.registration.serializers.RegisterSerializer):
     full_name = serializers.CharField(write_only=True)

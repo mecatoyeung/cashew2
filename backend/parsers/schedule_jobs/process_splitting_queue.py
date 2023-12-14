@@ -6,6 +6,7 @@ import os
 import re
 from pathlib import Path
 import shutil
+import traceback
 
 from django.db.models import Prefetch
 
@@ -375,7 +376,7 @@ def process_splitting_queue_job():
             queue_job.save()
 
         except Exception as e:
-
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.SPLITTING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()

@@ -80,7 +80,8 @@ const ProcessedQueue = (props) => {
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
-      queueClass: "PARSING"
+      queueClass: "PARSING",
+      queueStatus: "READY"
     })
   }
 
@@ -90,7 +91,8 @@ const ProcessedQueue = (props) => {
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
-      queueClass: "INTEGRATION"
+      queueClass: "INTEGRATION",
+      queueStatus: "READY"
     })
   }
 
@@ -167,9 +169,9 @@ const ProcessedQueue = (props) => {
                   style={{padding: 0}}
                 />
               </th>
-              <th colSpan={2}>
-
-              </th>
+              <th>Document Name</th>
+              <th>Document Type</th>
+              <th>Last Modified At</th>
             </tr>
           </thead>
           <tbody>
@@ -185,7 +187,8 @@ const ProcessedQueue = (props) => {
                       style={{padding: 0}}
                     />
                   </td>
-                  <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                  <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension + " (" + queue.document.totalPageNum + " Pages)"}</td>
+                  <td>{queue.document.documentType}</td>
                   <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                 </tr>
               )

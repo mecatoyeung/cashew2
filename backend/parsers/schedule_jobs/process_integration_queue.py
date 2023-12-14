@@ -16,6 +16,7 @@ from parsers.models.pdf_integration_type import PDFIntegrationType
 from backend.settings import MEDIA_URL
 import sys
 import os
+import traceback
 from pathlib import Path
 from datetime import datetime
 from jinja2 import Template
@@ -63,9 +64,16 @@ def process_integration_queue_job():
                         single_parsed_result["rule"]["type"] == "BARCODE":
                     updated_parsed_result[single_parsed_result["rule"]
                                           ["name"]] = single_parsed_result["streamed"]
+                elif single_parsed_result["rule"]["type"] == "TABLE":
+                    flattened_parsed_result = []
+                    for s in single_parsed_result["streamed"]:
+                        for ss in s:
+                            flattened_parsed_result.append(ss)
+                    updated_parsed_result[single_parsed_result["rule"]
+                                          ["name"]] = " ".join(flattened_parsed_result)
                 else:
                     updated_parsed_result[single_parsed_result["rule"]
-                                          ["name"]] = " ".join(single_parsed_result["streamed"])
+                                          ["name"]] = "Unknwon Rule Type"
 
             # Do the job
             integrations = Integration.objects.filter(parser_id=parser.id)
@@ -145,6 +153,7 @@ def process_integration_queue_job():
             queue_job.save()
 
         except Exception as e:
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.INTEGRATION.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()

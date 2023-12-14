@@ -45,7 +45,8 @@ const SplittingQueue = (props) => {
       .map(d => d.document.id)
     service.put("documents/change-queue-class/", {
       documents: documentIds,
-      queue_class: "PARSING"
+      queue_class: "PARSING",
+      queue_status: "READY"
     })
   }
 
@@ -90,9 +91,9 @@ const SplittingQueue = (props) => {
                     style={{padding: 0}}
                   />
                 </th>
-                <th colSpan={2}>
-
-                </th>
+                <th>Document Name</th>
+                <th>Document Type</th>
+                <th>Last Modified At</th>
               </tr>
             </thead>
             <tbody>
@@ -109,6 +110,7 @@ const SplittingQueue = (props) => {
                       />
                     </td>
                     <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension}</td>
+                    <td>{queue.document.documentType}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

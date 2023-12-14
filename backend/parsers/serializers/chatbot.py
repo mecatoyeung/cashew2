@@ -9,13 +9,15 @@ class ChatBotSerializer(serializers.ModelSerializer):
         required=False, allow_null=True, allow_blank=True)
     open_ai_api_key = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
+    open_ai_deployment = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True)
     open_ai_default_question = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = ChatBot
         fields = ['id', 'guid', 'chatbot_type',
-                  'open_ai_resource_name', 'open_ai_api_key', 'open_ai_default_question',
+                  'open_ai_resource_name', 'open_ai_api_key', 'open_ai_deployment', 'open_ai_default_question',
                   'base_url']
         read_only_fields = ['id']
 

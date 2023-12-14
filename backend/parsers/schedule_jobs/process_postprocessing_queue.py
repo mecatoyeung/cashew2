@@ -9,11 +9,13 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.models.post_processing import PostProcessing
 from parsers.models.post_processing_type import PostProcessingType
 from backend.settings import MEDIA_URL
 import sys
 import os
+import traceback
 import re
 import fitz
 from pathlib import Path
@@ -34,7 +36,10 @@ class Redactor:
                 # yields creates a generator
                 # generator is used to return
                 # values in between function iterations
-                yield search.group(1)
+                try:
+                    yield search.group(1)
+                except:
+                    pass
 
     # constructor
     def __init__(self, regex, input_path, output_path):
@@ -125,19 +130,35 @@ def process_postprocessing_queue_job():
                                         pdf_out_path)
                     redactor.redaction()
 
+            # Mark the job as preprocessing in progress
+            queue_job.queue_class = QueueClass.INTEGRATION.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+
         except Exception as e:
+            print(traceback.format_exc())
             queue_job.queue_class = QueueClass.POST_PROCESSING.value
             queue_job.queue_status = QueueStatus.READY.value
             queue_job.save()
 
-        # Mark the job as completed
-        # queue_job.queue_status = QueueStatus.COMPLETED.value
-        # queue_job.save()
 
-        # Mark the job as preprocessing in progress
-        queue_job.queue_class = QueueClass.INTEGRATION.value
-        queue_job.queue_status = QueueStatus.READY.value
+def process_stopped_postprocessing_queue_job():
+
+    all_stopped_postprocessing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.POST_PROCESSING.value, queue_status=QueueStatus.STOPPED.value)
+
+    for queue_job in all_stopped_postprocessing_queue_jobs:
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
         queue_job.save()
+
+        document_pages = DocumentPage.objects.filter(
+            document__queue__id=queue_job.pk)
+        for document_page in document_pages:
+            document_page.preprocessed = False
+            document_page.ocred = False
+            document_page.postprocessed = False
+            document_page.save()
 
 
 def postprocessing_queue_scheduler_start():
@@ -146,6 +167,8 @@ def postprocessing_queue_scheduler_start():
     # scheduler.add_jobstore(DjangoJobStore(), "postprocessing_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_postprocessing_queue_job, 'interval', seconds=5)
+    scheduler.add_job(process_stopped_postprocessing_queue_job,
+                      'interval', seconds=5)
     # register_events(scheduler)
     scheduler.start()
     print("Processing Post-processing Queue", file=sys.stdout)
