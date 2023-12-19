@@ -630,11 +630,11 @@ class RuleExtractor:
 
         preprocessings = PreProcessing.objects.filter(
             parser_id=self.parser.id).all()
-
         page_num = get_document_nos_from_range(
             self.rule.pages, 1, self.document.total_page_num)[0]
 
         xml_page = [x for x in xml_pages if x.page_num == page_num][0]
+        # xml_page = xml_pages[page_num-1]
 
         xml_rule = XMLRule(xml_page, self.rule)
 

@@ -35,6 +35,10 @@ const ocrOptions = [
   {
     label: "PaddleOCR (On Premise, Free, very good at Simplified Chinese, good at English/Japanese/Korean and fair at Traditional Chinese)",
     value: "PADDLE_OCR"
+  },
+  {
+    label: "Omnipage OCR (On Premise, Paid, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)",
+    value: "OMNIPAGE_OCR"
   }
 ]
 
@@ -70,6 +74,21 @@ const paddleOCRLangOptions = [
   {
     label: "Vietnamese",
     value: "vi"
+  }
+]
+
+const omnipageOCRLangOptions = [
+  {
+    label: "Traditional Chinese",
+    value: "LANG_CHT"
+  },
+  {
+    label: "Simplified Chinese",
+    value: "LANG_CHS"
+  },
+  {
+    label: "English",
+    value: "LANG_ENG"
   }
 ]
 

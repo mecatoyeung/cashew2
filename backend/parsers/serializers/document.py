@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pdf2image import convert_from_path
 import PIL
+import PyPDF2
 
 from parsers.models.document import Document
 from parsers.models.document_type import DocumentType
@@ -97,6 +98,7 @@ class DocumentUploadSerializer(DocumentSerializer):
         validated_data["filename_without_extension"] = filename_without_extension
         if extension == "pdf" or extension == "PDF":
             validated_data["document_extension"] = DocumentExtension.PDF.value
+
         validated_data["extension"] = extension
         document = Document.objects.create(**validated_data)
 

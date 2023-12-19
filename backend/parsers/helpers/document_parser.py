@@ -124,12 +124,12 @@ class DocumentParser:
 
     def extract(self, rule):
         # Add to xml page if not yet initialized
-        if rule.anchor_page_num == None:
-            pages = rule.pages
-        else:
-            pages = rule.pages + "," + str(rule.anchor_page_num)
+        # if rule.anchor_page_num == None:
+        #    pages = rule.pages
+        # else:
+        #    pages = rule.pages + "," + str(rule.anchor_page_num)
         page_nums = get_document_nos_from_range(
-            pages, 1, self.document.total_page_num)
+            rule.pages[:], 1, self.document.total_page_num)
 
         if len(self.document.document_pages.filter(ocred=False, page_num__in=page_nums)) > 0:
             if rule.rule_type == RuleType.TABLE.value:

@@ -34,11 +34,11 @@ def generate_images_from_pdf(document):
                 pix = page.get_pixmap(matrix=magnify)
                 abs_png_path = os.path.join(
                     folder_path, str(page_num) + ".jpg")
-                pix.save(abs_png_path, jpg_quality=80)
+                pix.save(abs_png_path)
 
                 im = Image.open(abs_png_path)
                 im.thumbnail((3508, 3508), Image.Resampling.LANCZOS)
-                im.save(abs_png_path, "JPEG")
+                im.save(abs_png_path, "JPEG", quality=80)
 
                 width, height = im.size
                 # width = pix.width

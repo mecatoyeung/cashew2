@@ -24,6 +24,7 @@ import traceback
 from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
 from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
 from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
+from parsers.helpers.convert_to_searchable_pdf_omnipage import convert_to_searchable_pdf_omnipage
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 
@@ -90,6 +91,12 @@ def process_ocr_queue_job():
                                                     documents_path,
                                                     preprocessings=preprocessings,
                                                     lang=ocr.paddle_ocr_language)
+            elif ocr.ocr_type == OCRType.OMNIPAGE_OCR.value:
+                convert_to_searchable_pdf_omnipage(document,
+                                                   searchable_pdf_path,
+                                                   documents_path,
+                                                   preprocessings=preprocessings,
+                                                   lang=ocr.omnipage_ocr_language)
 
             # Mark the job as preprocessing in progress
             updated_queue_job = Queue.objects.get(pk=queue_job.id)

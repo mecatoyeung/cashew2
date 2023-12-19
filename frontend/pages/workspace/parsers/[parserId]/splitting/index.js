@@ -50,6 +50,10 @@ const conditionOperators = [
       value: "CONTAINS"
   },
   {
+      label: "does not contains",
+      value: "DOES_NOT_CONTAINS"
+  },
+  {
     label: "is empty",
     value: "IS_EMPTY"
   },
@@ -360,7 +364,7 @@ const Splitting = () => {
                                 <span className={styles.firstPageSplittingOperator}>
                                   {conditionOperators.find(o => o.value == firstPageSplittingCondition.operator).label}
                                 </span>
-                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "EQUALS") && (
+                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || firstPageSplittingCondition.operator == "EQUALS") && (
                                   <span className={styles.firstPageSplittingValue}>{firstPageSplittingCondition.value}</span>
                                 )}
                               </div>
@@ -378,7 +382,7 @@ const Splitting = () => {
                                 <span className={styles.firstPageSplittingOperator}>
                                   {conditionOperators.find(o => o.value == firstPageSplittingCondition.operator).label}
                                 </span>
-                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "EQUALS") && (
+                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS"  || firstPageSplittingCondition.operator == "EQUALS") && (
                                   <span className={styles.firstPageSplittingValue}>{firstPageSplittingCondition.value}</span>
                                 )}
                               </div>
@@ -423,7 +427,7 @@ const Splitting = () => {
                                               <span className={styles.consecutivePageSplittingOperator}>
                                                 {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
                                               </span>
-                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
                                                 <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
                                               )}
                                             </div>
@@ -441,7 +445,7 @@ const Splitting = () => {
                                               <span className={styles.consecutivePageSplittingOperator}>
                                                 {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
                                               </span>
-                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
                                                 <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
                                               )}
                                             </div>
@@ -590,7 +594,8 @@ const Splitting = () => {
                       <td>
                         {(condition.operator == "EQUALS" ||
                           condition.operator == "REGEX" ||
-                          condition.operator == "CONTAINS") && (
+                          condition.operator == "CONTAINS" ||
+                          condition.operator == "DOES_NOT_CONTAINS") && (
                             <Form.Control value={condition.value} onChange={(e) => txtConditionValueChangeHandler(conditionIndex, e.target.value)}/>
                           )}
                       </td>

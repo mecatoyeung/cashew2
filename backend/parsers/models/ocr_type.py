@@ -7,6 +7,7 @@ class OCRType(Enum):
     GOOGLE_VISION = "GOOGLE_VISION"
     DOCTR = "DOCTR"
     PADDLE_OCR = "PADDLE_OCR"
+    OMNIPAGE_OCR = "OMNIPAGE_OCR"
 
     @classmethod
     def choices(cls):

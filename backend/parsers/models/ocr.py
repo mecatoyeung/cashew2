@@ -26,6 +26,8 @@ class OCR(models.Model):
         max_length=1024, null=True, blank=True)
     paddle_ocr_language = models.CharField(
         max_length=256, null=True, blank=True, default="cn")
+    omnipage_ocr_language = models.CharField(
+        max_length=256, null=True, blank=True, default="LANG_ENG")
 
     class Meta:
         db_table = 'ocrs'

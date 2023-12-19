@@ -35,6 +35,10 @@ const ocrOptions = [
   {
     label: "PaddleOCR (On Premise, Free, very good at Simplified Chinese, good at English/Japanese/Korean and fair at Traditional Chinese)",
     value: "PADDLE_OCR"
+  },
+  {
+    label: "Omnipage OCR (On Premise, Paid, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)",
+    value: "OMNIPAGE_OCR"
   }
 ]
 
@@ -73,6 +77,21 @@ const paddleOCRLangOptions = [
   }
 ]
 
+const omnipageOCRLangOptions = [
+  {
+    label: "Traditional Chinese",
+    value: "LANG_CHT"
+  },
+  {
+    label: "Simplified Chinese",
+    value: "LANG_CHS"
+  },
+  {
+    label: "English",
+    value: "LANG_ENG"
+  }
+]
+
 const OCR = () => {
 
   const router = useRouter()
@@ -107,6 +126,15 @@ const OCR = () => {
   const paddleOCRLanguageChangeHandler = (e) => {
     let updatedOCR = { ...parser.ocr }
     updatedOCR.paddleOcrLanguage = e.value
+    setParser({
+      ...parser,
+      ocr: updatedOCR
+    })
+  }
+
+  const omnipageOCRLanguageChangeHandler = (e) => {
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.omnipageOcrLanguage = e.value
     setParser({
       ...parser,
       ocr: updatedOCR
@@ -164,6 +192,19 @@ const OCR = () => {
                       options={paddleOCRLangOptions}
                       value={paddleOCRLangOptions.find(oo => oo.value == parser.ocr.paddleOcrLanguage)}
                       onChange={(e) => paddleOCRLanguageChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" />
+                  </Form.Group>
+                </>
+              )}
+              {parser.ocr.ocrType == "OMNIPAGE_OCR" && (
+                <>
+                  <Form.Group className="mb-3" controlId="formOmnipageOcrApiKey">
+                    <Form.Label>Omnipage OCR Language</Form.Label>
+                    <Select
+                      options={omnipageOCRLangOptions}
+                      value={omnipageOCRLangOptions.find(oo => oo.value == parser.ocr.omnipageOcrLanguage)}
+                      onChange={(e) => omnipageOCRLanguageChangeHandler(e)}
                       menuPlacement="auto"
                       menuPosition="fixed" />
                   </Form.Group>

@@ -178,7 +178,10 @@ class XMLPage:
 
                     prev_text = text
 
-                elif text_el.text == ' ' and 'bbox' not in text_el.attrib:
+                elif (text_el.text == ' ' and 'bbox' not in text_el.attrib) or text_el.text == '':
+
+                    if prev_text == None:
+                        continue
 
                     text = XMLText()
                     text.text = " "

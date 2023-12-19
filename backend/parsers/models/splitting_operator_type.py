@@ -5,6 +5,7 @@ class SplittingOperatorType(Enum):
 
     EQUALS = "EQUALS"
     CONTAINS = "CONTAINS"
+    DOES_NOT_CONTAINS = "DOES_NOT_CONTAINS"
     REGEX = "REGEX"
     IS_EMPTY = "IS_EMPTY"
     IS_NOT_EMPTY = "IS_NOT_EMPTY"

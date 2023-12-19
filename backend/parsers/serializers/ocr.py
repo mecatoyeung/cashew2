@@ -13,7 +13,7 @@ class OCRSerializer(serializers.ModelSerializer):
     class Meta:
         model = OCR
         fields = ['id', 'guid', 'ocr_type',
-                  'google_vision_ocr_api_key', 'paddle_ocr_language']
+                  'google_vision_ocr_api_key', 'paddle_ocr_language', 'omnipage_ocr_language']
         read_only_fields = ['id']
 
     def create(self, validated_data):

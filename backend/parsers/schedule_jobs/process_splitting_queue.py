@@ -100,6 +100,12 @@ def process_splitting_queue_job():
                         Prefetch("consecutive_page_splitting_rules",
                                  queryset=SplittingRule.objects.prefetch_related("splitting_conditions"))))).get(parser_id=parser.id)
 
+                if splitting.activated == False:
+                    queue_job.queue_class = QueueClass.PARSING.value
+                    queue_job.queue_status = QueueStatus.READY.value
+                    queue_job.save()
+                    continue
+
                 # Do the job
                 accumulated_page_nums = []
                 previous_pages_parsed_result = {}
@@ -135,6 +141,9 @@ def process_splitting_queue_job():
                                 splitting_condition.rule.id, parsed_result))
                             if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
                                 if not splitting_condition.value in streamed_rule_value:
+                                    first_page_conditions_passed = False
+                            elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                if splitting_condition.value in streamed_rule_value:
                                     first_page_conditions_passed = False
                             elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
                                 if not splitting_condition.value == streamed_rule_value:
@@ -202,6 +211,9 @@ def process_splitting_queue_job():
                                             splitting_condition.rule.id, parsed_result))
                                         if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
                                             if not splitting_condition.value in streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                            if splitting_condition.value in streamed_rule_value:
                                                 consecutive_page_conditions_passed = False
                                         elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
                                             if not splitting_condition.value == streamed_rule_value:
@@ -320,7 +332,7 @@ def process_splitting_queue_job():
                                 else:
                                     last_preprocessing = preprocessings[0]
                                     document_page_file_path = os.path.join(
-                                        media_folder_path, "documents", str(document.guid), "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".jpg")
+                                        media_folder_path, "documents", str(document.guid), "pre_processed-" + str(last_preprocessing.id), str(accumulated_page_num) + ".jpg")
                                     if not os.path.exists(document_page_file_path):
                                         document_page_file_path = os.path.join(
                                             media_folder_path, "documents", str(document.guid), str(accumulated_page_num) + ".jpg")

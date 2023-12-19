@@ -36,7 +36,7 @@ export default function XMLForm(props) {
     name: "",
     integrationType: "XML_INTEGRATION",
     xmlPath: "",
-    template: "<?xml version=\"1.0\" encoding=\"UTF-8\">",
+    template: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
     intervalSeconds: 15,
     activated: true,
     errorMessage: "",

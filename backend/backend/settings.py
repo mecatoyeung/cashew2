@@ -110,11 +110,10 @@ DATABASES = {
     }
 }
 
-"""
-DATABASES = {
+"""DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': os.environ.get('DB_NAME', 'docparser'),
+        'NAME': os.environ.get('DB_NAME', 'cashew2'),
         'USER': os.environ.get('DB_USER', 'sa'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Aa123456'),
         'HOST': os.environ.get('DB_HOST', '.\\MSSQLSERVER,1433'),
@@ -123,8 +122,7 @@ DATABASES = {
             'NAME': 'test_docparser',
         },
     }
-}
-"""
+}"""
 
 AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
