@@ -129,14 +129,6 @@ const Splitting = () => {
     })
   }
 
-  const updateParser = () => {
-    service.put("parsers/" + parserId,
-      parser,
-      response => {
-      }
-    )
-  }
-
   const addFirstPageSplittingClickHandler = () => {
     setSplittingModal(
       produce((draft) => {
@@ -314,7 +306,9 @@ const Splitting = () => {
   }
 
   const saveBtnClickHandler = () => {
+    console.log("will send")
     service.put("splittings/" + splitting.id + '/', splitting, (response) => {
+      console.log(response)
       getSplitting()
     })
   }

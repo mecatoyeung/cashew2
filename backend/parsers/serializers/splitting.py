@@ -98,6 +98,29 @@ class SplittingSerializer(serializers.ModelSerializer):
 
             splitting_rule.splitting_conditions.add(splitting_condition_obj)
 
+    def create(self, instance, validated_data):
+        """ Create a splitting rule. """
+        splitting_id = instance.id
+        SplittingCondition.objects.filter(
+            splitting_rule__splitting_id=splitting_id
+        ).delete()
+        SplittingRule.objects.filter(
+            splitting_id=splitting_id
+        ).delete()
+        Splitting.objects.filter(
+            id=splitting_id
+        ).delete()
+
+        splitting_rules = validated_data.pop("splitting_rules", [])
+
+        splitting_obj, created = Splitting.objects.get_or_create(
+            **validated_data,
+        )
+
+        self._get_or_create_splitting_rules(splitting_rules, splitting_obj)
+
+        return splitting_obj
+
     def update(self, instance, validated_data):
         """ Create a splitting rule. """
         splitting_id = instance.id

@@ -30,7 +30,7 @@ export default function ActivateEmail() {
 
   const activateEmail = () => {
     console.log(token)
-    service.post("/rest-auth/registration/verify-email/", {
+    service.post("rest-auth/registration/verify-email/", {
       key: token
     }, response => {
       setHasActivated(true)

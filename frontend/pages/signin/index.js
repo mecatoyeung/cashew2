@@ -59,7 +59,7 @@ export default function SignIn() {
       localStorage.removeItem("token");
       setFormErrorSummaryMessages("")
       service.post(
-        "/rest-auth/login/",
+        "rest-auth/login/",
         {
           username: signInForm.email,
           email: signInForm.email,

@@ -6,12 +6,30 @@ from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 from django.db.models import Prefetch
 
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+)
+
 from parsers.models.splitting import Splitting
 from parsers.models.splitting_rule import SplittingRule
 
 from parsers.serializers.splitting import SplittingSerializer, PostSplittingSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'parser_id',
+                OpenApiTypes.STR,
+                description="Filter by parser id."
+            )
+        ]
+    )
+)
 class SplittingViewSet(viewsets.ModelViewSet):
     """ View for manage post processing APIs. """
     serializer_class = SplittingSerializer
@@ -32,15 +50,15 @@ class SplittingViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """ Return the serializer class for request """
         if self.action == 'create':
-            return PostSplittingSerializer
+            return SplittingSerializer
         elif self.action == 'retrieve':
             return SplittingSerializer
         elif self.action == 'update':
-            return PostSplittingSerializer
+            return SplittingSerializer
         elif self.action == 'list':
             return SplittingSerializer
         elif self.action == 'destroy':
-            return PostSplittingSerializer
+            return SplittingSerializer
 
         return self.serializer_class
 
