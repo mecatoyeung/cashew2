@@ -117,6 +117,8 @@ const RegionSelector = () => {
         }
         pd.ocredPagesCount = ocredPagesCount
         pd.name = pd.filenameWithoutExtension + "." + pd.extension + " (Page " + ocredPagesCount + " of " + pd.totalPageNum + ")"
+        pd.documentPages = pd.documentPages.sort((a, b) => a.pageNum - b.pageNum)
+        console.log(pd)
       }
       setParserDocuments(parserDocuments)
       if (parserDocuments.length > 0 && documentId == 0) {

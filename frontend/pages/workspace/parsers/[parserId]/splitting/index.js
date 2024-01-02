@@ -46,6 +46,10 @@ const conditionOperators = [
       value: "REGEX"
   },
   {
+      label: "not regex",
+      value: "NOT_REGEX"
+  },
+  {
       label: "contains",
       value: "CONTAINS"
   },
@@ -150,6 +154,17 @@ const Splitting = () => {
     )
   }
 
+  const addLastPageSplittingClickHandler = (firstPageSplittingRuleIndex) => {
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = true
+        draft.type = "LAST_PAGE"
+        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
+        draft.routeToParser = null
+      })
+    )
+  }
+
   const addConditionBtnClickHandler = () => {
     setSplittingModal(produce((draft) => {
       draft.conditions.push({
@@ -227,6 +242,16 @@ const Splitting = () => {
     }))
   }
 
+  const lastRuleMoveUpBtnClickHandler = (firstPageIndex, lastPageIndex) => {
+    if (lastPageIndex <= 0) return
+    setSplitting(produce(draft => {
+      let lastPageSplittingRules = draft.splittingRules[firstPageIndex].lastPageSplittingRules
+      let tmpLastRule = lastPageSplittingRules[lastPageIndex]
+      lastPageSplittingRules[lastPageIndex] = lastPageSplittingRules[lastPageIndex - 1]
+      lastPageSplittingRules[lastPageIndex - 1] = tmpLastRule
+    }))
+  }
+
   const consecutiveRuleMoveDownBtnClickHandler = (firstPageIndex, consecutivePageIndex) => {
     setSplitting(produce(draft => {
       let consecutivePageSplittingRules = draft.splittingRules[firstPageIndex].consecutivePageSplittingRules
@@ -234,6 +259,16 @@ const Splitting = () => {
       let tmpConsecutiveRule = consecutivePageSplittingRules[consecutivePageIndex + 1]
       consecutivePageSplittingRules[consecutivePageIndex + 1] = consecutivePageSplittingRules[consecutivePageIndex]
       consecutivePageSplittingRules[consecutivePageIndex] = tmpConsecutiveRule
+    }))
+  }
+
+  const lastRuleMoveDownBtnClickHandler = (firstPageIndex, lastPageIndex) => {
+    setSplitting(produce(draft => {
+      let lastPageSplittingRules = draft.splittingRules[firstPageIndex].lastPageSplittingRules
+      if (lastPageIndex >= (lastPageSplittingRules.length - 1)) return
+      let tmpLastRule = lastPageSplittingRules[lastPageIndex + 1]
+      lastPageSplittingRules[lastPageIndex + 1] = lastPageSplittingRules[lastPageIndex]
+      lastPageSplittingRules[lastPageIndex] = tmpLastRule
     }))
   }
 
@@ -272,6 +307,25 @@ const Splitting = () => {
        } ))
   }
 
+  const lastPageSplittingRuleAddBtnClickHandler = (index) => {
+    setSplitting(produce((draft) => {
+      if (draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].lastPageSplittingRules == undefined) {
+        draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].lastPageSplittingRules = []
+      }
+      draft.splittingRules[splittingModal.firstPageSplittingRuleIndex].lastPageSplittingRules.push({
+        splittingRuleType: "LAST_PAGE",
+        parentSplittingRule: splittingModal.parentSplittingRule,
+        splitting: splitting.id,
+        routeToParser: splittingModal.routeToParser,
+        splittingConditions: splittingModal.conditions
+      })
+    }))
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = false
+       } ))
+  }
+
   const firstSplittingRuleDeleteHandler = (firstPageIndex) => {
     setSplitting(produce(draft => {
       draft.splittingRules.splice(firstPageIndex, 1)
@@ -282,6 +336,13 @@ const Splitting = () => {
     setSplitting(produce(draft => {
       let consecutivePageSplittingRules = draft.splittingRules[firstPageIndex].consecutivePageSplittingRules
       consecutivePageSplittingRules = consecutivePageSplittingRules.splice(consecutivePageIndex, 1)
+    }))
+  }
+
+  const lastSplittingRuleDeleteHandler = (firstPageIndex, lastPageIndex) => {
+    setSplitting(produce(draft => {
+      let lastPageSplittingRules = draft.splittingRules[firstPageIndex].lastPageSplittingRules
+      lastPageSplittingRules = lastPageSplittingRules.splice(lastPageIndex, 1)
     }))
   }
 
@@ -306,7 +367,6 @@ const Splitting = () => {
   }
 
   const saveBtnClickHandler = () => {
-    console.log("will send")
     service.put("splittings/" + splitting.id + '/', splitting, (response) => {
       console.log(response)
       getSplitting()
@@ -358,7 +418,11 @@ const Splitting = () => {
                                 <span className={styles.firstPageSplittingOperator}>
                                   {conditionOperators.find(o => o.value == firstPageSplittingCondition.operator).label}
                                 </span>
-                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || firstPageSplittingCondition.operator == "EQUALS") && (
+                                {(firstPageSplittingCondition.operator == "CONTAINS" || 
+                                  firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                  firstPageSplittingCondition.operator == "EQUALS" || 
+                                  firstPageSplittingCondition.operator == "REGEX" || 
+                                  firstPageSplittingCondition.operator == "NOT_REGEX") && (
                                   <span className={styles.firstPageSplittingValue}>{firstPageSplittingCondition.value}</span>
                                 )}
                               </div>
@@ -376,7 +440,11 @@ const Splitting = () => {
                                 <span className={styles.firstPageSplittingOperator}>
                                   {conditionOperators.find(o => o.value == firstPageSplittingCondition.operator).label}
                                 </span>
-                                {(firstPageSplittingCondition.operator == "CONTAINS" || firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS"  || firstPageSplittingCondition.operator == "EQUALS") && (
+                                {(firstPageSplittingCondition.operator == "CONTAINS" || 
+                                  firstPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                  firstPageSplittingCondition.operator == "EQUALS" || 
+                                  firstPageSplittingCondition.operator == "REGEX" || 
+                                  firstPageSplittingCondition.operator == "NOT_REGEX") && (
                                   <span className={styles.firstPageSplittingValue}>{firstPageSplittingCondition.value}</span>
                                 )}
                               </div>
@@ -421,7 +489,11 @@ const Splitting = () => {
                                               <span className={styles.consecutivePageSplittingOperator}>
                                                 {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
                                               </span>
-                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || 
+                                                consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                                consecutivePageSplittingCondition.operator == "EQUALS" ||
+                                                consecutivePageSplittingCondition.operator == "REGEX" || 
+                                                consecutivePageSplittingCondition.operator == "NOT_REGEX") && (
                                                 <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
                                               )}
                                             </div>
@@ -439,7 +511,11 @@ const Splitting = () => {
                                               <span className={styles.consecutivePageSplittingOperator}>
                                                 {conditionOperators.find(o => o.value == consecutivePageSplittingCondition.operator).label}
                                               </span>
-                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || consecutivePageSplittingCondition.operator == "EQUALS") && (
+                                              {(consecutivePageSplittingCondition.operator == "CONTAINS" || 
+                                                consecutivePageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                                consecutivePageSplittingCondition.operator == "EQUALS" ||
+                                                consecutivePageSplittingCondition.operator == "REGEX" || 
+                                                consecutivePageSplittingCondition.operator == "NOT_REGEX") && (
                                                 <span className={styles.consecutivePageSplittingValue}>{consecutivePageSplittingCondition.value}</span>
                                               )}
                                             </div>
@@ -467,10 +543,92 @@ const Splitting = () => {
                         </div>
                       )
                     })}
+                    <Card.Title style={{marginTop: "20px"}}>
+                      Last Page Splitting
+                    </Card.Title>
+                    {firstPageSplittingRule.lastPageSplittingRules && 
+                      firstPageSplittingRule.lastPageSplittingRules.map((lastPageSplittingRule, lastPageSplittingRuleIndex) => {
+                      return (
+                        <div key={lastPageSplittingRuleIndex}>
+                          {lastPageSplittingRuleIndex > 0 && (
+                            <p style={{textAlign: "center", margin: 10}}>or</p>
+                          )}
+                          <Card style={{ width: '100%', marginBottom: 10 }}>
+                            <Card.Body>
+                              <fieldset>
+                                <div className={styles.lastPageSplitting}>
+                                  <div className={styles.lastPageSplittingConditions}>
+                                    {lastPageSplittingRule && lastPageSplittingRule.splittingConditions.map((lastPageSplittingCondition, lastSplittingConditionIndex) => {
+                                      if (lastSplittingConditionIndex == 0) {
+                                        return (
+                                          <div key={lastSplittingConditionIndex}>
+                                            <div className={styles.lastPageSplittingCondition}>
+                                              <span className={styles.lastPageSplittingIf}>If</span>
+                                              <span className={styles.lastPageSplittingRuleName}>
+                                                {rules.find(r => r.id == lastPageSplittingCondition.rule).name}
+                                              </span>
+                                              <span className={styles.lastPageSplittingOperator}>
+                                                {conditionOperators.find(o => o.value == lastPageSplittingCondition.operator).label}
+                                              </span>
+                                              {(lastPageSplittingCondition.operator == "CONTAINS" || 
+                                                lastPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                                lastPageSplittingCondition.operator == "EQUALS" || 
+                                                lastPageSplittingCondition.operator == "REGEX" || 
+                                                lastPageSplittingCondition.operator == "NOT_REGEX") && (
+                                                <span className={styles.lastPageSplittingValue}>{lastPageSplittingCondition.value}</span>
+                                              )}
+                                            </div>
+                                            <br/>
+                                          </div>
+                                        )
+                                      } else {
+                                        return (
+                                          <>
+                                            <div className={styles.lastPageSplittingCondition}>
+                                              <span className={styles.lastPageSplittingAnd}>and</span>
+                                              <span className={styles.lastPageSplittingRuleName}>
+                                                {rules.find(r => r.id == lastPageSplittingCondition.rule).name}
+                                              </span>
+                                              <span className={styles.lastPageSplittingOperator}>
+                                                {conditionOperators.find(o => o.value == lastPageSplittingCondition.operator).label}
+                                              </span>
+                                              {(lastPageSplittingCondition.operator == "CONTAINS" || 
+                                                lastPageSplittingCondition.operator == "DOES_NOT_CONTAINS" || 
+                                                lastPageSplittingCondition.operator == "EQUALS" || 
+                                                lastPageSplittingCondition.operator == "REGEX" || 
+                                                lastPageSplittingCondition.operator == "NOT_REGEX") && (
+                                                <span className={styles.lastPageSplittingValue}>{lastPageSplittingCondition.value}</span>
+                                              )}
+                                            </div>
+                                          </>
+                                        )
+                                      }
+                                    })}
+                                    
+                                    <span className={styles.lastPageSplittingThen}>Then</span>
+                                  </div>
+                                  <div className={styles.lastPageSplittingRouter}>
+                                    <span className={styles.lastPageSplittingRouteTo}>exit routing to: </span>
+                                    <span className={styles.lastPageSplittingParser}>{allParsers.find(p => p.id == firstPageSplittingRule.routeToParser).name}</span>
+                                  </div>
+                                  <div className={styles.lastPageSplittingActions}>
+                                    <Button style={{marginRight: 10}} onClick={() => lastRuleMoveUpBtnClickHandler(firstPageSplittingRuleIndex, lastPageSplittingRuleIndex)}>&uarr;</Button>
+                                    <Button style={{marginRight: 10}} onClick={() => lastRuleMoveDownBtnClickHandler(firstPageSplittingRuleIndex, lastPageSplittingRuleIndex)}>&darr;</Button>
+                                    <Button variant='danger' onClick={() => lastSplittingRuleDeleteHandler(firstPageSplittingRuleIndex, lastPageSplittingRuleIndex)}>Delete</Button>
+                                  </div>
+                                </div>
+                              </fieldset>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                      )
+                    })}
                     <div className={styles.consecutivePageSplittingActions}>
                       <Button onClick={() => addConsecutivePageSplittingClickHandler(firstPageSplittingRuleIndex)}>Add Consecutive Page Splitting</Button>
                     </div>
-                    
+                    <div className={styles.lastPageSplittingActions}>
+                      <Button onClick={() => addLastPageSplittingClickHandler(firstPageSplittingRuleIndex)}>Add Last Page Splitting</Button>
+                    </div>
                     <Card style={{ width: '100%', marginBottom: 10, marginTop: 10 }}>
                       <Card.Body>
                         <fieldset>
@@ -540,7 +698,11 @@ const Splitting = () => {
               onHide={closeSplittingModalHandler}
             >
               <Modal.Header closeButton>
-                <Modal.Title>{splittingModal.type == "FIRST_PAGE" ? "Add first page splitting" : "Add consecutive page splitting"}</Modal.Title>
+                <Modal.Title>
+                  {splittingModal.type == "FIRST_PAGE" && "Add first page splitting"}
+                  {splittingModal.type == "CONSECUTIVE_PAGE" && "Add consecutive page splitting"}
+                  {splittingModal.type == "LAST_PAGE" && "Add last page splitting"}
+                </Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Table striped bordered hover>
@@ -588,6 +750,7 @@ const Splitting = () => {
                       <td>
                         {(condition.operator == "EQUALS" ||
                           condition.operator == "REGEX" ||
+                          condition.operator == "NOT_REGEX" ||
                           condition.operator == "CONTAINS" ||
                           condition.operator == "DOES_NOT_CONTAINS") && (
                             <Form.Control value={condition.value} onChange={(e) => txtConditionValueChangeHandler(conditionIndex, e.target.value)}/>
@@ -632,6 +795,9 @@ const Splitting = () => {
                   )}
                   {splittingModal.type == "CONSECUTIVE_PAGE" && (
                   <Button style={{ marginRight: 10 }} onClick={consecutivePageSplittingRuleAddBtnClickHandler}>Add</Button>
+                  )}
+                  {splittingModal.type == "LAST_PAGE" && (
+                  <Button style={{ marginRight: 10 }} onClick={lastPageSplittingRuleAddBtnClickHandler}>Add</Button>
                   )}
                   <Button variant="danger" onClick={closeSplittingModalHandler}>Cancel</Button>
                 </Form.Group>

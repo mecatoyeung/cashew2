@@ -5,6 +5,7 @@ class SplittingRuleType(Enum):
 
     FIRST_PAGE = "FIRST_PAGE"
     CONSECUTIVE_PAGE = "CONSECUTIVE_PAGE"
+    LAST_PAGE = "LAST_PAGE"
 
     @classmethod
     def choices(cls):

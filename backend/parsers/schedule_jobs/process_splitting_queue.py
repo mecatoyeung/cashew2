@@ -32,7 +32,7 @@ from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.chatbot_type import ChatBotType
 from parsers.models.splitting import Splitting
-from parsers.models.splitting_rule import SplittingRule
+from parsers.models.splitting_rule import SplittingRule, ConsecutivePageSplittingRule, LastPageSplittingRule
 from parsers.models.splitting_rule_type import SplittingRuleType
 from parsers.models.rule import Rule
 from parsers.models.splitting_operator_type import SplittingOperatorType
@@ -93,12 +93,19 @@ def process_splitting_queue_job():
                 # splitting = Splitting.objects.prefetch_related("").get(parser_id=parser.id)
                 splitting = Splitting.objects.prefetch_related(Prefetch(
                     "splitting_rules",
-                    queryset=SplittingRule.objects.filter(
+                    queryset=SplittingRule.objects.order_by("sort_order").filter(
                         splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
                     .prefetch_related("splitting_conditions")
                     .prefetch_related(
                         Prefetch("consecutive_page_splitting_rules",
-                                 queryset=SplittingRule.objects.prefetch_related("splitting_conditions"))))).get(parser_id=parser.id)
+                                 queryset=ConsecutivePageSplittingRule.objects.filter(
+                                     splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value).
+                                 order_by("sort_order").prefetch_related("splitting_conditions")))
+                    .prefetch_related(
+                        Prefetch("last_page_splitting_rules",
+                                 queryset=LastPageSplittingRule.objects.filter(
+                                     splitting_rule_type=SplittingRuleType.LAST_PAGE.value)
+                                 .order_by("sort_order").prefetch_related("splitting_conditions"))))).get(parser_id=parser.id)
 
                 if splitting.activated == False:
                     queue_job.queue_class = QueueClass.PARSING.value
@@ -150,6 +157,9 @@ def process_splitting_queue_job():
                                     first_page_conditions_passed = False
                             elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
                                 if not re.match(splitting_condition.value, streamed_rule_value):
+                                    first_page_conditions_passed = False
+                            elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                if re.match(splitting_condition.value, streamed_rule_value):
                                     first_page_conditions_passed = False
                             elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                                 if not streamed_rule_value.strip() == "":
@@ -203,6 +213,59 @@ def process_splitting_queue_job():
 
                                 previous_pages_parsed_result[page_num] = parsed_result
 
+                                any_last_page_rules_passed = False
+                                for last_page_splitting_rule in first_page_splitting_rule.last_page_splitting_rules.all():
+                                    last_page_conditions_passed = True
+                                    for splitting_condition in last_page_splitting_rule.splitting_conditions.all():
+                                        streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, parsed_result))
+                                        if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                            if not splitting_condition.value in streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                            if splitting_condition.value in streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                            if not splitting_condition.value == streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                            if not re.match(splitting_condition.value, streamed_rule_value):
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                            if re.match(splitting_condition.value, streamed_rule_value):
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                            if not streamed_rule_value.strip() == "":
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                            if streamed_rule_value.strip() == "":
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if streamed_rule_value == previous_streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if not streamed_rule_value == previous_streamed_rule_value:
+                                                last_page_conditions_passed = False
+
+                                    if last_page_conditions_passed:
+
+                                        any_last_page_rules_passed = True
+                                        break
+
+                                if any_last_page_rules_passed:
+
+                                    document_page_index -= 1
+                                    page_num = document_page_index + 1
+                                    break
+
                                 any_consecutive_page_rules_passed = False
                                 for consecutive_page_splitting_rule in first_page_splitting_rule.consecutive_page_splitting_rules.all():
                                     consecutive_page_conditions_passed = True
@@ -220,6 +283,9 @@ def process_splitting_queue_job():
                                                 consecutive_page_conditions_passed = False
                                         elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
                                             if not re.match(splitting_condition.value, streamed_rule_value):
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                            if re.match(splitting_condition.value, streamed_rule_value):
                                                 consecutive_page_conditions_passed = False
                                         elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                                             if not streamed_rule_value.strip() == "":
@@ -282,6 +348,8 @@ def process_splitting_queue_job():
                             route_to_parser_id = first_page_splitting_rule.route_to_parser_id
                             new_document.parser_id = route_to_parser_id
                             new_document.last_modified_at = datetime.now()
+                            new_parser_ocr = OCR.objects.get(
+                                parser_id=route_to_parser_id)
 
                             new_documents_path = os.path.join(
                                 media_folder_path, "documents", str(new_document.guid))
@@ -319,7 +387,10 @@ def process_splitting_queue_job():
                                 new_document_page.xml = document_page.xml
                                 new_document_page.document_id = new_document.id
                                 new_document_page.preprocessed = False
-                                new_document_page.ocred = False
+                                if new_parser_ocr.ocr_type == OCRType.NO_OCR.value:
+                                    new_document_page.ocred = True
+                                else:
+                                    new_document_page.ocred = False
                                 new_document_page.postprocessed = False
                                 new_document_page.chatbot_completed = False
 
@@ -346,34 +417,9 @@ def process_splitting_queue_job():
 
                             create_queue_when_upload_document(new_document)
 
-                            """filename_without_extension = document.filename_without_extension + \
-                                "_pages_" + \
-                                str(accumulated_page_nums[0]) + \
-                                "-" + str(accumulated_page_nums[-1])
-
-                            document_upload_serializer_data["file"] = File(
-                                new_searchable_pdf_in_bytes, filename_without_extension + ".pdf")
-
-                            route_to_parser_id = first_page_splitting_rule.route_to_parser_id
-                            document_upload_serializer_data["parser"] = route_to_parser_id
-
-                            document_upload_serializer_data["guid"] = str(
-                                uuid.uuid4())
-
-                            document_upload_serializer_data["document_type"] = DocumentType.IMPORT.value
-
-                            document_upload_serializer_data["document_extension"] = DocumentExtension.PDF.value
-
-                            document_upload_serializer_data["filename_without_extension"] = filename_without_extension
-                            document_upload_serializer_data["extension"] = "pdf"
-
-                            document_upload_serializer = DocumentUploadSerializer(
-                                data=document_upload_serializer_data)
-
-                            if document_upload_serializer.is_valid():
-                                document_upload_serializer.save()"""
-
                             accumulated_page_nums = []
+
+                            break
 
                     document_page_index += 1
                     page_num = document_page_index + 1

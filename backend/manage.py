@@ -3,19 +3,15 @@
 import os
 import sys
 
+
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-    #os.environ.setdefault('DB_HOST', 'localhost')
-    #os.environ.setdefault('DB_PORT', '5432')
-    #os.environ.setdefault('DB_NAME', 'Cashew')
-    #os.environ.setdefault('DB_USER', 'postgres')
-    #os.environ.setdefault('DB_PASS', 'CASHEW')
 
     if use_ptvsd():
         import ptvsd
         print('Waiting debugger to attach (port: 5000)...')
-        ptvsd.enable_attach(address = ('0.0.0.0', 5000))
+        ptvsd.enable_attach(address=('0.0.0.0', 5000))
         ptvsd.wait_for_attach()
         print('Attached debugger!')
 

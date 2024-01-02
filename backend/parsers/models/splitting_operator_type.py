@@ -7,6 +7,7 @@ class SplittingOperatorType(Enum):
     CONTAINS = "CONTAINS"
     DOES_NOT_CONTAINS = "DOES_NOT_CONTAINS"
     REGEX = "REGEX"
+    NOT_REGEX = "NOT_REGEX"
     IS_EMPTY = "IS_EMPTY"
     IS_NOT_EMPTY = "IS_NOT_EMPTY"
     CHANGED = "CHANGED"

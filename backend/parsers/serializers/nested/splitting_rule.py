@@ -27,7 +27,7 @@ class SplittingRuleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SplittingRule
-        fields = ['id', 'splitting', 'route_to_parser', 'splitting_rule_type', 'parent_splitting_rule',
+        fields = ['id', 'splitting', 'route_to_parser', 'splitting_rule_type',
                   'sort_order', 'splitting_conditions']
         read_only_fields = ['id']
 

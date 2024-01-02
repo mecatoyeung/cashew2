@@ -123,7 +123,62 @@
 }
 
 .consecutivePageSplittingActions {
+    margin-bottom: 10px;
+}
+
+.lastPageSplitting {
+
+}
+
+.lastPageSplittingConditions {
+    display: inline-block;
+}
+
+.lastPageSplittingCondition {
+    display: inline-block;
+    margin : 10px 0;
+}
+
+.lastPageSplittingIf {
+    padding: 5px 5px 5px 0;
+}
+
+.lastPageSplittingRuleName {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.lastPageSplittingOperator {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.lastPageSplittingValue {
+    margin: 0 5px;
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+.lastPageSplittingThen {
+    padding: 5px;
+}
+
+.lastPageSplittingRouter {
+    padding: 10px 0;
+}
+
+.lastPageSplittingRouteTo {
     
+}
+
+.lastPageSplittingParser {
+    font-weight: bold;
+}
+
+.lastPageSplittingActions {
+
 }
 
 .parserSelect {

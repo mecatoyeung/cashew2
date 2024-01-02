@@ -15,7 +15,6 @@ from django.db import transaction
 from backend.settings import MEDIA_URL
 
 
-@transaction.atomic
 def parse_pdf_to_xml(document):
     try:
         media_folder_path = MEDIA_URL
