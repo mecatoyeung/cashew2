@@ -1,16 +1,20 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
+import Head from "next/head"
+import Image from "next/image"
+import Link from "next/link"
 
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useRouter } from "next/router"
+import { useState, useEffect } from "react"
 
-import { Nav } from "react-bootstrap";
-import { Button } from "react-bootstrap";
+import { Nav } from "react-bootstrap"
+import { Button } from "react-bootstrap"
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import service from "../service";
+import WorkspaceHeader from "./_workspaceHeader"
 
-import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css";
+import service from "../service"
+
+import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css"
 
 export default function WorkspaceLayout({ children }) {
   const router = useRouter();
@@ -18,21 +22,31 @@ export default function WorkspaceLayout({ children }) {
   let { parserId } = router.query;
 
   const [parser, setParser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
 
   const getParser = () => {
-    if (!parserId) return;
+    if (!parserId) return
     service.get("parsers/" + parserId + "/", (response) => {
-      console.log(response.data)
-      setParser(response.data);
-    });
-  };
+      setParser(response.data)
+    })
+  }
+
+  const getUserProfile = () => {
+    service.get("profiles/", (response) => {
+      setUserProfile(response.data[0])
+    })
+  }
 
   const logoutBtnClickHandler = () => {
     service.post("rest-auth/logout/", {}, () => {
-      localStorage.removeItem("token");
-      router.push("/");
-    });
-  };
+      localStorage.removeItem("token")
+      router.push("/")
+    })
+  }
+
+  useEffect(() => {
+    getUserProfile()
+  }, [])
 
   useEffect(() => {
     getParser()
@@ -50,51 +64,7 @@ export default function WorkspaceLayout({ children }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className={workspaceLayoutStyles.wrapper}>
-        <header className={workspaceLayoutStyles.header}>
-          <div>
-            <div className="row" style={{ padding: 0, margin: 0 }}>
-              <div
-                className="col-6 col-md-6"
-                style={{ paddingLeft: 20, paddingRight: 0 }}
-              >
-                <div className={workspaceLayoutStyles.logoDiv}>
-                  <Image
-                    src="/static/img/logo.png"
-                    width="40"
-                    height="36"
-                    alt="Cashew Docparser"
-                  />
-                </div>
-                <h2>Cashew</h2>
-                &nbsp;&nbsp;&nbsp;
-                <Nav.Link
-                  href="/workspace/parsers"
-                  style={{ display: "inline-block", verticalAlign: "top" }}
-                >
-                  <i
-                    className={
-                      workspaceLayoutStyles.parsersIcon + " bi bi-grid"
-                    }
-                  ></i>
-                </Nav.Link>
-              </div>
-              <div
-                className="col-6 col-md-6"
-                style={{ paddingLeft: 0, paddingRight: 20 }}
-              >
-                <nav className={workspaceLayoutStyles.nav}>
-                  <ul>
-                    <li>
-                      <Button className="btn" onClick={logoutBtnClickHandler}>
-                        Logout
-                      </Button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </header>
+        <WorkspaceHeader />
         <hr className={workspaceLayoutStyles.headerHr} />
         <main className={workspaceLayoutStyles.main + " d-flex flex-column"}>
           <div

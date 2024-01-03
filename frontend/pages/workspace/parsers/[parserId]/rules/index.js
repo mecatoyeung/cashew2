@@ -24,7 +24,6 @@ export default function Parsers() {
   const router = useRouter()
 
   const { parserId } = router.query
-  console.log("parserId: ", parserId)
 
   const ruleTypes = [
     { label: "Textfield", value: "TEXTFIELD"},

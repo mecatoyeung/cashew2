@@ -14,16 +14,21 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-)
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
 from django.conf.urls.static import static
-from .settings import STATIC_URL, STATIC_ROOT
+
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+)
+
+from rest_auth.registration.views import RegisterView, VerifyEmailView
+from rest_auth.views import PasswordResetView, PasswordResetConfirmView
+
+from .settings import STATIC_URL, STATIC_ROOT
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,6 +37,7 @@ urlpatterns = [
             include('rest_auth.registration.urls')),
     re_path(r'^api/', include('user_countries.urls')),
     re_path(r'^api/', include('parsers.urls')),
+    re_path(r'^api/', include('core.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name="api-schema"),
     path(
         'api/docs',

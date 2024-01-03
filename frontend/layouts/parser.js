@@ -3,6 +3,8 @@ import Image from "next/image"
 import { useRouter } from 'next/router'
 
 import { Button } from 'react-bootstrap'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
 import service from '../service'
 
@@ -45,7 +47,11 @@ export default function ParserLayout({
                   <ul>
                     <li>Welcome!</li>
                     <li>
-                      <Button className="btn" onClick={logoutBtnClickHandler}>Logout</Button>
+                      <DropdownButton id="dropdown-basic-button" title="Account">
+                        <Dropdown.Item href="/account/profile">Profile</Dropdown.Item>
+                        <Dropdown.Item href="/account/change-password">Change Password</Dropdown.Item>
+                        <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>Logout</Dropdown.Item>
+                      </DropdownButton>
                     </li>
                   </ul>
                 </nav>

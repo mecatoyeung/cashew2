@@ -14,7 +14,7 @@ import rest_auth
 
 from django.contrib.auth import get_user_model
 
-from core.models import Profile
+from core.models.profile import Profile
 
 from rest_auth.registration.serializers import RegisterSerializer
 
