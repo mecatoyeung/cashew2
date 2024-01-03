@@ -27,7 +27,7 @@ from parsers.models.pre_processing import PreProcessing
 from parsers.helpers.detect_orientation_opencv import detect_orientation_opencv
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 
 def process_preprocessing_queue_job():

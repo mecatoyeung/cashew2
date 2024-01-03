@@ -1,3 +1,13 @@
+import sys
+import os
+import traceback
+from pathlib import Path
+from datetime import datetime
+from jinja2 import Template
+import shutil
+import json
+import glob
+
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -13,16 +23,6 @@ from parsers.models.document_type import DocumentType
 from parsers.models.integration import Integration
 from parsers.models.integration_type import IntegrationType
 from parsers.models.pdf_integration_type import PDFIntegrationType
-from backend.settings import MEDIA_URL
-import sys
-import os
-import traceback
-from pathlib import Path
-from datetime import datetime
-from jinja2 import Template
-import shutil
-import json
-import glob
 
 from django.conf import settings
 

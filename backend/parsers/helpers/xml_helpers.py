@@ -237,9 +237,6 @@ class XMLPage:
             if b.region.x1 == None or b.region.x2 == None or b.region.y1 == None or b.region.y2 == None:
                 return 0
 
-            if a.text == 'Good Receipt Note Range' or b.text == 'Good Receipt Note Range':
-                pass
-
             if (a.region.is_in_same_line(b.region)):
                 for item_before in arr_before:
                     if a.region.is_in_same_column(item_before.region):
@@ -310,13 +307,13 @@ class XMLRegion:
         return False
 
     def is_in_same_column(self, another_region):
-        if self.x1 <= another_region.x2 and self.x1 >= (another_region.x1) and self.x2 >= (another_region.x2):
+        if self.x1 >= another_region.x1 and self.x1 <= another_region.x2 and self.x2 >= another_region.x1 and self.x2 <= another_region.x2:
             return True
-        if (self.x1) <= another_region.x1 and (self.x2) <= another_region.x2 and self.x2 >= another_region.x1:
+        if self.x1 <= another_region.x1 and self.x2 >= another_region.x2:
             return True
-        if self.x2 >= (another_region.x2) and (self.x1) <= another_region.x1:
+        if self.x1 <= another_region.x1 and self.x2 >= another_region.x1:
             return True
-        if (self.x2) <= another_region.x2 and self.x1 >= (another_region.x1):
+        if self.x1 >= another_region.x1 and self.x1 <= another_region.x2:
             return True
         return False
 

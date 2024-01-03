@@ -44,7 +44,7 @@ from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 from parsers.helpers.document_parser import DocumentParser
 from parsers.helpers.stream_processor import StreamProcessor
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 
 def get_streamed_by_rule(rule_id, parsed_result):
@@ -328,7 +328,7 @@ def process_splitting_queue_job():
 
                             """document_upload_serializer_data = {}"""
 
-                            media_folder_path = MEDIA_URL
+                            media_folder_path = MEDIA_ROOT
                             documents_path = os.path.join(
                                 media_folder_path, "documents", str(document.guid))
                             searchable_pdf_path = os.path.join(

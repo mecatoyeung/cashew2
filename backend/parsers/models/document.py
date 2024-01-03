@@ -10,7 +10,7 @@ from parsers.models.document_type import DocumentType
 from parsers.models.document_extension import DocumentExtension
 from parsers.models.parser import Parser
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 
 class Document(models.Model):
@@ -19,7 +19,7 @@ class Document(models.Model):
     guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
 
     def file_upload_to(instance, filename):
-        return os.path.join(MEDIA_URL, 'documents/%s/%s.%s' % (instance.guid, 'original', instance.extension))
+        return os.path.join(MEDIA_ROOT, 'documents/%s/%s.%s' % (instance.guid, 'original', instance.extension))
     file = models.FileField(null=True, upload_to=file_upload_to)
     document_type = models.CharField(
         max_length=255, choices=DocumentType.choices())

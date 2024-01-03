@@ -25,8 +25,6 @@ from drf_spectacular.utils import (
     OpenApiTypes,
 )
 
-from backend.settings import MEDIA_URL
-
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
@@ -35,6 +33,8 @@ from parsers.serializers.document import DocumentSerializer, DocumentUploadSeria
 
 from parsers.helpers.generate_images_from_pdf import generate_images_from_pdf
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
+
+from backend.settings import MEDIA_ROOT
 
 
 class PNGRenderer(renderers.BaseRenderer):
@@ -129,7 +129,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             "step").filter(parser_id=document.parser.id)
 
         folder_path = os.path.join(
-            MEDIA_URL, 'documents/%s/' % (document.guid))
+            MEDIA_ROOT, 'documents/%s/' % (document.guid))
         if len(preprocessings) == 0:
             abs_png_path = os.path.join(folder_path, str(page_num) + ".jpg")
         else:

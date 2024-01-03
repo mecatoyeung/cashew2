@@ -1,3 +1,10 @@
+import sys
+import os
+import traceback
+import re
+import fitz
+from pathlib import Path
+
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,13 +19,8 @@ from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.post_processing import PostProcessing
 from parsers.models.post_processing_type import PostProcessingType
-from backend.settings import MEDIA_URL
-import sys
-import os
-import traceback
-import re
-import fitz
-from pathlib import Path
+
+from backend.settings import MEDIA_ROOT
 
 
 class Redactor:
@@ -111,18 +113,18 @@ def process_postprocessing_queue_job():
                     redaction_regex = post_processing.redaction_regex
 
                     if post_processing_index == 0:
-                        pdf_input_path = os.path.join(MEDIA_URL, 'documents', document.guid,
+                        pdf_input_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
                                                       "ocred.pdf")
                     else:
                         pdf_input_path = pdf_out_path
 
                     working_path = os.path.join(
-                        MEDIA_URL, 'documents', document.guid, "post_processed-" + str(post_processing.id))
+                        MEDIA_ROOT, 'documents', document.guid, "post_processed-" + str(post_processing.id))
                     is_working_dir_exist = os.path.exists(working_path)
                     if not is_working_dir_exist:
                         os.makedirs(working_path)
 
-                    pdf_out_path = os.path.join(MEDIA_URL, 'documents', document.guid,
+                    pdf_out_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
                                                 "post_processed-" + str(post_processing.id), "output.pdf")
 
                     redactor = Redactor(redaction_regex,

@@ -13,13 +13,13 @@ import cv2
 
 from parsers.models.document_page import DocumentPage
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 
 def generate_images_from_pdf(document):
     try:
         folder_path = os.path.join(
-            MEDIA_URL, 'documents/%s/' % (document.guid))
+            MEDIA_ROOT, 'documents/%s/' % (document.guid))
         abs_pdf_path = os.path.join(
             folder_path, 'source_file.' + document.extension)
 

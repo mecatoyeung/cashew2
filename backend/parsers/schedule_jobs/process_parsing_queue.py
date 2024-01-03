@@ -1,3 +1,7 @@
+import sys
+import os
+from pathlib import Path
+import json
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -13,12 +17,7 @@ from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
-from backend.settings import MEDIA_URL
 from parsers.helpers.document_parser import DocumentParser
-import sys
-import os
-from pathlib import Path
-import json
 
 from ..helpers.rule_extractor import RuleExtractor
 from ..helpers.stream_processor import StreamProcessor

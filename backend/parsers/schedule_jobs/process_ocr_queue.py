@@ -1,3 +1,9 @@
+import sys
+import os
+from pathlib import Path
+import shutil
+import traceback
+
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -15,17 +21,14 @@ from parsers.models.document_page import DocumentPage
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
-from backend.settings import MEDIA_URL
-import sys
-import os
-from pathlib import Path
-import shutil
-import traceback
+
 from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
 from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
 from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
 from parsers.helpers.convert_to_searchable_pdf_omnipage import convert_to_searchable_pdf_omnipage
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
+
+from backend.settings import MEDIA_ROOT
 
 
 def process_ocr_queue_job():
@@ -64,7 +67,7 @@ def process_ocr_queue_job():
         try:
             # Do the job
             # Create Working Dir if not exist
-            media_folder_path = MEDIA_URL
+            media_folder_path = MEDIA_ROOT
             documents_path = os.path.join(
                 media_folder_path, "documents", str(document.guid))
             working_path = os.path.join(documents_path, "ocr")
@@ -150,7 +153,7 @@ def process_no_ocr_queue_job():
         try:
             # Do the job
             # Create Working Dir if not exist
-            media_folder_path = MEDIA_URL
+            media_folder_path = MEDIA_ROOT
             documents_path = os.path.join(
                 media_folder_path, "documents", str(document.guid))
             working_path = os.path.join(documents_path, "ocr")

@@ -11,7 +11,7 @@ import os
 import cv2
 from pyzbar.pyzbar import decode
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
@@ -95,13 +95,115 @@ class RuleExtractor:
                 if xml_rule.region.overlaps(textline.region) and textline.text != "":
                     textlines_within_area.append(textline)
 
+            text_in_rows = []
             textlines_in_rows = []
             # Organize Textlines in Row by Row
             # textlines_in_current_row = []
             # while len(textlines_within_area) > 0:
             #    current_textline = textlines_within_area.pop(0)
 
-            text_in_current_row = ""
+            toppest_textline = None
+            toppest_textline_index = 0
+            while len(textlines_within_area) > 0:
+
+                if toppest_textline == None:
+                    toppest_textline = textlines_within_area[0]
+                    toppest_textline_index = 0
+
+                for textline_index in range(0, len(textlines_within_area) - 1):
+
+                    if textline_index == toppest_textline_index:
+                        continue
+
+                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+                        if textlines_within_area[textline_index].region.y2 > toppest_textline.region.y2:
+                            toppest_textline = textlines_within_area[textline_index]
+                            toppest_textline_index = textline_index
+
+                # found the toppest line.
+                # Now find all textlines in the same line
+                textlines_that_are_the_same_line_with_toppest = []
+                textline_indexes_that_are_the_same_line_with_toppest = []
+                textlines_that_are_the_same_line_with_toppest.append(
+                    toppest_textline)
+                textlines_within_area.pop(toppest_textline_index)
+                for textline_index in range(0, len(textlines_within_area)):
+
+                    if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
+                        break
+
+                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+
+                        overlapping_column_with_existing_textlines = False
+                        for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:
+                            if textline_that_are_the_same_line_with_toppest.region.is_in_same_column(toppest_textline.region):
+                                overlapping_column_with_existing_textlines = True
+                                break
+
+                        if not overlapping_column_with_existing_textlines:
+                            textlines_that_are_the_same_line_with_toppest.append(
+                                textlines_within_area[textline_index])
+                            textline_indexes_that_are_the_same_line_with_toppest.append(
+                                textline_index)
+
+                for textline_index_that_are_the_same_line_with_toppest in textline_indexes_that_are_the_same_line_with_toppest:
+                    textlines_within_area.pop(
+                        textline_index_that_are_the_same_line_with_toppest)
+
+                textlines_that_are_the_same_line_with_toppest.sort(
+                    key=lambda x: x.region.x1)
+
+                textlines_in_rows.append(
+                    textlines_that_are_the_same_line_with_toppest)
+
+                toppest_textline = None
+                toppest_textline_index = 0
+
+            previous_textline = None
+            for textlines_in_row in textlines_in_rows:
+                text_in_current_row = ""
+                for current_textline in textlines_in_row:
+                    # if it is the first line, add empty lines
+                    if len(text_in_rows) == 0:
+                        num_of_empty_lines_to_be_prepend = math.floor(
+                            (xml_rule.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend):
+                            text_in_rows.append("")
+                    else:
+                        num_of_empty_lines_to_be_prepend = math.floor(
+                            (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
+                        for i in range(num_of_empty_lines_to_be_prepend):
+                            text_in_rows.append("")
+
+                    # if current textline is the first line in the row
+                    if previous_textline == None:
+                        num_of_spaces_to_be_prepend = math.floor(
+                            (current_textline.region.x1 - xml_rule.region.x1) / xml_page.median_text_width)
+                        spaces = " " * num_of_spaces_to_be_prepend
+                        text_in_current_row = spaces + current_textline.text
+                    # if current textline has previous line
+                    else:
+                        num_of_spaces_to_be_prepend = math.floor(
+                            (current_textline.region.x1 - previous_textline.region.x2) / xml_page.median_text_width)
+                        spaces = " " * num_of_spaces_to_be_prepend
+                        text_in_current_row = text_in_current_row + spaces + current_textline.text
+
+                    previous_textline = current_textline
+
+                text_in_rows.append(text_in_current_row)
+
+            # append empty textlines in the end
+            if len(textlines_in_rows) > 0:
+                last_textline = textlines_in_rows[-1][-1]
+                if len(textlines_within_area) == 0:
+                    num_of_empty_lines_to_be_append = math.floor(
+                        (last_textline.region.y1 - xml_rule.region.y1) / xml_page.median_text_height)
+                    for i in range(num_of_empty_lines_to_be_append):
+                        text_in_rows.append("")
+
+            textlines_in_all_pages = textlines_in_all_pages + text_in_rows
+
+        """text_in_current_row = ""
             prev_text_width = xml_page.median_text_width
             first_textline_in_row = None
             while len(textlines_within_area) > 0:
@@ -165,7 +267,7 @@ class RuleExtractor:
 
                 previous_textline = current_textline
 
-            textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows
+            textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows"""
 
         if len(textlines_in_all_pages) == 0:
             textlines_in_all_pages = [""]

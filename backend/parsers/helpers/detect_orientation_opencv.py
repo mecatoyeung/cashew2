@@ -12,14 +12,14 @@ from parsers.models.queue import Queue
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue_status import QueueStatus
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 
 def detect_orientation_opencv(document, preprocessing, last_preprocessing=None):
 
-    media_folder_path = MEDIA_URL
+    media_folder_path = MEDIA_ROOT
     documents_folder_path = os.path.join(
         media_folder_path, "documents", str(document.guid))
     working_path = os.path.join(

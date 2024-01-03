@@ -75,9 +75,8 @@ def export_pdf(playground, default_dpi, savefile=False):
     images = glob.glob(os.path.join(playground, '*.jpg'))
     images.sort(key=lambda x: int(Path(x).stem))
     if len(images) == 0:
-        print(f"WARNING: No JPG images found in the folder {playground}"
-              "\nScript cannot proceed without them and will terminate now.\n")
-        sys.exit(0)
+        raise Exception(f"WARNING: No JPG images found in the folder {playground}"
+                        "\nScript cannot proceed without them and will terminate now.\n")
     load_invisible_font()
     pdf = Canvas(savefile if savefile else StdoutWrapper(), pageCompression=1)
     pdf.setCreator('hocr-tools')

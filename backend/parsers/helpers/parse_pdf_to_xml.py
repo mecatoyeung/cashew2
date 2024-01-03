@@ -12,12 +12,12 @@ from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
 
 from django.db import transaction
 
-from backend.settings import MEDIA_URL
+from backend.settings import MEDIA_ROOT
 
 
 def parse_pdf_to_xml(document):
     try:
-        media_folder_path = MEDIA_URL
+        media_folder_path = MEDIA_ROOT
         documents_folder_path = os.path.join(
             media_folder_path, "documents", document.guid)
 
