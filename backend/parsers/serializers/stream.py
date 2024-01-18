@@ -9,6 +9,14 @@ from parsers.serializers.stream_condition import StreamConditionSerializer
 
 class StreamSerializer(serializers.ModelSerializer):
 
+    text = serializers.CharField(
+        trim_whitespace=False, allow_blank=True, allow_null=True)
+    regex = serializers.CharField(
+        trim_whitespace=False, allow_blank=True, allow_null=True)
+    join_string = serializers.CharField(
+        trim_whitespace=False, allow_blank=True, allow_null=True)
+    open_ai_question = serializers.CharField(
+        trim_whitespace=False, allow_blank=True, allow_null=True)
     stream_conditions = StreamConditionSerializer(many=True, required=False)
 
     class Meta:

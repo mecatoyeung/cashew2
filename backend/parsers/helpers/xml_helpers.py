@@ -313,7 +313,7 @@ class XMLRegion:
             return True
         if self.x1 <= another_region.x1 and self.x2 >= another_region.x1:
             return True
-        if self.x1 >= another_region.x1 and self.x1 <= another_region.x2:
+        if self.x1 <= another_region.x2 and self.x2 >= another_region.x2:
             return True
         return False
 

@@ -47,6 +47,6 @@ class OpenAIStreamProcessor(StreamBase):
                 output.append("")
         else:
             for key, value in response_dict.items():
-                output.append(key + ": " + value)
+                output.append(key + ": " + str(value))
 
         return output

@@ -7,10 +7,6 @@ import traceback
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
-from django.utils import timezone
-from django_apscheduler.models import DjangoJobExecution
-from django_apscheduler.jobstores import register_job
 from django.db.models import Q
 
 from parsers.models.queue import Queue
@@ -22,10 +18,6 @@ from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 
-from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
-from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
-from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
-from parsers.helpers.convert_to_searchable_pdf_omnipage import convert_to_searchable_pdf_omnipage
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
 from backend.settings import MEDIA_ROOT
@@ -78,23 +70,27 @@ def process_ocr_queue_job():
             searchable_pdf_path = os.path.join(
                 documents_path, 'ocred.pdf')
             if ocr.ocr_type == OCRType.GOOGLE_VISION.value:
+                from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
                 convert_to_searchable_pdf_gcv(document,
                                               searchable_pdf_path,
                                               documents_path,
                                               google_vision_api_key=ocr.google_vision_ocr_api_key,
                                               preprocessings=preprocessings)
             elif ocr.ocr_type == OCRType.DOCTR.value:
+                from parsers.helpers.convert_to_searchable_pdf_doctr import convert_to_searchable_pdf_doctr
                 convert_to_searchable_pdf_doctr(document,
                                                 searchable_pdf_path,
                                                 documents_path,
                                                 preprocessings=preprocessings)
             elif ocr.ocr_type == OCRType.PADDLE_OCR.value:
+                from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
                 convert_to_searchable_pdf_paddleocr(document,
                                                     searchable_pdf_path,
                                                     documents_path,
                                                     preprocessings=preprocessings,
                                                     lang=ocr.paddle_ocr_language)
             elif ocr.ocr_type == OCRType.OMNIPAGE_OCR.value:
+                from parsers.helpers.convert_to_searchable_pdf_omnipage import convert_to_searchable_pdf_omnipage
                 convert_to_searchable_pdf_omnipage(document,
                                                    searchable_pdf_path,
                                                    documents_path,

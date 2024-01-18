@@ -1,3 +1,6 @@
+from omnipage import kRecInit, kRecQuit, kRecSetLicense, kRecLoadImgF, \
+    kRecRecognize, kRecSetLanguages, kRecSetDefaultRecognitionModule, \
+    kRecSetCodePage, kRecFreeImg, kRecSetDefaults, kRecSetDTXTFormat
 import os
 from pathlib import Path
 import base64
@@ -29,17 +32,15 @@ from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
 
 from django.db import transaction
 
-from .omnipage_utils import LICENSE_FILE, OEM_CODE, SID, PAGE_NUMBER_0, \
-    InfoMsg, ErrMsg, USE_OEM_LICENSE, YOUR_COMPANY, YOUR_PRODUCT, \
-    API_INIT_WARN, API_LICENSEVALIDATION_WARN, DTXT_HOCR, DTXT_IOTPDF, CreateEnabledLanguagesArray, \
-    LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO
-from omnipage import REC_OK
-from omnipage import kRecInit, kRecQuit, kRecSetLicense, kRecLoadImgF, \
-    kRecRecognize, kRecSetLanguages, kRecSetDefaultRecognitionModule, \
-    kRecSetCodePage, kRecFreeImg, kRecSetDefaults, kRecSetDTXTFormat
-
 
 def convert_png_to_pdf(png_path, hocr_path, lang="LANG_ENG"):
+
+    from .omnipage_utils import LICENSE_FILE, OEM_CODE, SID, PAGE_NUMBER_0, \
+        InfoMsg, ErrMsg, USE_OEM_LICENSE, YOUR_COMPANY, YOUR_PRODUCT, \
+        API_INIT_WARN, API_LICENSEVALIDATION_WARN, DTXT_HOCR, DTXT_IOTPDF, CreateEnabledLanguagesArray, \
+        LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO
+
+    from omnipage import REC_OK
 
     rc = REC_OK
 

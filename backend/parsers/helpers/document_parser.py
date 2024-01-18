@@ -1,6 +1,7 @@
 from .xml_helpers import XMLPage
 from decimal import Decimal
 import math
+import re
 
 from parsers.models.rule_type import RuleType
 
@@ -21,6 +22,7 @@ class DocumentParser:
         self.parsed_result = []
 
     def extract_all_text_in_one_page(self, page_num):
+
         page_nums = [int(page_num)]
 
         for page_num in page_nums:
@@ -31,84 +33,148 @@ class DocumentParser:
                 self.xml_pages.append(xml_page)
         self.xml_pages.sort(key=lambda x: x.page_num)
 
-        textlines_in_all_pages = []
+        xml_page = [x for x in self.xml_pages if x.page_num == page_num][0]
 
-        for page_num in page_nums:
+        # Get All Textlines within Area
+        textlines_within_area = []
+        for textline in xml_page.textlines:
+            # Tailored for Google Invoices
+            if re.match(r'[.]+', textline.text):
+                continue
 
-            xml_page = [x for x in self.xml_pages if x.page_num == page_num][0]
+            textlines_within_area.append(textline)
 
-            textlines_in_rows = []
+        text_in_rows = []
+        textlines_in_rows = []
+        # Organize Textlines in Row by Row
+        # textlines_in_current_row = []
+        # while len(textlines_within_area) > 0:
+        #    current_textline = textlines_within_area.pop(0)
 
-            # Get All Textlines within Area
-            textlines_within_area = []
-            for textline in xml_page.textlines:
-                textlines_within_area.append(textline)
+        toppest_textline = None
+        toppest_textline_index = 0
+        while len(textlines_within_area) > 0:
 
-            text_in_current_row = ""
-            prev_text_width = xml_page.median_text_width
-            first_textline_in_row = None
-            while len(textlines_within_area) > 0:
-                current_textline = textlines_within_area.pop(0)
+            if toppest_textline == None:
+                toppest_textline = textlines_within_area[0]
+                toppest_textline_index = 0
 
-                text_to_add = ""
-                for text_in_textline in current_textline.text_elements:
-                    text_to_add = text_to_add + text_in_textline.text
+            for textline_index in range(0, len(textlines_within_area) - 1):
 
-                # if it is a new line, just prepend space append to the row array
-                if len(text_in_current_row) == 0:
-                    first_textline_in_row = current_textline
-                    # if it is the first line, add empty lines
-                    if len(textlines_in_rows) == 0:
-                        num_of_empty_lines_to_be_prepend = math.floor(
-                            (xml_page.region.y2 - current_textline.region.y2) / xml_page.median_text_height)
-                        for i in range(num_of_empty_lines_to_be_prepend):
-                            textlines_in_rows.append("")
-                    # if it is not the first line and there is a line difference between current line and previous line,
-                    # add empty lines between them
-                    else:
-                        if current_textline.region.y2 == None:
+                if textline_index == toppest_textline_index:
+                    continue
+
+                if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+                    if textlines_within_area[textline_index].region.y2 > toppest_textline.region.y2:
+                        toppest_textline = textlines_within_area[textline_index]
+                        toppest_textline_index = textline_index
+
+            # found the toppest line.
+            # Now find all textlines in the same line
+            textlines_that_are_the_same_line_with_toppest = []
+            textline_indexes_that_are_the_same_line_with_toppest = []
+
+            textlines_that_are_the_same_line_with_toppest.append(
+                toppest_textline)
+            textlines_within_area.pop(toppest_textline_index)
+            textline_index = 0
+            # for textline_index in range(0, len(textlines_within_area)):
+            while textline_index < len(textlines_within_area):
+
+                if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
+                    break
+
+                if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+
+                    overlapping_column_with_existing_textlines = False
+                    for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:
+                        if textline_that_are_the_same_line_with_toppest == toppest_textline:
                             continue
+                        if textline_that_are_the_same_line_with_toppest.region.is_in_same_column(toppest_textline.region):
+                            overlapping_column_with_existing_textlines = True
+                            break
+
+                    if not overlapping_column_with_existing_textlines:
+                        textlines_that_are_the_same_line_with_toppest.append(
+                            textlines_within_area[textline_index])
+                        textline_indexes_that_are_the_same_line_with_toppest.append(
+                            textline_index)
+                        textlines_within_area.pop(
+                            textline_index)
+                        continue
+
+                textline_index += 1
+
+            textlines_that_are_the_same_line_with_toppest.sort(
+                key=lambda x: x.region.x1)
+
+            textlines_in_rows.append(
+                textlines_that_are_the_same_line_with_toppest)
+
+            toppest_textline = None
+            toppest_textline_index = 0
+
+        if len(textlines_in_rows) > 0 and len(textlines_in_rows[0]) > 0:
+            num_of_empty_lines_to_be_prepend = math.floor(
+                (100 - textlines_in_rows[0][0].region.y2) / xml_page.median_text_height)
+            for i in range(num_of_empty_lines_to_be_prepend):
+                num_of_spaces_to_be_prepend = math.floor(
+                    (100 - 0) / xml_page.median_text_width)
+                spaces = " " * num_of_spaces_to_be_prepend
+                text_in_rows.append(spaces)
+
+        previous_textline = None
+        for textlines_in_row in textlines_in_rows:
+            text_in_current_row = ""
+            for current_textline_index in range(0, len(textlines_in_row)):
+                current_textline = textlines_in_row[current_textline_index]
+
+                if current_textline_index == 0:
+                    # if current textline is the first line in the row,
+                    # add empty lines before
+                    if previous_textline != None:
                         num_of_empty_lines_to_be_prepend = math.floor(
                             (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
                         for i in range(num_of_empty_lines_to_be_prepend):
-                            textlines_in_rows.append("")
-
+                            num_of_spaces_to_be_prepend = math.floor(
+                                (100 - 0) / xml_page.median_text_width)
+                            spaces = " " * num_of_spaces_to_be_prepend
+                            text_in_rows.append(spaces)
+                    # if current textline is the first line in the row,
+                    # add spaces before
                     num_of_spaces_to_be_prepend = math.floor(
-                        (current_textline.region.x1 - 0) / prev_text_width)
+                        (current_textline.region.x1 - 0) / xml_page.median_text_width)
                     spaces = " " * num_of_spaces_to_be_prepend
-                    text_in_current_row = text_in_current_row + spaces + text_to_add
-
-                # else, calculate spaces to prepend from previous textline
+                    text_in_current_row = spaces + current_textline.text
+                # if current textline has previous line,
+                # add spaces before
                 else:
                     num_of_spaces_to_be_prepend = math.floor(
-                        (current_textline.region.x1 - 0) / prev_text_width) - len(text_in_current_row)
+                        (current_textline.region.x1 - 0) / xml_page.median_text_width) - len(text_in_current_row)
                     spaces = " " * num_of_spaces_to_be_prepend
-                    text_in_current_row = text_in_current_row + spaces + text_to_add
+                    text_in_current_row = text_in_current_row + spaces + current_textline.text
 
-                # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
-                if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
-                    num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - 0) / prev_text_width) - \
-                        len(text_in_current_row)
-                    spaces = " " * num_of_spaces_to_be_append
+                # add spaces if textline is the last
+                if current_textline_index == (len(textlines_in_row) - 1):
+                    num_of_spaces_to_be_prepend = math.floor(
+                        (100 - 0) / xml_page.median_text_width) - len(text_in_current_row)
+                    spaces = " " * num_of_spaces_to_be_prepend
                     text_in_current_row = text_in_current_row + spaces
-                    textlines_in_rows.append(text_in_current_row)
-                    text_in_current_row = ""
-
-                # append empty textlines in the end
-                if len(textlines_within_area) == 0:
-                    num_of_empty_lines_to_be_append = math.floor(
-                        (current_textline.region.y1 - xml_page.region.y1) / xml_page.median_text_height)
-                    for i in range(num_of_empty_lines_to_be_append):
-                        textlines_in_rows.append("")
 
                 previous_textline = current_textline
 
-            textlines_in_all_pages = textlines_in_all_pages + textlines_in_rows
+            text_in_rows.append(text_in_current_row)
 
-        if len(textlines_in_all_pages) == 0:
-            textlines_in_all_pages = [""]
+        # append empty textlines in the end
+        if len(textlines_in_rows) > 0:
+            last_textline = textlines_in_rows[-1][-1]
+            if len(textlines_within_area) == 0:
+                num_of_empty_lines_to_be_append = math.floor(
+                    (last_textline.region.y1 - 0) / xml_page.median_text_height)
+                for i in range(num_of_empty_lines_to_be_append):
+                    text_in_rows.append("")
 
-        return textlines_in_all_pages
+        return text_in_rows
 
     def extract_all_text_in_all_pages(self):
 

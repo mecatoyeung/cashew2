@@ -26,7 +26,6 @@ from parsers.models.queue import Queue
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue_status import QueueStatus
 
-from paddleocr import PaddleOCR, draw_ocr
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element as ETElement
 from xml.etree.ElementTree import SubElement
@@ -324,6 +323,8 @@ def convert_to_searchable_pdf_paddleocr(document,
                                         document_path,
                                         preprocessings=[],
                                         lang="cn"):
+
+    from paddleocr import PaddleOCR
 
     working_path = os.path.join(
         document_path, "ocr")

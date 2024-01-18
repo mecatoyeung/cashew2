@@ -40,6 +40,130 @@ import service from '../../../../../service'
 
 import styles from '../../../../../styles/AIChat.module.css'
 
+const isMultipleArrays = (chat) => {
+  
+  for (const [key, value] of Object.entries(chat)) {
+    console.log("value: ", value)
+    if (!Array.isArray(value)) {
+      return false
+    }
+    /*if (typeof value === 'object') {
+      return false
+    }*/
+  }
+
+  return true
+}
+
+const arrayRange = (start, stop, step) =>
+    Array.from(
+    { length: (stop - start) / step + 1 },
+    (value, index) => start + index * step
+)
+
+const RecursiveChat = ({chat}) => {
+  if (typeof chat === 'string' || typeof chat === 'number') {
+    console.log("string: ", chat)
+    return (
+      <div className={styles.talkValue}>{chat}</div>
+    )
+  } else if (isMultipleArrays(chat)) {
+    console.log("multiple arrays: ", chat)
+    return (
+        <div className="talk-table-div">
+          <table className="talk-table">
+            <thead>
+              <tr>
+                {console.log(chat)}
+                {Object.keys(chat).map(header => {
+                  return (
+                    <td>{header}</td>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {(function renderTableBody() {
+                let cols = Object.keys(chat)
+                {console.log(chat)}
+                if (chat[cols[0]] == undefined) {
+                  return (
+                    <></>
+                  )
+                }
+                let rows = arrayRange(0, chat[cols[0]].length - 1, 1)
+                console.log("cols: ", cols)
+                return (
+                  <>
+                    {rows.map(row => (
+                      <tr>
+                        {cols.map(col => {
+                          if (chat[col][row] != undefined) {
+                            return (
+                              <td>{chat[col][row]}</td>
+                            )
+                          }
+                        })}
+                      </tr>
+                    ))}
+                  </>
+                )
+              })()}
+            </tbody>
+          </table>
+        </div>
+      )
+  } else if (Array.isArray(chat)) {
+    console.log("array: ", chat)
+    if (chat.length == 0) return (<></>)
+    
+    return (
+      <div className="talk-table-div">
+        <table className="talk-table">
+          <thead>
+            <tr>
+              {Object.keys(chat[0]).map((tableKey, tableKeyIndex) => {
+                return (
+                  <th key={tableKeyIndex}>{tableKey}</th>
+                )
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {chat.map((tableRow, tableRowIndex) => {
+              let tableRowObjectKeys = Object.keys(tableRow)
+              if (tableRowObjectKeys.length > 0) {
+                return (
+                  <tr key={tableRowIndex}>
+                    {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                      <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                    ))}
+                  </tr>
+                )
+              } else {
+                return (
+                  <tr key={tableRowIndex}></tr>
+                )
+              }
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  } else if (typeof chat === 'object') {
+    console.log("object: ", chat)
+    return (
+      Object.keys(chat).map((objectKey, objectKeyIndex) => {
+        return (
+          <div style={{paddingLeft: 10}}>
+            <div className={styles.talkKeyToValue}>{objectKey}</div>
+            {<RecursiveChat chat={chat[objectKey]} />}
+          </div>
+        )
+      })
+    )
+  }
+}
 
 const AIChat = () => {
 
@@ -292,6 +416,40 @@ const AIChat = () => {
             let rowValues = []
             rowValues[1] = key
             rowValues[2] = value
+
+            if (typeof value === 'object' && Object.entries(value).length == 1 && Array.isArray(value[0])) {
+              Object.entries(latestMachineResponse)
+                .map(([key, value]) => {
+                let itemTableName = key
+                let itemTableRows = value
+                if (itemTableRows.length > 0) {
+                  let itemTableSheet = workbook.addWorksheet(chatCounter + ". " + itemTableName)
+                  let rowValues = []
+                  let itemTableColIndex = 1
+                  Object.entries(itemTableRows[0])
+                  .map(([tableKey, tableValue]) => {
+                    rowValues[itemTableColIndex] = tableKey
+                    itemTableColIndex++
+                  })
+                  itemTableSheet.addRow(rowValues)
+                  
+                  
+                  for (let j=0; j<itemTableRows.length; j++) {
+                    let itemTableRow = itemTableRows[j]
+                    rowValues = []
+
+                    itemTableColIndex = 1
+                    Object.entries(itemTableRow)
+                    .map(([tableKey, tableValue]) => {
+                      rowValues[itemTableColIndex] = tableValue
+                      itemTableColIndex++
+                    })
+                    itemTableSheet.addRow(rowValues)
+                  }
+                }
+              })
+            }
+
             metadataWorksheet.addRow(rowValues)
           } else {
             let itemTableName = key
@@ -361,7 +519,6 @@ const AIChat = () => {
   const getParserDocuments = () => {
     if (!parserId) return
     service.get("documents/?parserId=" + parserId, response => {
-      console.log(response.data)
       let parserDocuments = response.data
       for (let j=0; j<parserDocuments.length; j++) {
         let pd = parserDocuments[j]
@@ -462,6 +619,59 @@ const AIChat = () => {
       window.removeEventListener("mouseup", stopResizing);
     };
   }, [resize, stopResizing]);
+
+  const renderChat = (chat) => {
+    if (typeof chat === 'string' || typeof chat === Number) {
+      console.log(chat)
+      return (
+        <div className={styles.talkKeyToValue}>{chat}</div>
+      )
+    } else if (Array.isArray(chat)) {
+      return (
+        <div className="talk-table-div" key={keyIndex}>
+          <p>{key}: </p>
+          <table className="talk-table">
+            <thead>
+              <tr>
+                {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
+                  return (
+                    <th key={tableKeyIndex}>{tableKey}</th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {tableJSON.map((tableRow, tableRowIndex) => {
+                let tableRowObjectKeys = Object.keys(tableRow)
+                if (tableRowObjectKeys.length > 0) {
+                  return (
+                    <tr key={tableRowIndex}>
+                      {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                        <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                      ))}
+                    </tr>
+                  )
+                } else {
+                  return (
+                    <tr key={tableRowIndex}></tr>
+                  )
+                }
+              })}
+            </tbody>
+          </table>
+        </div>
+      )
+    } else if (typeof chat === 'object') {
+      Object.keys(chat).map((objectKey, objectKeyIndex) => {
+      return (
+        <>
+          <div className={styles.talkKeyToValue}>{objectKey}</div>
+          {renderChat(chat[objectKey])}
+        </>
+      )
+      })
+    }
+  }
 
   return (
     <>
@@ -567,7 +777,6 @@ const AIChat = () => {
                     initialScale={0.3}
                     minScale={0.2} maxScale={1}
                     centerZoomedOut={false} customTransform={(x, y, scale) => {
-                      console.log(x, y, scale)
                       const a = scale;
                       const b = 0;
                       const c = 0;
@@ -672,7 +881,7 @@ const AIChat = () => {
                           />
                         </div>
                         <div className={styles.talktext}>
-                          {Array.isArray(chatHistory.chat) && chatHistory.chat.length > 0 && (
+                          {/*Array.isArray(chatHistory.chat) && chatHistory.chat.length > 0 && (
                             <div className="talk-table-div" key={key}>
                               <table className="talk-table">
                                 <thead>
@@ -705,8 +914,9 @@ const AIChat = () => {
                                 </tbody>
                               </table>
                             </div>
-                          )}
-                          {!Array.isArray(chatHistory.chat) && Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key, keyIndex) => {
+                                )*/}
+                          {<RecursiveChat chat={chatHistory.chat}/>}
+                          {/*!Array.isArray(chatHistory.chat) && Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key, keyIndex) => {
                             if (typeof chatHistory.chat === 'string') {
                               <div className={styles.talkKeyToValue}>{chatHistory.chat[key]}</div>
                             } else if (typeof chatHistory.chat[key] === 'string') {
@@ -766,49 +976,67 @@ const AIChat = () => {
                               let objectsHtml = (<></>)
                               if (Object.keys(objectJSON).length > 0) {
                                 objectsHtml = Object.keys(objectJSON).map((objectKey, objectKeyIndex) => {
-                                  console.log(objectKey, ": ", objectJSON[objectKey])
+                                  //console.log(objectKey, ": ", objectJSON[objectKey])
                                   if (typeof objectJSON[objectKey] === 'string') {
                                     return (
                                       <div key={objectKeyIndex} className={styles.talkKeyToValue}>{objectKey}: {objectJSON[objectKey]}</div>
                                     )
                                   } else if (Array.isArray(objectJSON[objectKey])){
                                     let tableJSON = objectJSON[objectKey]
+                                    console.log("Anchor: ", tableJSON)
                                     if (tableJSON.length > 0) {
-                                      return (
-                                        <div className="talk-table-div" key={key}>
-                                          <p>{key}: </p>
-                                          <table className="talk-table">
-                                            <thead>
-                                              <tr>
-                                                {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
-                                                  console.log(tableKey)
+                                      if (typeof tableJSON[0] === 'string') {
+                                        return (
+                                          <div className="talk-table-div">
+                                            <table className="talk-table">
+                                              <tbody>
+                                                {tableJSON.map(row => {
                                                   return (
-                                                    <th key={tableKeyIndex}>{tableKey}</th>
+                                                    <tr>{row}</tr>
                                                   )
                                                 })}
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-                                              {tableJSON.map((tableRow, tableRowIndex) => {
-                                                let tableRowObjectKeys = Object.keys(tableRow)
-                                                if (tableRowObjectKeys.length > 0) {
-                                                  return (
-                                                    <tr key={tableRowIndex}>
-                                                      {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
-                                                        <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
-                                                      ))}
-                                                    </tr>
-                                                  )
-                                                } else {
-                                                  return (
-                                                    <tr key={tableRowIndex}></tr>
-                                                  )
-                                                }
-                                              })}
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      )
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        )
+                                      } else {
+
+                                        return (
+                                          <div className="talk-table-div" key={key}>
+                                            <p>{key}: </p>
+                                            <table className="talk-table">
+                                              <thead>
+                                                <tr>
+                                                  {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
+                                                    return (
+                                                      <th key={tableKeyIndex}>{tableKey}</th>
+                                                    )
+                                                  })}
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {tableJSON.map((tableRow, tableRowIndex) => {
+                                                  let tableRowObjectKeys = Object.keys(tableRow)
+                                                  if (tableRowObjectKeys.length > 0) {
+                                                    return (
+                                                      <tr key={tableRowIndex}>
+                                                        {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+                                                          <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                                                        ))}
+                                                      </tr>
+                                                    )
+                                                  } else {
+                                                    return (
+                                                      <tr key={tableRowIndex}></tr>
+                                                    )
+                                                  }
+                                                })}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        )
+                                        
+                                      }
                                     }
                                   }
                                   
@@ -816,7 +1044,7 @@ const AIChat = () => {
                               }
                               return objectsHtml
                             } 
-                          })}
+                          })*/}
                         </div>
                       </div>
                     )}

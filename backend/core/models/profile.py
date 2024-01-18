@@ -25,6 +25,4 @@ class Profile(models.Model):
     company_name = models.TextField(max_length=1023, blank=True)
     country = models.CharField(
         max_length=1023,
-        choices=[value for (value, label) in dict(
-            countries_for_language('en')).items()],
         blank=True)

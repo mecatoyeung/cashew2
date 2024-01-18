@@ -169,6 +169,11 @@
 
 .talkKeyToValue {
   overflow-wrap: break-word;
+  font-weight: bold;
+}
+
+.talkKeyToValue .talkValue {
+  font-weight: normal;
 }
 
 .talkActionDiv {

@@ -461,9 +461,16 @@ const StreamEditor = () => {
                         <thead>
                           <tr>
                             {processedStream.data.header.map((header, headerIndex) => {
-                              return (
-                                <th key={headerIndex}>{header}</th>
-                              )
+                              if (typeof header == 'number') {
+                                return (
+                                  <th key={headerIndex}>{header + 1}</th>
+                                )
+                              } else {
+                                return (
+                                  <th key={headerIndex}>{header}</th>
+                                )
+                              }
+                              
                             })}
                           </tr>
                         </thead>

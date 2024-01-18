@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Image from "next/image"
 import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 
 import { Button } from 'react-bootstrap'
 import Dropdown from 'react-bootstrap/Dropdown'
@@ -16,6 +17,8 @@ export default function ParserLayout({
 
   const router = useRouter()
 
+  let { parserId } = router.query;
+
   const logoutBtnClickHandler = () => {
     service.post("rest-auth/logout/", {}
       , () => {
@@ -23,6 +26,9 @@ export default function ParserLayout({
       router.push("/")
     })
   }
+
+  useEffect(() => {
+  }, [parserId])
 
   return (
     <>

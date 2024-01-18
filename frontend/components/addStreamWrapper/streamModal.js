@@ -189,7 +189,8 @@ const AddStreamModal = (props) => {
     unpivotColumnIndex: "",
     unpivotNewlineChar: "",
     unpivotPropertyAssignCharacter: "",
-    convertToTableBySpecifyHeaders: ""
+    convertToTableBySpecifyHeaders: "",
+    openAIQuestion: ""
   })
 
   const selectedStreamClassChangeHandler = (e) => {
