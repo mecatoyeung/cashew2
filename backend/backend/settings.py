@@ -91,7 +91,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Configuration for PostgreSQL Server
-DATABASES = {
+"""DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_NAME'),
@@ -103,10 +103,10 @@ DATABASES = {
             'NAME': 'test_docparser',
         },
     }
-}
+}"""
 
 # Configuration for MSSQL Server
-"""DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'mssql',
         'NAME': env('DB_NAME'),
@@ -118,7 +118,7 @@ DATABASES = {
             'NAME': 'test_docparser',
         },
     }
-}"""
+}
 
 AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',

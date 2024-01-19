@@ -74,10 +74,9 @@ const RecursiveChat = ({chat}) => {
           <table className="talk-table">
             <thead>
               <tr>
-                {console.log(chat)}
-                {Object.keys(chat).map(header => {
+                {Object.keys(chat).map((header, headerIndex) => {
                   return (
-                    <td>{header}</td>
+                    <td key={headerIndex}>{header}</td>
                   )
                 })}
               </tr>
@@ -85,22 +84,20 @@ const RecursiveChat = ({chat}) => {
             <tbody>
               {(function renderTableBody() {
                 let cols = Object.keys(chat)
-                {console.log(chat)}
                 if (chat[cols[0]] == undefined) {
                   return (
                     <></>
                   )
                 }
                 let rows = arrayRange(0, chat[cols[0]].length - 1, 1)
-                console.log("cols: ", cols)
                 return (
                   <>
-                    {rows.map(row => (
-                      <tr>
-                        {cols.map(col => {
+                    {rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {cols.map((col, colIndex) => {
                           if (chat[col][row] != undefined) {
                             return (
-                              <td>{chat[col][row]}</td>
+                              <td key={colIndex}>{chat[col][row]}</td>
                             )
                           }
                         })}
@@ -151,11 +148,10 @@ const RecursiveChat = ({chat}) => {
       </div>
     )
   } else if (typeof chat === 'object') {
-    console.log("object: ", chat)
     return (
       Object.keys(chat).map((objectKey, objectKeyIndex) => {
         return (
-          <div style={{paddingLeft: 10}}>
+          <div style={{paddingLeft: 10}} key={objectKeyIndex}>
             <div className={styles.talkKeyToValue}>{objectKey}</div>
             {<RecursiveChat chat={chat[objectKey]} />}
           </div>
