@@ -99,6 +99,9 @@ const RegionSelector = () => {
 
   const getRule = () => {
     service.get("rules/" + ruleId + "?parserId" + parserId, response => {
+      if (documentId != null) {
+        response.data.anchorDocument = documentId
+      }
       console.log(response.data)
       setRule(response.data)
     })
@@ -148,7 +151,8 @@ const RegionSelector = () => {
   const openChangeDocumentModalHandler = () => setShowChangeDocumentModal(true)
 
   const updateRule = (updatedRule) => {
-    service.put("rules/" + ruleId + "/",
+    console.log(updatedRule)
+    service.put("rules/" + ruleId + "/?parserId=" + parserId,
       updatedRule,
       response => {
       }
@@ -234,7 +238,9 @@ const RegionSelector = () => {
       anchorX2: (anchorRegion.x + anchorRegion.width).toFixed(2),
       anchorY1: (100 - anchorRegion.y - anchorRegion.height).toFixed(2),
       anchorY2: (100 - anchorRegion.y).toFixed(2),
-      anchorDocument: documentId,
+      anchorDocument: {
+        id: parseInt(documentId)
+      },
       anchorPageNum: pageNum
     }
     setRule(updatedRule)
@@ -252,7 +258,9 @@ const RegionSelector = () => {
       anchorX2: (p.x + p.width).toFixed(2),
       anchorY1: (100 - p.y - p.height).toFixed(2),
       anchorY2: (100 - p.y).toFixed(2),
-      anchorDocument: documentId,
+      anchorDocument: { 
+        id: parseInt(documentId)
+      },
       anchorPageNum: pageNum
     }
     setRule(updatedRule)

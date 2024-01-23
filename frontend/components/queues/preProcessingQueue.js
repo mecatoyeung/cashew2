@@ -172,7 +172,7 @@ const PreProcessingQueue = (props) => {
                     </td>
                     <td className={styles.tdGrow}>{queue.document.description}</td>
                     <td>{queue.document.documentType}</td>
-                    <td>{queue.queueStatus}</td>
+                    <td>{queue.queueStatus.replace("_", " ")}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

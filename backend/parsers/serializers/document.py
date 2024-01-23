@@ -92,8 +92,8 @@ class DocumentUploadSerializer(DocumentSerializer):
         """ Create a document. """
         guid = str(uuid.uuid4())
         file = validated_data.pop("file")
-        filename_without_extension = os.path.basename(file.name).split(".")[0]
-        extension = file.name.split(".")[1].lower()
+        filename_without_extension = Path(file.name).stem
+        extension = Path(file.name).suffix[1:]
         validated_data["guid"] = guid
         validated_data["filename_without_extension"] = filename_without_extension
         if extension == "pdf" or extension == "PDF":

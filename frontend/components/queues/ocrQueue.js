@@ -30,17 +30,6 @@ const OCRQueue = (props) => {
     })
   }
 
-  const getQueues = () => {
-    if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueClass=OCR", response => {
-      let queues = response.data
-      for (let i = 0; i < queues.length; i++) {
-        queues[i].selected = false
-      }
-      setQueues(response.data)
-    })
-  }
-
   const stopOCRClickHandler = async () => {
     for (let i=0; i<selectedQueueIds.length; i++) {
       let queue = queues.find(q => q.id == selectedQueueIds[i])
@@ -48,6 +37,7 @@ const OCRQueue = (props) => {
       queue.queueStatus = "STOPPED"
       await service.put("queues/" + selectedQueueIds[i] + "/", queue)
     }
+    setSelectedQueueIds([])
   }
 
   const chkQueueChangeHandler = (e, queue) => {
@@ -81,6 +71,7 @@ const OCRQueue = (props) => {
     if (!router.isReady) return
     getParser()
     let queues = props.queues
+    let stoppedQueuesCount = 0
     for (let i=0; i<queues.length; i++) {
       let queue = queues[i]
       let ocredCount = 0
@@ -89,6 +80,13 @@ const OCRQueue = (props) => {
         if (documentPage.ocred) ocredCount++
       } 
       queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (OCRed " + ocredCount + " of " + queue.document.documentPages.length + ")"
+      if (queue.queueStatus == "STOPPED") {
+        stoppedQueuesCount++
+      }
+    }
+    /* Avoid misleading queue informartion */
+    if (stoppedQueuesCount > 0) {
+      return
     }
     setQueues(queues)
   }, [router.isReady, props.queues])
@@ -146,7 +144,7 @@ const OCRQueue = (props) => {
                     </td>
                     <td className={styles.tdGrow}>{queue.document.description}</td>
                     <td>{queue.document.documentType}</td>
-                    <td>{queue.queueStatus}</td>
+                    <td>{queue.queueStatus.replace("_", " ")}</td>
                     <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                   </tr>
                 )

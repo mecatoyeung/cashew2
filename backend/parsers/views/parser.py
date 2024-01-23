@@ -226,11 +226,9 @@ class ParserViewSet(viewsets.ModelViewSet):
                         splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
                         .prefetch_related("splitting_conditions")
                         .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                                   queryset=ConsecutivePageSplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                       splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                                                   queryset=ConsecutivePageSplittingRule.objects.prefetch_related("splitting_conditions")))
                         .prefetch_related(Prefetch("last_page_splitting_rules",
-                                                   queryset=LastPageSplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                       splitting_rule_type=SplittingRuleType.LAST_PAGE.value)))
+                                                   queryset=LastPageSplittingRule.objects.prefetch_related("splitting_conditions")))
                     )) \
                     .get(pk=parser_id)
 
@@ -386,6 +384,28 @@ class ParserViewSet(viewsets.ModelViewSet):
                                 consecutive_page_splitting_condition.sort_order = consecutive_page_splitting_condition_json_obj[
                                     "sortOrder"]
                                 consecutive_page_splitting_condition.save()
+
+                        for last_page_splitting_rule_json_obj in splitting_rule_json_obj["lastPageSplittingRules"]:
+                            last_page_splitting_rule = LastPageSplittingRule()
+                            last_page_splitting_rule.splitting = splitting
+                            last_page_splitting_rule.splitting_rule_type = last_page_splitting_rule_json_obj[
+                                "splittingRuleType"]
+                            last_page_splitting_rule.parent_splitting_rule = splitting_rule
+                            last_page_splitting_rule.sort_order = consecutive_page_splitting_rule_json_obj[
+                                "sortOrder"]
+                            last_page_splitting_rule.save()
+
+                            for last_page_splitting_condition_json_obj in last_page_splitting_rule_json_obj["splittingConditions"]:
+                                last_page_splitting_condition = SplittingCondition()
+                                last_page_splitting_condition.rule = r
+                                last_page_splitting_condition.splitting_rule = last_page_splitting_rule
+                                last_page_splitting_condition.operator = last_page_splitting_condition[
+                                    "operator"]
+                                last_page_splitting_condition.value = last_page_splitting_condition_json_obj[
+                                    "value"]
+                                last_page_splitting_condition.sort_order = last_page_splitting_condition_json_obj[
+                                    "sortOrder"]
+                                last_page_splitting_condition.save()
 
                 chatbot = ChatBot()
                 chatbot.guid = parser_json_obj["chatbot"]["guid"]

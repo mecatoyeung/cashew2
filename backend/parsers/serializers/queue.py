@@ -2,6 +2,8 @@ import os
 import shutil
 import glob
 
+from django.db import transaction
+
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -87,43 +89,47 @@ class QueueSerializer(serializers.ModelSerializer):
         #    instance.queue_status = QueueStatus.STOPPED.value
         #    instance.save()
         #    return instance
-        """ Update queue. """
-        for attr, value in validated_data.items():
-            if attr == "document":
-                continue
-            if attr == "queue_class" and value == QueueClass.PROCESSED.value:
-                document_pages = DocumentPage.objects.filter(
-                    document__queue__id=instance.pk)
-                for document_page in document_pages:
-                    document_page.preprocessed = False
-                    document_page.ocred = False
-                    document_page.postprocessed = False
-                    document_page.save()
-            if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
-                document_pages = DocumentPage.objects.filter(
-                    document__queue__id=instance.pk)
-                for document_page in document_pages:
-                    document_page.preprocessed = False
-                    document_page.ocred = False
-                    document_page.postprocessed = False
-                    document_page.save()
-            if attr == "queue_class" and value == QueueClass.OCR.value:
-                document_pages = DocumentPage.objects.filter(
-                    document__queue__id=instance.pk)
-                for document_page in document_pages:
-                    document_page.ocred = False
-                    document_page.postprocessed = False
-                    document_page.save()
-            if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
-                document_pages = DocumentPage.objects.filter(
-                    document__queue__id=instance.pk)
-                for document_page in document_pages:
-                    document_page.postprocessed = False
-                    document_page.save()
-            setattr(instance, attr, value)
+        with transaction.atomic():
+            """ Update queue. """
+            for attr, value in validated_data.items():
+                if attr == "document":
+                    continue
+                if attr == "queue_class" and value == QueueClass.PROCESSED.value:
+                    document_pages = DocumentPage.objects.filter(
+                        document__queue__id=instance.pk)
+                    for document_page in document_pages:
+                        document_page.preprocessed = False
+                        document_page.ocred = False
+                        document_page.postprocessed = False
+                        document_page.save()
+                if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
+                    document_pages = DocumentPage.objects.filter(
+                        document__queue__id=instance.pk)
+                    for document_page in document_pages:
+                        document_page.preprocessed = False
+                        document_page.ocred = False
+                        document_page.postprocessed = False
+                        document_page.save()
+                if attr == "queue_class" and value == QueueClass.OCR.value:
+                    document_pages = DocumentPage.objects.filter(
+                        document__queue__id=instance.pk)
+                    for document_page in document_pages:
+                        document_page.preprocessed = False
+                        document_page.ocred = False
+                        document_page.postprocessed = False
+                        document_page.save()
+                if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
+                    document_pages = DocumentPage.objects.filter(
+                        document__queue__id=instance.pk)
+                    for document_page in document_pages:
+                        document_page.preprocessed = False
+                        document_page.ocred = False
+                        document_page.postprocessed = False
+                        document_page.save()
+                setattr(instance, attr, value)
 
-        instance.save()
-        return instance
+            instance.save()
+            return instance
 
     """def delete(self, request, pk, format=None):
         instance = self.get_object(pk)

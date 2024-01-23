@@ -5,6 +5,7 @@ class DocumentType(Enum):
 
     TEMPLATE = "TEMPLATE"
     IMPORT = "IMPORT"
+    TRASH = "TRASH"
 
     @classmethod
     def choices(cls):

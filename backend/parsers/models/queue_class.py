@@ -12,6 +12,7 @@ class QueueClass(Enum):
     PARSING = "PARSING"
     POST_PROCESSING = "POST_PROCESSING"
     INTEGRATION = "INTEGRATION"
+    TRASH = "TRASH"
 
     @classmethod
     def choices(cls):

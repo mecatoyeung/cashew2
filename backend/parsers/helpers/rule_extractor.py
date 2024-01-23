@@ -11,7 +11,7 @@ import os
 import cv2
 from pyzbar.pyzbar import decode
 
-from backend.settings import MEDIA_ROOT
+from backend.settings import MEDIA_ROOT, MEDIA_URL
 
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
@@ -776,7 +776,7 @@ class RuleExtractor:
         else:
             png_path = os.path.join(
                 'documents', self.document.guid, str(page_num) + ".jpg")
-        full_png_path = os.path.join(MEDIA_URL, png_path)
+        full_png_path = os.path.join(MEDIA_ROOT, png_path)
 
         im = cv2.imread(full_png_path)
         h, w, c = im.shape

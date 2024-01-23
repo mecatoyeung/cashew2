@@ -20,6 +20,8 @@ from parsers.models.document_page import DocumentPage
 from parsers.models.post_processing import PostProcessing
 from parsers.models.post_processing_type import PostProcessingType
 
+from parsers.schedule_jobs.process_integration_queue import process_single_integration_queue
+
 from backend.settings import MEDIA_ROOT
 
 
@@ -73,6 +75,59 @@ class Redactor:
         # saving it to a new pdf
         doc.save(self.output_path, garbage=4, deflate=True)
 
+def process_single_postprocessing_queue(queue_job):
+
+    # Mark the job as in progress
+    queue_job.queue_class = QueueClass.POST_PROCESSING.value
+    queue_job.queue_status = QueueStatus.IN_PROGRESS.value
+    queue_job.save()
+
+    try:
+        parser = queue_job.parser
+        document = queue_job.document
+
+        # Do the job
+        post_processings = PostProcessing.objects.filter(
+            parser_id=parser.id)
+
+        for post_processing_index, post_processing in enumerate(post_processings):
+
+            post_processings_type = post_processing.post_processing_type
+            if post_processings_type == PostProcessingType.REDACTION.value:
+                redaction_regex = post_processing.redaction_regex
+
+                if post_processing_index == 0:
+                    pdf_input_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
+                                                    "ocred.pdf")
+                else:
+                    pdf_input_path = pdf_out_path
+
+                working_path = os.path.join(
+                    MEDIA_ROOT, 'documents', document.guid, "post_processed-" + str(post_processing.id))
+                is_working_dir_exist = os.path.exists(working_path)
+                if not is_working_dir_exist:
+                    os.makedirs(working_path)
+
+                pdf_out_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
+                                            "post_processed-" + str(post_processing.id), "output.pdf")
+
+                redactor = Redactor(redaction_regex,
+                                    pdf_input_path,
+                                    pdf_out_path)
+                redactor.redaction()
+
+        # Mark the job as preprocessing in progress
+        queue_job.queue_class = QueueClass.INTEGRATION.value
+        queue_job.queue_status = QueueStatus.READY.value
+        queue_job.save()
+
+        process_single_integration_queue(queue_job)
+
+    except Exception as e:
+        print(traceback.format_exc())
+        queue_job.queue_class = QueueClass.POST_PROCESSING.value
+        queue_job.queue_status = QueueStatus.READY.value
+        queue_job.save()
 
 def process_postprocessing_queue_job():
 
@@ -93,55 +148,7 @@ def process_postprocessing_queue_job():
         .all()
     for queue_job in all_ready_postprocessing_queue_jobs:
 
-        # Mark the job as in progress
-        queue_job.queue_class = QueueClass.POST_PROCESSING.value
-        queue_job.queue_status = QueueStatus.IN_PROGRESS.value
-        queue_job.save()
-
-        try:
-            parser = queue_job.parser
-            document = queue_job.document
-
-            # Do the job
-            post_processings = PostProcessing.objects.filter(
-                parser_id=parser.id)
-
-            for post_processing_index, post_processing in enumerate(post_processings):
-
-                post_processings_type = post_processing.post_processing_type
-                if post_processings_type == PostProcessingType.REDACTION.value:
-                    redaction_regex = post_processing.redaction_regex
-
-                    if post_processing_index == 0:
-                        pdf_input_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
-                                                      "ocred.pdf")
-                    else:
-                        pdf_input_path = pdf_out_path
-
-                    working_path = os.path.join(
-                        MEDIA_ROOT, 'documents', document.guid, "post_processed-" + str(post_processing.id))
-                    is_working_dir_exist = os.path.exists(working_path)
-                    if not is_working_dir_exist:
-                        os.makedirs(working_path)
-
-                    pdf_out_path = os.path.join(MEDIA_ROOT, 'documents', document.guid,
-                                                "post_processed-" + str(post_processing.id), "output.pdf")
-
-                    redactor = Redactor(redaction_regex,
-                                        pdf_input_path,
-                                        pdf_out_path)
-                    redactor.redaction()
-
-            # Mark the job as preprocessing in progress
-            queue_job.queue_class = QueueClass.INTEGRATION.value
-            queue_job.queue_status = QueueStatus.READY.value
-            queue_job.save()
-
-        except Exception as e:
-            print(traceback.format_exc())
-            queue_job.queue_class = QueueClass.POST_PROCESSING.value
-            queue_job.queue_status = QueueStatus.READY.value
-            queue_job.save()
+        process_single_postprocessing_queue(queue_job)
 
 
 def process_stopped_postprocessing_queue_job():

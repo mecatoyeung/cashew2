@@ -100,10 +100,10 @@ export default function EditorLayout({ children }) {
         </div>
         <div className={styles.sidebarSizeControlDiv} style={{ left: openSidebar ? "225px": "10px" }}>
           {openSidebar && (
-            <Button onClick={toggleSidebarHandler}><i class="bi bi-arrow-left"></i></Button>
+            <Button onClick={toggleSidebarHandler}><i className="bi bi-arrow-left"></i></Button>
           )}
           {!openSidebar && (
-            <Button onClick={toggleSidebarHandler}><i class="bi bi-arrow-right"></i></Button>
+            <Button onClick={toggleSidebarHandler}><i className="bi bi-arrow-right"></i></Button>
           )}
         </div>
         <ToastContainer position="bottom-center" className="p-3">

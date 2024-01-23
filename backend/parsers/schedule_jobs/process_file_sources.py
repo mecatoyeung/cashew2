@@ -3,6 +3,7 @@ import sys
 import stat
 import uuid
 from datetime import timedelta
+import pathlib
 
 from io import BytesIO
 
@@ -81,10 +82,8 @@ def process_file_sources():
 
                             document_upload_serializer_data["document_extension"] = DocumentExtension.PDF.value
 
-                            document_upload_serializer_data["filename_without_extension"] = os.path.basename(filename).split(".")[
-                                0]
-                            document_upload_serializer_data["extension"] = filename.split(".")[
-                                1].lower()
+                            document_upload_serializer_data["filename_without_extension"] = pathlib.Path(filename).stem
+                            document_upload_serializer_data["extension"] = pathlib.Path(filename).suffix[1:]
 
                             try:
                                 with open(abs_source_file_path, "rb") as file:

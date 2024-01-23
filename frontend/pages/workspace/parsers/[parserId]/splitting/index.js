@@ -404,7 +404,7 @@ const Splitting = () => {
                 <fieldset>
                   <div className={styles.firstPageSplitting}>
                     <div className={styles.firstPageSplittingConditions}>
-                      {firstPageSplittingRule.splittingConditions.map((firstPageSplittingCondition, firstPageSplittingConditionIndex) => {
+                      {firstPageSplittingRule && firstPageSplittingRule.splittingConditions.map((firstPageSplittingCondition, firstPageSplittingConditionIndex) => {
                         if (firstPageSplittingConditionIndex == 0) {
                           return (
                             <>

@@ -333,6 +333,7 @@ const ImportQueue = (props) => {
                 </th>
                 <th>Document Name</th>
                 <th>Document Type</th>
+                <th>Queue Status</th>
                 <th>Last Modified At</th>
               </tr>
             </thead>
@@ -356,6 +357,7 @@ const ImportQueue = (props) => {
                           queue.document.extension}
                       </td>
                       <td>{queue.document.documentType}</td>
+                      <td>{queue.queueStatus.replace("_", " ")}</td>
                       <td className={styles.tdNoWrap}>
                         {moment(queue.document.lastModifiedAt).format(
                           "YYYY-MM-DD hh:mm:ss a"

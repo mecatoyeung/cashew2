@@ -6,14 +6,25 @@ from parsers.models.table_column_separator import TableColumnSeparator
 from parsers.models.document import Document
 
 from parsers.serializers.table_column_separator import TableColumnSeparatorSerializer
+from parsers.serializers.document import DocumentSerializer
 
 from parsers.helpers.document_parser import DocumentParser
 
+
+class AnchorDocumentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Document
+        fields = [
+            'id',
+        ]
 
 class RuleSerializer(serializers.ModelSerializer):
 
     anchor_text = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
+    anchor_document = AnchorDocumentSerializer(many=False,
+        required=False)
 
     class Meta:
         model = Rule
@@ -57,10 +68,10 @@ class RuleSerializer(serializers.ModelSerializer):
     def _set_anchor(self, rule, validated_data):
         anchor_document = validated_data.pop("anchor_document", None)
         anchor_text = validated_data.pop("anchor_text", "")
-        if not anchor_document == None:
+        if anchor_document and not anchor_document == None:
             parser = Parser.objects.get(pk=rule.parser_id)
             document = Document.objects.get(
-                pk=anchor_document.pk)
+                pk=anchor_document.id)
             document_parser = DocumentParser(parser, document)
             relative_anchor_region = document_parser.get_anchor_relative_region(
                 rule)
@@ -95,6 +106,8 @@ class RuleSerializer(serializers.ModelSerializer):
 
         """ Update rule. """
         for attr, value in validated_data.items():
+            if attr == "anchor_document":
+                continue
             setattr(instance, attr, value)
 
         instance.save()
