@@ -76,7 +76,11 @@ export default function Parsers() {
 
   const addOrientationDetectionBtnClickHandler = () => {
     router.push("/workspace/parsers/" + parserId + "/preprocessings/addOrientationDetection/");
-  };
+  }
+
+  const addThresholdBinarizationBtnClickHandler = () => {
+    router.push("/workspace/parsers/" + parserId + "/preprocessings/addThresholdBinarization/");
+  }
 
   const modifyBtnClickHandler = (preProcessings) => {
     router.push(
@@ -105,6 +109,9 @@ export default function Parsers() {
             >
             <Dropdown.Item href="#" onClick={addOrientationDetectionBtnClickHandler}>
               Add Orientation Detection
+            </Dropdown.Item>
+            <Dropdown.Item href="#" onClick={addThresholdBinarizationBtnClickHandler}>
+              Add Threshold Binarization
             </Dropdown.Item>
           </DropdownButton>
         </div>

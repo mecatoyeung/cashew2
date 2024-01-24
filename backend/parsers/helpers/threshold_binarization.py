@@ -5,7 +5,6 @@ import os
 import shutil
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
-import pytesseract
 
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
@@ -14,10 +13,10 @@ from parsers.models.queue_status import QueueStatus
 
 from backend.settings import MEDIA_ROOT
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
+def threshold_binarization(document_page, preprocessing, last_preprocessing=None):
 
-def detect_orientation_opencv(document_page, preprocessing, last_preprocessing=None):
+    page_num = document_page.page_num
 
     media_folder_path = MEDIA_ROOT
     documents_folder_path = os.path.join(
@@ -27,11 +26,10 @@ def detect_orientation_opencv(document_page, preprocessing, last_preprocessing=N
     is_working_dir_exist = os.path.exists(working_path)
     if not is_working_dir_exist:
         os.makedirs(working_path)
-
-    page_num = document_page.page_num
-
+    
     if document_page.preprocessed:
         return
+    
     png_path = os.path.join(str(page_num) + ".jpg")
     new_preprocessed_image_path = os.path.join(working_path, png_path)
     if last_preprocessing == None:
@@ -44,71 +42,15 @@ def detect_orientation_opencv(document_page, preprocessing, last_preprocessing=N
 
     im = cv2.imread(new_preprocessed_image_path)
 
-    scores = []
-    im = cv2.imread(new_preprocessed_image_path)
-    img_gray = cv2.imread(new_preprocessed_image_path,
-                            cv2.IMREAD_GRAYSCALE)
-    cropped_gray = crop_image_center(img_gray)
+    # Convert RGB to grayscale:
+    grayscaleImage = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-    (thresh, im_bw) = cv2.threshold(cropped_gray, 128,
-                                    255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    # Threshold:
+    threshValue = preprocessing.threshold_binarization
+    _, binaryImage = cv2.threshold(grayscaleImage, threshValue, 255, cv2.THRESH_BINARY)
 
-    # Let numpy do the heavy lifting for converting pixels to pure black or white
-    thresh = 127
-    bw = cv2.threshold(cropped_gray, thresh, 255, cv2.THRESH_BINARY)[1]
-
-    # Pixel range is 0...255, 256/2 = 128
-    bw[bw < 128] = 0    # Black
-    bw[bw >= 128] = 255  # White
-
-    img_bw = cv2.resize(bw, (0, 0), fx=0.3, fy=0.3)
-
-    angle = 0
-    while angle <= 180:
-        # Rotate the source image
-        img = rotate_without_crop(img_bw, angle)
-        # Crop the center 1/3rd of the image (roi is filled with text)
-        h, w = img.shape
-        # buffer = min(h, w) - int(min(h,w)/1.15)
-        # roi = img[int(h/2-buffer):int(h/2+buffer), int(w/2-buffer):int(w/2+buffer)]
-        # Create background to draw transform on
-        # bg = np.zeros((buffer*2, buffer*2), np.uint8)
-        # Compute the sums of the rows
-        row_sums = sum_rows(img)
-        # High score --> Zebra stripes
-        score = np.count_nonzero(row_sums)
-        scores.append(score)
-        # Image has best rotation
-        if score <= min(scores):
-            # Save the rotatied image
-            # best_rotation = img.copy()
-            best_rotation_angle = angle
-        # k = display_data(img, row_sums, buffer)
-        # if k == 27: break
-        # Increment angle and try again
-        angle += 90
-
-    # Flip image and try again
-
-    """result = rotate_without_crop(im, best_rotation_angle)
-    result_flipped = rotate_without_crop(im, best_rotation_angle + 180)
-
-    if (top_bot_margin_ratio(result) < top_bot_margin_ratio(result_flipped)):
-        best_rotation_angle = best_rotation_angle
-    else:
-        best_rotation_angle = best_rotation_angle + 180"""
-
-    if best_rotation_angle == 0 or best_rotation_angle == 180 or best_rotation_angle == 360:
-        try:
-            osd = pytesseract.image_to_osd(
-                im, output_type='dict')
-        except Exception as e:
-            osd = {"orientation": 0}
-        best_rotation_angle = osd["orientation"]
-
-    rotated_im = rotate_without_crop(im, best_rotation_angle)
-
-    cv2.imwrite(new_preprocessed_image_path, rotated_im)
+    # Write image:
+    cv2.imwrite(new_preprocessed_image_path, binaryImage)
 
     document_page.save()
 
@@ -127,6 +69,25 @@ def crop_image_center(image):
         cropped_image = image[int(y):int(y+h), int(x):int(x+h)]
 
     return cropped_image
+
+
+def convert_images_to_pdf(images, output_file_path):
+    """Create a searchable PDF from a pile of HOCR + JPEG"""
+    pdf = Canvas(output_file_path, pageCompression=1)
+    dpi = 300
+    for image in images:
+        im = Image.open(image)
+        w, h = im.size
+        try:
+            dpi = im.info['dpi'][0]
+        except KeyError:
+            pass
+        width = w * 72 / dpi
+        height = h * 72 / dpi
+        pdf.setPageSize((width, height))
+        pdf.drawImage(image, 0, 0, width=width, height=height)
+        pdf.showPage()
+    pdf.save()
 
 
 def rotate_without_crop(mat, angle):

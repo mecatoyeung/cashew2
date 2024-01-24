@@ -16,7 +16,8 @@ import WorkspaceLayout from '../../../../../../layouts/workspace'
 
 import service from '../../../../../../service'
 
-import PreProcessingForm from './_orientationDetectionForm'
+import OrientationDetectionFormForm from './_orientationDetectionForm'
+import ThresholdBinarizationForm from './_thresholdBinarizationForm'
 
 export default function PreProcessing() {
 
@@ -40,7 +41,10 @@ export default function PreProcessing() {
   return (
     <>
       {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION" && (
-        <PreProcessingForm type="edit" />
+        <OrientationDetectionFormForm type="edit" />
+      )}
+      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION" && (
+        <ThresholdBinarizationForm type="edit" />
       )}
     </>
   )
