@@ -4,8 +4,12 @@ from rest_framework import serializers
 from django.db import transaction
 
 from parsers.models.splitting import Splitting
-from parsers.models.splitting_rule import SplittingRule, ConsecutivePageSplittingRule, LastPageSplittingRule
+from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_condition import SplittingCondition
+from parsers.models.consecutive_page_splitting_rule import ConsecutivePageSplittingRule
+from parsers.models.consecutive_page_splitting_condition import ConsecutivePageSplittingCondition
+from parsers.models.last_page_splitting_rule import LastPageSplittingRule
+from parsers.models.last_page_splitting_condition import LastPageSplittingCondition
 
 from parsers.serializers.splitting_rule import SplittingRuleSerializer, PostSplittingRuleSerializer
 
@@ -32,9 +36,7 @@ class SplittingSerializer(serializers.ModelSerializer):
             consecutive_page_splitting_rule["parent_splitting_rule_id"] = splitting_rule.id
             consecutive_page_splitting_rule["sort_order"] = sort_order
             consecutive_page_splitting_conditions = consecutive_page_splitting_rule.pop(
-                "splitting_conditions")
-            consecutive_page_splitting_rules = consecutive_page_splitting_rule.pop(
-                "consecutive_page_splitting_rules", [])
+                "consecutive_page_splitting_conditions")
 
             consecutive_page_splitting_rule_obj = ConsecutivePageSplittingRule()
             consecutive_page_splitting_rule_obj.sort_order = consecutive_page_splitting_rule[
@@ -42,8 +44,6 @@ class SplittingSerializer(serializers.ModelSerializer):
             consecutive_page_splitting_rule_obj.route_to_parser = None
             consecutive_page_splitting_rule_obj.splitting = splitting
             consecutive_page_splitting_rule_obj.parent_splitting_rule = splitting_rule
-            consecutive_page_splitting_rule_obj.splitting_rule_type = consecutive_page_splitting_rule[
-                "splitting_rule_type"]
             consecutive_page_splitting_rule_obj.save()
 
             splitting_rule.consecutive_page_splitting_rules.add(
@@ -51,6 +51,8 @@ class SplittingSerializer(serializers.ModelSerializer):
 
             self._get_or_create_consecutive_page_splitting_conditions(
                 consecutive_page_splitting_conditions, consecutive_page_splitting_rule_obj)
+            
+            sort_order = sort_order + 1
 
     def _get_or_create_consecutive_page_splitting_conditions(self,
                                                              consecutive_page_splitting_conditions,
@@ -60,12 +62,12 @@ class SplittingSerializer(serializers.ModelSerializer):
         for consecutive_page_splitting_condition in consecutive_page_splitting_conditions:
             consecutive_page_splitting_condition["consecutive_page_splitting_rule"] = consecutive_page_splitting_rule
             consecutive_page_splitting_condition["sort_order"] = sort_order
-            consecutive_page_splitting_condition_obj, consecutive_page_splitting_condition_created = SplittingCondition.objects.get_or_create(
+            consecutive_page_splitting_condition_obj, consecutive_page_splitting_condition_created = ConsecutivePageSplittingCondition.objects.get_or_create(
                 **consecutive_page_splitting_condition,
             )
             sort_order += 1
 
-            consecutive_page_splitting_rule.splitting_conditions.add(
+            consecutive_page_splitting_rule.consecutive_page_splitting_conditions.add(
                 consecutive_page_splitting_condition_obj)
 
     def _get_or_create_last_page_splitting_rules(self, last_page_splitting_rules, splitting_rule, splitting):
@@ -76,9 +78,7 @@ class SplittingSerializer(serializers.ModelSerializer):
             last_page_splitting_rule["parent_splitting_rule_id"] = splitting_rule.id
             last_page_splitting_rule["sort_order"] = sort_order
             last_page_splitting_conditions = last_page_splitting_rule.pop(
-                "splitting_conditions")
-            last_page_splitting_rules = last_page_splitting_rule.pop(
-                "last_page_splitting_rules", [])
+                "last_page_splitting_conditions")
 
             last_page_splitting_rule_obj = LastPageSplittingRule()
             last_page_splitting_rule_obj.sort_order = last_page_splitting_rule[
@@ -86,8 +86,6 @@ class SplittingSerializer(serializers.ModelSerializer):
             last_page_splitting_rule_obj.route_to_parser = None
             last_page_splitting_rule_obj.splitting = splitting
             last_page_splitting_rule_obj.parent_splitting_rule = splitting_rule
-            last_page_splitting_rule_obj.splitting_rule_type = last_page_splitting_rule[
-                "splitting_rule_type"]
             last_page_splitting_rule_obj.save()
 
             splitting_rule.last_page_splitting_rules.add(
@@ -95,6 +93,8 @@ class SplittingSerializer(serializers.ModelSerializer):
 
             self._get_or_create_last_page_splitting_conditions(
                 last_page_splitting_conditions, last_page_splitting_rule_obj)
+            
+            sort_order = sort_order + 1
 
     def _get_or_create_last_page_splitting_conditions(self,
                                                       last_page_splitting_conditions,
@@ -104,12 +104,12 @@ class SplittingSerializer(serializers.ModelSerializer):
         for last_page_splitting_condition in last_page_splitting_conditions:
             last_page_splitting_condition["last_page_splitting_rule"] = last_page_splitting_rule
             last_page_splitting_condition["sort_order"] = sort_order
-            last_page_splitting_condition_obj, last_page_splitting_condition_created = SplittingCondition.objects.get_or_create(
+            last_page_splitting_condition_obj, last_page_splitting_condition_created = LastPageSplittingCondition.objects.get_or_create(
                 **last_page_splitting_condition,
             )
             sort_order += 1
 
-            last_page_splitting_rule.splitting_conditions.add(
+            last_page_splitting_rule.last_page_splitting_conditions.add(
                 last_page_splitting_condition_obj)
 
     def _get_or_create_splitting_rules(self, splitting_rules, splitting):
@@ -124,9 +124,11 @@ class SplittingSerializer(serializers.ModelSerializer):
             last_page_splitting_rules = splitting_rule.pop(
                 "last_page_splitting_rules", [])
 
-            splitting_rule_obj, splitting_rule_created = SplittingRule.objects.get_or_create(
-                **splitting_rule,
-            )
+            #splitting_rule_obj, splitting_rule_created = SplittingRule.objects.create(
+            #    **splitting_rule,
+            #)
+            splitting_rule_obj = SplittingRule(**splitting_rule)
+            splitting_rule_obj.save()
 
             splitting.splitting_rules.add(splitting_rule_obj)
 
@@ -198,9 +200,6 @@ class SplittingSerializer(serializers.ModelSerializer):
             LastPageSplittingRule.objects.filter(
                 parent_splitting_rule__splitting_id=splitting_id
             ).delete()
-            # Splitting.objects.filter(
-            #    id=splitting_id
-            # ).delete()
 
             splitting_rules = validated_data.pop("splitting_rules", [])
 
@@ -211,9 +210,6 @@ class SplittingSerializer(serializers.ModelSerializer):
             instance.activated = validated_data.pop(
                 "activated")
             instance.save()
-            # splitting_obj, created = Splitting.objects.get_or_create(
-            #    **validated_data,
-            # )
 
             self._get_or_create_splitting_rules(splitting_rules, instance)
 

@@ -42,8 +42,12 @@ from parsers.models.integration import Integration
 from parsers.models.splitting_type import SplittingType
 from parsers.models.splitting import Splitting
 from parsers.models.splitting_rule_type import SplittingRuleType
-from parsers.models.splitting_rule import SplittingRule
+from parsers.models.splitting_rule import SplittingRule 
+from parsers.models.consecutive_page_splitting_rule import ConsecutivePageSplittingRule
+from parsers.models.last_page_splitting_rule import LastPageSplittingRule
 from parsers.models.splitting_condition import SplittingCondition
+from parsers.models.consecutive_page_splitting_condition import ConsecutivePageSplittingCondition
+from parsers.models.last_page_splitting_condition import LastPageSplittingCondition
 from parsers.models.post_processing import PostProcessing
 
 from parsers.serializers.parser import ParserSerializer, ParserListSerializer, ParserUpdateSerializer, ParserExportSerializer, ParserImportSerializer
@@ -94,11 +98,9 @@ class ParserViewSet(viewsets.ModelViewSet):
                                            queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
                                                splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
                                            .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                                                      queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                                          splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value)))
+                                                                      queryset=ConsecutivePageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
                                            .prefetch_related(Prefetch("last_page_splitting_rules",
-                                                                      queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
-                                                                          splitting_rule_type=SplittingRuleType.LAST_PAGE.value)))
+                                                                      queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions")))
                                            ))
 
         return queryset.filter(
@@ -171,12 +173,10 @@ class ParserViewSet(viewsets.ModelViewSet):
                 splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
             .prefetch_related(
                 Prefetch("consecutive_page_splitting_rules",
-                         queryset=SplittingRule.objects.filter(
-                             splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value).prefetch_related("splitting_conditions")))
+                         queryset=ConsecutivePageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
             .prefetch_related(
                 Prefetch("last_page_splitting_rules",
-                         queryset=SplittingRule.objects.filter(
-                             splitting_rule_type=SplittingRuleType.LAST_PAGE.value).prefetch_related("splitting_conditions"))))).get(parser_id=pk)
+                         queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions"))))).get(parser_id=pk)
 
         return Response(SplittingSerializer(splitting).data, status=200)
 
@@ -226,9 +226,9 @@ class ParserViewSet(viewsets.ModelViewSet):
                         splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
                         .prefetch_related("splitting_conditions")
                         .prefetch_related(Prefetch("consecutive_page_splitting_rules",
-                                                   queryset=SplittingRule.objects.prefetch_related("splitting_conditions")))
+                                                   queryset=ConsecutivePageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
                         .prefetch_related(Prefetch("last_page_splitting_rules",
-                                                   queryset=SplittingRule.objects.prefetch_related("splitting_conditions")))
+                                                   queryset=LastPageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
                     )) \
                     .get(pk=parser_id)
 
@@ -364,19 +364,17 @@ class ParserViewSet(viewsets.ModelViewSet):
                             splitting_condition.save()
 
                         for consecutive_page_splitting_rule_json_obj in splitting_rule_json_obj["consecutivePageSplittingRules"]:
-                            consecutive_page_splitting_rule = SplittingRule()
+                            consecutive_page_splitting_rule = ConsecutivePageSplittingRule()
                             consecutive_page_splitting_rule.splitting = splitting
-                            consecutive_page_splitting_rule.splitting_rule_type = consecutive_page_splitting_rule_json_obj[
-                                "splittingRuleType"]
                             consecutive_page_splitting_rule.parent_splitting_rule = splitting_rule
                             consecutive_page_splitting_rule.sort_order = consecutive_page_splitting_rule_json_obj[
                                 "sortOrder"]
                             consecutive_page_splitting_rule.save()
 
-                            for consecutive_page_splitting_condition_json_obj in consecutive_page_splitting_rule_json_obj["splittingConditions"]:
-                                consecutive_page_splitting_condition = SplittingCondition()
+                            for consecutive_page_splitting_condition_json_obj in consecutive_page_splitting_rule_json_obj["consecutivePageSplittingConditions"]:
+                                consecutive_page_splitting_condition = ConsecutivePageSplittingCondition()
                                 consecutive_page_splitting_condition.rule = r
-                                consecutive_page_splitting_condition.splitting_rule = consecutive_page_splitting_rule
+                                consecutive_page_splitting_condition.consecutive_page_splitting_rule = consecutive_page_splitting_rule
                                 consecutive_page_splitting_condition.operator = consecutive_page_splitting_condition_json_obj[
                                     "operator"]
                                 consecutive_page_splitting_condition.value = consecutive_page_splitting_condition_json_obj[
@@ -386,19 +384,17 @@ class ParserViewSet(viewsets.ModelViewSet):
                                 consecutive_page_splitting_condition.save()
 
                         for last_page_splitting_rule_json_obj in splitting_rule_json_obj["lastPageSplittingRules"]:
-                            last_page_splitting_rule = SplittingRule()
+                            last_page_splitting_rule = LastPageSplittingRule()
                             last_page_splitting_rule.splitting = splitting
-                            last_page_splitting_rule.splitting_rule_type = last_page_splitting_rule_json_obj[
-                                "splittingRuleType"]
                             last_page_splitting_rule.parent_splitting_rule = splitting_rule
                             last_page_splitting_rule.sort_order = consecutive_page_splitting_rule_json_obj[
                                 "sortOrder"]
                             last_page_splitting_rule.save()
 
-                            for last_page_splitting_condition_json_obj in last_page_splitting_rule_json_obj["splittingConditions"]:
-                                last_page_splitting_condition = SplittingCondition()
+                            for last_page_splitting_condition_json_obj in last_page_splitting_rule_json_obj["lastPageSplittingConditions"]:
+                                last_page_splitting_condition = LastPageSplittingCondition()
                                 last_page_splitting_condition.rule = r
-                                last_page_splitting_condition.splitting_rule = last_page_splitting_rule
+                                last_page_splitting_condition.last_page_splitting_rule = last_page_splitting_rule
                                 last_page_splitting_condition.operator = last_page_splitting_condition[
                                     "operator"]
                                 last_page_splitting_condition.value = last_page_splitting_condition_json_obj[

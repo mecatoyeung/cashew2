@@ -24,7 +24,7 @@ class SplittingRule(models.Model):
         db_table = 'splitting_rules'
 
 
-class ConsecutivePageSplittingRule(models.Model):
+"""class ConsecutivePageSplittingRule(models.Model):
     id = models.AutoField(primary_key=True)
     guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     splitting_rule_type = models.CharField(
@@ -47,4 +47,4 @@ class LastPageSplittingRule(models.Model):
     sort_order = models.IntegerField(null=False)
 
     class Meta:
-        db_table = 'last_page_splitting_rules'
+        db_table = 'last_page_splitting_rules'"""

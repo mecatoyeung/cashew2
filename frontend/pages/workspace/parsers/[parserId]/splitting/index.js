@@ -298,7 +298,7 @@ const Splitting = () => {
         parentSplittingRule: splittingModal.parentSplittingRule,
         splitting: splitting.id,
         routeToParser: splittingModal.routeToParser,
-        splittingConditions: splittingModal.conditions
+        consecutivePageSplittingConditions: splittingModal.conditions
       })
     }))
     setSplittingModal(
@@ -317,7 +317,7 @@ const Splitting = () => {
         parentSplittingRule: splittingModal.parentSplittingRule,
         splitting: splitting.id,
         routeToParser: splittingModal.routeToParser,
-        splittingConditions: splittingModal.conditions
+        lastPageSplittingConditions: splittingModal.conditions
       })
     }))
     setSplittingModal(
@@ -477,7 +477,7 @@ const Splitting = () => {
                               <fieldset>
                                 <div className={styles.consecutivePageSplitting}>
                                   <div className={styles.consecutivePageSplittingConditions}>
-                                    {consecutivePageSplittingRule && consecutivePageSplittingRule.splittingConditions.map((consecutivePageSplittingCondition, consecutiveSplittingConditionIndex) => {
+                                    {consecutivePageSplittingRule && consecutivePageSplittingRule.consecutivePageSplittingConditions.map((consecutivePageSplittingCondition, consecutiveSplittingConditionIndex) => {
                                       if (consecutiveSplittingConditionIndex == 0) {
                                         return (
                                           <div key={consecutiveSplittingConditionIndex}>
@@ -558,7 +558,7 @@ const Splitting = () => {
                               <fieldset>
                                 <div className={styles.lastPageSplitting}>
                                   <div className={styles.lastPageSplittingConditions}>
-                                    {lastPageSplittingRule && lastPageSplittingRule.splittingConditions.map((lastPageSplittingCondition, lastSplittingConditionIndex) => {
+                                    {lastPageSplittingRule && lastPageSplittingRule.lastPageSplittingConditions.map((lastPageSplittingCondition, lastSplittingConditionIndex) => {
                                       if (lastSplittingConditionIndex == 0) {
                                         return (
                                           <div key={lastSplittingConditionIndex}>

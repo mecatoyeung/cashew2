@@ -32,8 +32,10 @@ from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.chatbot_type import ChatBotType
 from parsers.models.splitting import Splitting
-from parsers.models.splitting_rule import SplittingRule, ConsecutivePageSplittingRule, LastPageSplittingRule
+from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_rule_type import SplittingRuleType
+from parsers.models.consecutive_page_splitting_rule import ConsecutivePageSplittingRule
+from parsers.models.last_page_splitting_rule import LastPageSplittingRule
 from parsers.models.rule import Rule
 from parsers.models.splitting_operator_type import SplittingOperatorType
 
@@ -82,14 +84,12 @@ def process_single_splitting_queue(queue_job):
                 .prefetch_related("splitting_conditions")
                 .prefetch_related(
                     Prefetch("consecutive_page_splitting_rules",
-                                queryset=ConsecutivePageSplittingRule.objects.filter(
-                                    splitting_rule_type=SplittingRuleType.CONSECUTIVE_PAGE.value).
-                                order_by("sort_order").prefetch_related("splitting_conditions")))
+                                queryset=ConsecutivePageSplittingRule.objects.
+                                order_by("sort_order").prefetch_related("consecutive_page_splitting_conditions")))
                 .prefetch_related(
                     Prefetch("last_page_splitting_rules",
-                                queryset=LastPageSplittingRule.objects.filter(
-                                    splitting_rule_type=SplittingRuleType.LAST_PAGE.value)
-                                .order_by("sort_order").prefetch_related("splitting_conditions"))))).get(parser_id=parser.id)
+                                queryset=LastPageSplittingRule.objects
+                                .order_by("sort_order").prefetch_related("last_page_splitting_conditions"))))).get(parser_id=parser.id)
 
             if splitting.activated == False:
                 queue_job.queue_class = QueueClass.PARSING.value
@@ -200,7 +200,7 @@ def process_single_splitting_queue(queue_job):
                             any_last_page_rules_passed = False
                             for last_page_splitting_rule in first_page_splitting_rule.last_page_splitting_rules.all():
                                 last_page_conditions_passed = True
-                                for splitting_condition in last_page_splitting_rule.splitting_conditions.all():
+                                for splitting_condition in last_page_splitting_rule.last_page_splitting_conditions.all():
                                     streamed_rule_value = ' '.join(get_streamed_by_rule(
                                         splitting_condition.rule.id, parsed_result))
                                     if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
@@ -253,7 +253,7 @@ def process_single_splitting_queue(queue_job):
                             any_consecutive_page_rules_passed = False
                             for consecutive_page_splitting_rule in first_page_splitting_rule.consecutive_page_splitting_rules.all():
                                 consecutive_page_conditions_passed = True
-                                for splitting_condition in consecutive_page_splitting_rule.splitting_conditions.all():
+                                for splitting_condition in consecutive_page_splitting_rule.consecutive_page_splitting_conditions.all():
                                     streamed_rule_value = ' '.join(get_streamed_by_rule(
                                         splitting_condition.rule.id, parsed_result))
                                     if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:

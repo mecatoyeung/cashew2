@@ -17,7 +17,7 @@ from parsers.models.queue_status import QueueStatus
 from backend import settings
 
 
-class DocumentPageSerializer(serializers.ModelSerializer):
+"""class DocumentPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DocumentPage
@@ -54,13 +54,14 @@ class DocumentSerializer(serializers.ModelSerializer):
             'last_modified_at',
             'document_pages',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id']"""
 
 
 class QueueSerializer(serializers.ModelSerializer):
 
-    document = DocumentSerializer(
-        many=False, required=False, allow_null=True)
+    """document = DocumentSerializer(
+        many=False, required=False, allow_null=True)"""
+    document = serializers.SerializerMethodField()
 
     class Meta:
         model = Queue
@@ -76,6 +77,10 @@ class QueueSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    def get_document(self, obj):
+        from parsers.serializers.nested.document import DocumentSerializer
+        return DocumentSerializer(obj.document).data
+
     def create(self, validated_data):
         """ Create a queue. """
         queue = Queue.objects.create(**validated_data)
@@ -83,12 +88,6 @@ class QueueSerializer(serializers.ModelSerializer):
         return queue
 
     def update(self, instance, validated_data):
-        # new_queue_class = validated_data.get("queue_class", None)
-        # new_queue_status = validated_data.get("queue_status", None)
-        # if instance.queue_status == QueueStatus.IN_PROGRESS.value and new_queue_status == QueueStatus.READY.value:
-        #    instance.queue_status = QueueStatus.STOPPED.value
-        #    instance.save()
-        #    return instance
         with transaction.atomic():
             """ Update queue. """
             for attr, value in validated_data.items():
@@ -131,18 +130,3 @@ class QueueSerializer(serializers.ModelSerializer):
             instance.save()
             return instance
 
-    """def delete(self, request, pk, format=None):
-        instance = self.get_object(pk)
-        # delete documents folder first
-        document_folder = os.path.join(
-            settings.MEDIA_ROOT, 'documents', instance.guid)
-        files = glob.glob(document_folder)
-        for f in files:
-            os.remove(f)
-        shutil.rmtree(document_folder)
-        # delete document pages first
-        DocumentPage.objects.delete(document__queue_id=pk)
-        # delete document first
-        Document.objects.delete(queue_id=pk)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)"""
