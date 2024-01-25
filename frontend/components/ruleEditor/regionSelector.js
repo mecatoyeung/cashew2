@@ -83,10 +83,8 @@ const RegionSelector = () => {
   }, [router.isReady, parserId])
 
   useEffect(() => {
-    if (parserId == undefined) return
-    if (documentId == 0) return
     getDocumentPageImage()
-  }, [router.isReady, ,parserId, documentId, pageNum])
+  }, [router.isReady, parserId, documentId, pageNum])
 
   useEffect(() => {
   }, [imageRef])
@@ -135,6 +133,8 @@ const RegionSelector = () => {
   }
 
   const getDocumentPageImage = () => {
+    if (parserId == undefined) return
+    if (documentId == 0) return
     service.getFile("documents/" + documentId + "/pages/" + pageNum + "/",
       (response) => {
         let data = `data:${

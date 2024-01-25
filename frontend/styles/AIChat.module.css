@@ -109,12 +109,11 @@
 }
 
 .pageText {
-  padding: 10px;
   width: 100%;
   height: 100%;
   flex-grow: 1;
   overflow: auto;
-  font-size: 90%;
+  font-size: 100%;
   flex: 3;
 }
 

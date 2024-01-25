@@ -12,8 +12,8 @@ from .path_helper import xml_path
 from parsers.helpers.is_chinese import is_chinese
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(0.5)
-ASSUMED_TEXT_HEIGHT = Decimal(1.0)
+ASSUMED_TEXT_WIDTH = Decimal(0.3)
+ASSUMED_TEXT_HEIGHT = Decimal(0.6)
 
 
 def is_english(s):
@@ -46,8 +46,8 @@ class XMLPage:
                 page_num=page_num).height
         self.text_widths = []
         self.text_heights = []
-        self.median_text_width = ASSUMED_TEXT_WIDTH
-        self.median_text_height = ASSUMED_TEXT_HEIGHT
+        self.median_of_text_widths = ASSUMED_TEXT_WIDTH
+        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT
         self.textlines = []
         self.load_all_textlines()
 
@@ -103,29 +103,6 @@ class XMLPage:
             text_els = textline.textline_element.findall('.//text')
             for i in range(len(text_els)):
                 text_el = text_els[i]
-                """if prev_text != None and prev_text.text == ' ':
-
-                    text = XMLText()
-                    text_bbox_str = text_el.attrib['bbox']
-                    text_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
-                                                 text_bbox_str,
-                                                 re.IGNORECASE
-                                                 )
-                    text.region.x1 = Decimal(text_bbox_search.group(
-                        1)) / self.width * Decimal(100.00)
-                    text.region.y1 = Decimal(text_bbox_search.group(
-                        2)) / self.height * Decimal(100.00)
-                    text.region.x2 = Decimal(text_bbox_search.group(
-                        3)) / self.width * Decimal(100.00)
-                    text.region.y2 = Decimal(text_bbox_search.group(
-                        4)) / self.height * Decimal(100.00)
-
-                    text.text = text_el.text
-
-                    number_of_spaces_between = math.floor((
-                        text.region.x1 - prev_text.region.x1) / ASSUMED_TEXT_WIDTH)
-
-                    result_text = result_text + " " * number_of_spaces_between"""
 
                 if text_el.text != '\n' and text_el.text != '' and text_el.text != None and 'bbox' in text_el.attrib:
 
@@ -206,6 +183,23 @@ class XMLPage:
             textline.region.y2 = actual_textline_y2
 
         self.sort_textlines()
+
+        
+
+        # Calculate median of text width and height
+        text_widths = []
+        text_heights = []
+        for textline in self.textlines:
+            for text in textline.text_elements:
+                text_width = text.region.x2 - text.region.x1
+                text_height = text.region.y2 - text.region.y1
+                text_widths.append(text_width)
+                text_heights.append(text_height)
+
+        self.median_of_text_widths = statistics.median(text_widths) * 2 / 3
+        self.median_of_text_heights = statistics.median(text_heights) * 2 / 3
+        self.median_of_text_widths = ASSUMED_TEXT_WIDTH
+        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT
 
         return
 

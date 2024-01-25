@@ -454,7 +454,7 @@ class ParserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True,
             methods=['GET'],
-            name='Get All Texts',
+            name='Get All Texts in One Page',
             url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
     def extract_all_text_in_one_page(self, request, pk, document_id, page_num, *args, **kwargs):
 
@@ -465,6 +465,22 @@ class ParserViewSet(viewsets.ModelViewSet):
         document_parser = DocumentParser(parser, document)
 
         result = document_parser.extract_all_text_in_one_page(page_num)
+
+        return Response(result, status=200)
+    
+    @action(detail=True,
+            methods=['GET'],
+            name='Get All Texts',
+            url_path='document/(?P<document_id>[^/.]+)/extract_all_text')
+    def extract_all_text(self, request, pk, document_id, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=int(pk))
+
+        document = Document.objects.get(id=document_id)
+
+        document_parser = DocumentParser(parser, document)
+
+        result = document_parser.extract_all_text_in_all_pages()
 
         return Response(result, status=200)
 

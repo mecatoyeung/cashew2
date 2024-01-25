@@ -21,6 +21,7 @@
     "file-saver": "^2.0.5",
     "global": "^4.4.0",
     "immer": "^10.0.2",
+    "js-file-download": "^0.4.12",
     "moment": "^2.29.4",
     "next": "13.4.1",
     "next-remove-imports": "^1.0.12",

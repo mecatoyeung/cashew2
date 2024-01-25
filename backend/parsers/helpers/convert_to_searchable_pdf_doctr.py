@@ -250,10 +250,10 @@ def convert_to_searchable_pdf_doctr(document,
             r"C:\Program Files\GTK3-Runtime Win64\bin")
         global doctr_model
         if doctr_model == None:
-            #device = torch.device("cpu")
-            #doctr_model = ocr_predictor(
-                #det_arch='db_mobilenet_v3_large', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
-            doctr_model = ocr_predictor(pretrained=True)
+            device = torch.device("cpu")
+            doctr_model = ocr_predictor(
+                det_arch='db_mobilenet_v3_large', reco_arch='crnn_vgg16_bn', pretrained=True).to(device)
+            #doctr_model = ocr_predictor(pretrained=True)
         doc = DocumentFile.from_images(working_path + "\\" + filename)
         result = doctr_model(doc)
 

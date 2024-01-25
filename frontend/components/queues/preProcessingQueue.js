@@ -77,9 +77,10 @@ const PreProcessingQueue = (props) => {
   }
 
   const chkQueueChangeHandler = (e, queue) => {
+    let updatedSelectedQueueIds = []
     if (e.target.checked) {
       if (!selectedQueueIds.includes(queue.id)) {
-        setSelectedQueueIds([...selectedQueueIds, queue.id])
+        updatedSelectedQueueIds = [...selectedQueueIds, queue.id]
       }
     } else {
       let updatedSelectedQueueIds = [...selectedQueueIds]
@@ -87,8 +88,14 @@ const PreProcessingQueue = (props) => {
       if (index !== -1) {
         updatedSelectedQueueIds.splice(index, 1);
       }
-      setSelectedQueueIds(updatedSelectedQueueIds)
     }
+    let filteredSelectedQueueIds = []
+    for (let i=0; i<updatedSelectedQueueIds.length; i++) {
+      if (queues.filter(q => q.id == updatedSelectedQueueIds[i]).length > 0) {
+        filteredSelectedQueueIds.push(updatedSelectedQueueIds[i])
+      }
+    }
+    setSelectedQueueIds(filteredSelectedQueueIds)
   }
 
   const chkAllChangeHandler = (e) => {
@@ -106,9 +113,9 @@ const PreProcessingQueue = (props) => {
   useEffect(() => {
     getParser()
     let queues = props.queues
+    queues = queues.filter(q => q.queueStatus != "STOPPED")
     for (let i=0; i<queues.length; i++) {
       let queue = queues[i]
-      console.log(queue)
       let preprocessedCount = 0
       for (let j=0; j<queue.document.documentPages.length; j++) {
         let documentPage = queue.document.documentPages[j]

@@ -75,6 +75,26 @@ class Service {
     );
   }
 
+  getFileBlob(path, callback) {
+    let service = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      responseType: "blob",
+    })
+    service.interceptors.response.use(this.handleSuccess, this.handleError)
+    service.interceptors.request.use(function (config) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Token ${token}`
+      }
+      return config
+    })
+    return service.get(path).then(
+      (response) => {
+        callback(response)
+      }
+    );
+  }
+
   patch(path, payload, callback) {
     return this.service.request({
       method: 'PATCH',

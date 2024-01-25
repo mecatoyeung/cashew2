@@ -41,9 +41,10 @@ const OCRQueue = (props) => {
   }
 
   const chkQueueChangeHandler = (e, queue) => {
+    let updatedSelectedQueueIds = []
     if (e.target.checked) {
       if (!selectedQueueIds.includes(queue.id)) {
-        setSelectedQueueIds([...selectedQueueIds, queue.id])
+        updatedSelectedQueueIds = [...selectedQueueIds, queue.id]
       }
     } else {
       let updatedSelectedQueueIds = [...selectedQueueIds]
@@ -51,8 +52,14 @@ const OCRQueue = (props) => {
       if (index !== -1) {
         updatedSelectedQueueIds.splice(index, 1);
       }
-      setSelectedQueueIds(updatedSelectedQueueIds)
     }
+    let filteredSelectedQueueIds = []
+    for (let i=0; i<updatedSelectedQueueIds.length; i++) {
+      if (queues.filter(q => q.id == updatedSelectedQueueIds[i]).length > 0) {
+        filteredSelectedQueueIds.push(updatedSelectedQueueIds[i])
+      }
+    }
+    setSelectedQueueIds(filteredSelectedQueueIds)
   }
 
   const chkAllChangeHandler = (e) => {
@@ -72,6 +79,7 @@ const OCRQueue = (props) => {
     getParser()
     let queues = props.queues
     let stoppedQueuesCount = 0
+    queues = queues.filter(q => q.queueStatus != "STOPPED")
     for (let i=0; i<queues.length; i++) {
       let queue = queues[i]
       let ocredCount = 0
@@ -80,13 +88,6 @@ const OCRQueue = (props) => {
         if (documentPage.ocred) ocredCount++
       } 
       queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (OCRed " + ocredCount + " of " + queue.document.documentPages.length + ")"
-      if (queue.queueStatus == "STOPPED") {
-        stoppedQueuesCount++
-      }
-    }
-    /* Avoid misleading queue informartion */
-    if (stoppedQueuesCount > 0) {
-      return
     }
     setQueues(queues)
   }, [router.isReady, props.queues])

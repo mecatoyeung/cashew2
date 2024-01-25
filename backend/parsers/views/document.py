@@ -119,8 +119,37 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True,
             methods=['GET'],
+            name='Document PDF',
+            url_path='searchable-pdf')
+    def searchable_pdf(self, request, pk, *args, **kwargs):
+
+        document = Document.objects.get(id=pk)
+        preprocessings = PreProcessing.objects.order_by(
+            "step").filter(parser_id=document.parser.id)
+
+        folder_path = os.path.join(
+            MEDIA_ROOT, 'documents/%s/' % (document.guid))
+        abs_pdf_path = os.path.join(folder_path, "ocred.pdf")
+        if not os.path.isfile(abs_pdf_path):
+            for pre_processing in preprocessings:
+                abs_pdf_path = os.path.join(folder_path, "pre_processed-" + pre_processing.id, "output.pdf")
+                if os.path.isfile(abs_pdf_path):
+                    break
+
+        if not os.path.isfile(abs_pdf_path):
+            abs_pdf_path = os.path.join(folder_path, "source_file.pdf")
+
+        pdf_file = open(abs_pdf_path, 'rb')
+        return_filename = document.guid + "-searchable.pdf"
+
+        response = Response(File(pdf_file), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % return_filename
+        return response
+
+    @action(detail=True,
+            methods=['GET'],
             name='Document Image',
-            url_path='pages/(?P<page_num>[^/.]+)',
+            url_path='pages/(?P<page_num>[^/.]+)/image',
             renderer_classes=[PNGRenderer])
     def image(self, request, pk, page_num, *args, **kwargs):
 

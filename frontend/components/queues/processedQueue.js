@@ -42,6 +42,7 @@ const ProcessedQueue = (props) => {
       await service.delete("queues/" + selectedQueueIds[i] + "/")
     }
     getQueues()
+    setSelectedQueueIds([])
   }
 
   const moveToPreProcessingQueueClickHandler = async () => {
@@ -52,6 +53,7 @@ const ProcessedQueue = (props) => {
       await service.put("queues/" + selectedQueueIds[i] + "/", queue)
     }
     getQueues()
+    setSelectedQueueIds([])
   }
 
   const moveToOCRQueueClickHandler = async () => {
@@ -62,6 +64,7 @@ const ProcessedQueue = (props) => {
       await service.put("queues/" + selectedQueueIds[i] + "/", queue)
     }
     getQueues()
+    setSelectedQueueIds([])
   }
 
   const moveToSplittingQueueClickHandler = async () => {
@@ -72,28 +75,29 @@ const ProcessedQueue = (props) => {
       await service.put("queues/" + selectedQueueIds[i] + "/", queue)
     }
     getQueues()
+    setSelectedQueueIds([])
   }
 
-  const moveToParsingQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(q => q.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queueClass: "PARSING",
-      queueStatus: "READY"
-    })
+  const moveToParsingQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "PARSING"
+      queue.queueStatus = "READY"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+    getQueues()
+    setSelectedQueueIds([])
   }
 
-  const moveToIntegrationQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(q => q.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queueClass: "INTEGRATION",
-      queueStatus: "READY"
-    })
+  const moveToIntegrationQueueClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "INTEGRATION"
+      queue.queueStatus = "READY"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
+    getQueues()
+    setSelectedQueueIds([])
   }
 
   const chkQueueChangeHandler = (e, queue) => {
@@ -127,11 +131,6 @@ const ProcessedQueue = (props) => {
     if (!router.isReady) return
     getParser()
     setQueues(props.queues)
-    /*getQueues()
-    const interval = setInterval(() => {
-      getQueues()
-    }, 5000);
-    return () => clearInterval(interval);*/
   }, [router.isReady, props.queues])
 
   return (

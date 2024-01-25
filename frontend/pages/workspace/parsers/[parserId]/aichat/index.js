@@ -28,7 +28,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
 import untruncateJson from "untruncate-json"
 
-
+const FileDownload = require('js-file-download')
 
 const ExcelJS = require('exceljs')
 
@@ -47,9 +47,6 @@ const isMultipleArrays = (chat) => {
     if (!Array.isArray(value)) {
       return false
     }
-    /*if (typeof value === 'object') {
-      return false
-    }*/
   }
 
   return true
@@ -61,7 +58,76 @@ const arrayRange = (start, stop, step) =>
     (value, index) => start + index * step
 )
 
+const recursiveChatInExcel = (metadataSheet, chat, level = 0, currentLineIndex = 0) => {
+  if (typeof chat === 'string' || typeof chat === 'number') {
+    let rowValues = []
+    for (let i=0; i<level; i++) {
+      rowValues.push("")
+    }
+    metadataSheet.addRow(rowValues)
+  } else if (isMultipleArrays(chat)) {
+    let rowValues = []
+    Object.keys(chat).map((header, headerIndex) => {
+      for (let i=0; i<level; i++) {
+        rowValues.push("")
+      }
+      rowValues.push(header)
+    })
+
+    metadataSheet.addRow(rowValues)
+    rowValues = []
+    currentLineIndex++
+
+    Object.values(chat).map((chatRow, chatRowIndex) => {
+      for (let i=0; i<level; i++) {
+        rowValues.push("")
+      }
+      for (let i=0; i<chatRow.length; i++) {
+        rowValues.push(chatRow[i])
+      }
+      metadataSheet.addRow(rowValues)
+      rowValues = []
+      currentLineIndex++
+    })
+  } else if (Array.isArray(chat)) {
+    let rowValues = []
+    Object.keys(chat[0]).map((header, headerIndex) => {
+      for (let i=0; i<level; i++) {
+        rowValues.push("")
+      }
+      rowValues.push(header)
+    })
+
+    metadataSheet.addRow(rowValues)
+    rowValues = []
+    currentLineIndex++
+
+    chat.map((tableRow, tableRowIndex) => {
+      let tableRowObjectKeys = Object.keys(tableRow)
+      if (tableRowObjectKeys.length > 0) {
+        {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
+          rowValues.push(tableRow[tableRowObjectKey])
+        ))}
+        metadataSheet.addRow(rowValues)
+        rowValues = []
+        currentLineIndex++
+      }
+    })
+  } else if (typeof chat === 'object') {
+    return (
+      Object.keys(chat).map((objectKey, objectKeyIndex) => {
+        recursiveChatInExcel(metadataSheet, chat[objectKey], level=level+1, currentLineIndex=currentLineIndex)
+      })
+    )
+  }
+
+  if (level == 0) {
+    return metadataSheet
+  }
+}
+
 const RecursiveChat = ({chat}) => {
+  console.log("raw: ", chat)
   if (typeof chat === 'string' || typeof chat === 'number') {
     console.log("string: ", chat)
     return (
@@ -230,7 +296,7 @@ const AIChat = () => {
   const getDocumentPageImage = () => {
     if (!documentId) return
     if (!pageNum) return
-    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/",
+    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/image/",
       (response) => {
         let data = `data:${
           response.headers["content-type"]
@@ -400,12 +466,14 @@ const AIChat = () => {
 
     let latestMachineResponses = chatHistories.filter(ch => ch.from == "machine" && ch.export_xlsx)
     
+    //let metadataSheet = workbook.addWorksheet("Metadata")
+    //metadataSheet = recursiveChatInExcel(metadataSheet, latestMachineResponses[latestMachineResponses.length - 1])
 
     for (let i=0; i<latestMachineResponses.length; i++) {
       let chatCounter = i + 1
       let rowIndex = 0
       let latestMachineResponse = latestMachineResponses[i].chat
-      let metadataWorksheet = workbook.addWorksheet(chatCounter + ". " + 'Metadata')
+      let metadataWorksheet = workbook.addWorksheet(chatCounter + ".Metadata")
       Object.entries(latestMachineResponse)
         .map(([key, value]) => {
           if (!Array.isArray(value)) {
@@ -506,6 +574,30 @@ const AIChat = () => {
     }, errorResponse => {
       console.error(errorResponse)
     })
+  }
+
+  const downloadPDFBtnClickHandler = (e) => {
+    service.getFileBlob("documents/" + documentId + "/searchable-pdf/", (response) => {
+      FileDownload(response.data, document.guid + "-searchable.pdf")
+    })
+  }
+
+  const downloadTextBtnClickHandler = () => {
+    console.log(textlines)
+    service.get("parsers/" + parserId + "/document/" + documentId + "/extract_all_text/", response => {
+      let filename = document.guid + "-text.txt"
+      let element = window.document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response.data.join("\n")))
+      element.setAttribute('download', filename)
+
+      element.style.display = 'none'
+      window.document.body.appendChild(element)
+
+      element.click()
+
+      window.document.body.removeChild(element)
+    })
+    
   }
 
   const timeout = async (delay) => {
@@ -790,6 +882,7 @@ const AIChat = () => {
                           <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
                           <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
                           <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
+                          <Button className={styles.toolsBtn} onClick={() => downloadPDFBtnClickHandler()}><i className="bi bi-file-earmark-pdf"></i> Download</Button>
                         </div>
                         <TransformComponent>
                           <div style={{marginTop: 150}}>
@@ -815,6 +908,7 @@ const AIChat = () => {
                           <Button className={styles.toolsBtn} onClick={() => prevPage()}><i className="bi bi-arrow-left"></i></Button>
                           <Button className={styles.toolsBtn}>Page {pageNum} of {document && document.documentPages.length}</Button>
                           <Button className={styles.toolsBtn} onClick={() => nextPage()}><i className="bi bi-arrow-right"></i></Button>
+                          <Button className={styles.toolsBtn} onClick={() => downloadPDFBtnClickHandler()}><i className="bi bi-file-earmark-pdf"></i> Download</Button>
                         </div>
                         <TransformComponent>
 
@@ -827,6 +921,9 @@ const AIChat = () => {
               </div>
               <div className={styles.sidebarResizer} onMouseDown={startResizing}></div>
               <div className={styles.pageText}>
+                <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
+                  <Button className={styles.toolsBtn} onClick={() => downloadTextBtnClickHandler()}><i className="bi bi-card-text"></i> Download</Button>
+                </div>
                 <div className={styles.streamTableDiv}>
                   <table className={styles.streamTable}>
                     <tbody>

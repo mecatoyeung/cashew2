@@ -3,6 +3,7 @@ from decimal import Decimal
 import math
 import re
 
+from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
 
 from parsers.helpers.get_document_nos_from_range import get_document_nos_from_range
@@ -23,7 +24,17 @@ class DocumentParser:
 
     def extract_all_text_in_one_page(self, page_num):
 
-        page_nums = [int(page_num)]
+        rule = Rule()
+        rule.rule_type = RuleType.TEXTFIELD.value
+        rule.pages = str(page_num)
+        rule.x1 = Decimal(0.00)
+        rule.x2 = Decimal(100.00)
+        rule.y1 = Decimal(0.00)
+        rule.y2 = Decimal(100.00)
+
+        return self.extract(rule)
+
+        """page_nums = [int(page_num)]
 
         for page_num in page_nums:
             xml_page_already_exists = sum(
@@ -174,7 +185,7 @@ class DocumentParser:
                 for i in range(num_of_empty_lines_to_be_append):
                     text_in_rows.append("")
 
-        return text_in_rows
+        return text_in_rows"""
 
     def extract_all_text_in_all_pages(self):
 
