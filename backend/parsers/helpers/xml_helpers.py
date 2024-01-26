@@ -187,7 +187,7 @@ class XMLPage:
         
 
         # Calculate median of text width and height
-        text_widths = []
+        """text_widths = []
         text_heights = []
         for textline in self.textlines:
             for text in textline.text_elements:
@@ -197,7 +197,7 @@ class XMLPage:
                 text_heights.append(text_height)
 
         self.median_of_text_widths = statistics.median(text_widths) * 2 / 3
-        self.median_of_text_heights = statistics.median(text_heights) * 2 / 3
+        self.median_of_text_heights = statistics.median(text_heights) * 2 / 3"""
         self.median_of_text_widths = ASSUMED_TEXT_WIDTH
         self.median_of_text_heights = ASSUMED_TEXT_HEIGHT
 

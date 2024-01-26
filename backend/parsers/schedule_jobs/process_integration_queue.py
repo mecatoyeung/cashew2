@@ -145,8 +145,10 @@ def process_single_integration_queue(queue_job):
 
     except Exception as e:
         print(traceback.format_exc())
-        queue_job.queue_class = QueueClass.INTEGRATION.value
-        queue_job.queue_status = QueueStatus.READY.value
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
+        #queue_job.queue_class = QueueClass.INTEGRATION.value
+        #queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
 
     try:

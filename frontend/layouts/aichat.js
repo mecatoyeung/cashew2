@@ -99,7 +99,7 @@ export default function AIChatLayout({ children }) {
           <div>
             <div className="row" style={{ padding: 0, margin: 0 }}>
               <div
-                className="col-6 col-md-6"
+                className="col-4 col-md-4"
                 style={{ paddingLeft: 20, paddingRight: 0 }}
               >
                 <div className={styles.logoDiv}>
@@ -122,15 +122,22 @@ export default function AIChatLayout({ children }) {
                     }
                   ></i>
                 </Nav.Link>
-                <Nav.Link
-                  href={"/workspace/parsers/" + parserId + "/rules"}
-                  style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}
-                >
-                  <Button>Back to Configurations</Button>
-                </Nav.Link>
+                <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
+                  <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
+                </div>
               </div>
               <div
-                className="col-6 col-md-6"
+                className="col-4 col-md-4"
+                style={{ paddingLeft: 0, paddingRight: 20, width: "100%", textAlign: "center" }}
+              >
+                {parserDocuments && documentId && (
+                  <>123
+                    {parserDocuments.find(d => d.id == documentId).filenameWithoutExtension + "." + parserDocuments.find(d => d.id == documentId).extension}
+                  </>
+                )}
+              </div>
+              <div
+                className="col-4 col-md-4"
                 style={{ paddingLeft: 0, paddingRight: 20 }}
               >
                 <nav className={styles.nav}>

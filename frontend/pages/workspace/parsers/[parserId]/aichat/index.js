@@ -40,6 +40,8 @@ import service from '../../../../../service'
 
 import styles from '../../../../../styles/AIChat.module.css'
 
+const shiftCharCode = Δ => c => String.fromCharCode(c.charCodeAt(0) + Δ);
+
 const isMultipleArrays = (chat) => {
   
   for (const [key, value] of Object.entries(chat)) {
@@ -266,7 +268,7 @@ const AIChat = () => {
 
   const router = useRouter()
 
-  let { pathname, parserId, documentId, pageNum } = router.query;
+  let { pathname, parserId, documentId, pageNum = 1 } = router.query;
 
   const [parser, setParser] = useState(null)
 
@@ -813,7 +815,7 @@ const AIChat = () => {
           <div>
             <div className="row" style={{ padding: 0, margin: 0 }}>
               <div
-                className="col-6 col-md-6"
+                className="col-4 col-md-4"
                 style={{ paddingLeft: 20, paddingRight: 0 }}
               >
                 <div className={styles.logoDiv}>
@@ -836,15 +838,24 @@ const AIChat = () => {
                     }
                   ></i>
                 </Nav.Link>
-                <Nav.Link
-                  href={"/workspace/parsers/" + parserId + "/rules"}
-                  style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}
-                >
-                  <Button>Back to Configurations</Button>
-                </Nav.Link>
+                <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
+                  <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
+                </div>
               </div>
               <div
-                className="col-6 col-md-6"
+                className="col-4 col-md-4"
+                style={{ paddingLeft: 0, paddingRight: 0, textAlign: "center", lineHeight: "52px" }}
+              >
+                {console.log(parserDocuments)}
+                {console.log(documentId)}
+                {parserDocuments && parserDocuments.length > 0 && documentId && (
+                  <>
+                    {parserDocuments.find(d => d.id == documentId).filenameWithoutExtension + "." + parserDocuments.find(d => d.id == documentId).extension}
+                  </>
+                )}
+              </div>
+              <div
+                className="col-4 col-md-4"
                 style={{ paddingLeft: 0, paddingRight: 20 }}
               >
                 <nav className={styles.nav}>
@@ -956,6 +967,7 @@ const AIChat = () => {
                 )}
               </div>
               <div className={styles.sidebarResizer} onMouseDown={startResizing}></div>
+              {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length > 0 && (
               <div className={styles.pageText}>
                 <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
                   <Button className={styles.toolsBtn} onClick={() => downloadTextBtnClickHandler()}><i className="bi bi-card-text"></i> Download</Button>
@@ -966,6 +978,7 @@ const AIChat = () => {
                       {textlines.map((row, rowIndex) => {
                         return (
                           <tr key={rowIndex}>
+                            {/* .replace(" ", "　").replace(/[!-~]/g, shiftCharCode(0xFEE0)) */}
                             <td>{row.replace(/ /g, '\u00a0')}</td>
                           </tr>
                         )
@@ -974,6 +987,7 @@ const AIChat = () => {
                   </table>
                 </div>
               </div>
+              )}
             </div>
             <div className="d-flex flex-grow-1"
                 style={{ padding: 0, margin: 0, flexDirection: "column", overflowY: "hidden", borderTop: "2px solid #000" }}>

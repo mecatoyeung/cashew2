@@ -95,7 +95,7 @@ export default function ThresholdBinarizationForm(props) {
   return (
     <WorkspaceLayout>
       <div className={preProcessingsStyles.wrapper}>
-        <h1 className={preProcessingsStyles.h1}>Add Orientation Detection</h1>
+        <h1 className={preProcessingsStyles.h1}>Add Threshold Binarization</h1>
         <Accordion defaultActiveKey="0" style={{padding: 10}}>
           <Accordion.Item eventKey="0">
             <Accordion.Header>Please fill in the form</Accordion.Header>

@@ -155,7 +155,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         document = Document.objects.get(id=pk)
         preprocessings = PreProcessing.objects.order_by(
-            "step").filter(parser_id=document.parser.id)
+            "-step").filter(parser_id=document.parser.id)
 
         folder_path = os.path.join(
             MEDIA_ROOT, 'documents/%s/' % (document.guid))
