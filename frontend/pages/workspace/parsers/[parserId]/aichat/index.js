@@ -61,30 +61,36 @@ const arrayRange = (start, stop, step) =>
 const recursiveChatInExcel = (metadataSheet, chat, level = 0, currentLineIndex = 0) => {
   if (typeof chat === 'string' || typeof chat === 'number') {
     let rowValues = []
-    for (let i=0; i<level; i++) {
+    for (let i=1; i<level; i++) {
       rowValues.push("")
     }
+    rowValues.push(chat)
+    debugger
     metadataSheet.addRow(rowValues)
+    rowValues = []
+    currentLineIndex++
   } else if (isMultipleArrays(chat)) {
     let rowValues = []
     Object.keys(chat).map((header, headerIndex) => {
-      for (let i=0; i<level; i++) {
+      for (let i=1; i<level; i++) {
         rowValues.push("")
       }
       rowValues.push(header)
     })
 
+    debugger
     metadataSheet.addRow(rowValues)
     rowValues = []
     currentLineIndex++
 
     Object.values(chat).map((chatRow, chatRowIndex) => {
-      for (let i=0; i<level; i++) {
+      for (let i=1; i<level; i++) {
         rowValues.push("")
       }
       for (let i=0; i<chatRow.length; i++) {
         rowValues.push(chatRow[i])
       }
+      debugger
       metadataSheet.addRow(rowValues)
       rowValues = []
       currentLineIndex++
@@ -92,12 +98,13 @@ const recursiveChatInExcel = (metadataSheet, chat, level = 0, currentLineIndex =
   } else if (Array.isArray(chat)) {
     let rowValues = []
     Object.keys(chat[0]).map((header, headerIndex) => {
-      for (let i=0; i<level; i++) {
+      for (let i=1; i<level; i++) {
         rowValues.push("")
       }
       rowValues.push(header)
     })
 
+    debugger
     metadataSheet.addRow(rowValues)
     rowValues = []
     currentLineIndex++
@@ -108,21 +115,36 @@ const recursiveChatInExcel = (metadataSheet, chat, level = 0, currentLineIndex =
         {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
           rowValues.push(tableRow[tableRowObjectKey])
         ))}
+        debugger
         metadataSheet.addRow(rowValues)
         rowValues = []
         currentLineIndex++
       }
     })
   } else if (typeof chat === 'object') {
-    return (
-      Object.keys(chat).map((objectKey, objectKeyIndex) => {
-        recursiveChatInExcel(metadataSheet, chat[objectKey], level=level+1, currentLineIndex=currentLineIndex)
-      })
-    )
+    debugger
+    level = level + 1
+    Object.keys(chat).map((objectKey, objectKeyIndex) => {
+      let rowValues = []
+      for (let i=1; i<level; i++) {
+        rowValues.push("")
+      }
+      rowValues.push(objectKey)
+      let row = metadataSheet.addRow(rowValues)
+      row.font = {
+        bold: true
+      }
+      rowValues = []
+      currentLineIndex++
+      currentLineIndex = recursiveChatInExcel(metadataSheet, chat[objectKey], level=level, currentLineIndex=currentLineIndex)
+    })
   }
 
   if (level == 0) {
     return metadataSheet
+  } else {
+    debugger
+    return currentLineIndex
   }
 }
 
@@ -161,9 +183,16 @@ const RecursiveChat = ({chat}) => {
                     {rows.map((row, rowIndex) => (
                       <tr key={rowIndex}>
                         {cols.map((col, colIndex) => {
-                          if (chat[col][row] != undefined) {
+                          if (Array.isArray(chat[col][row])) {
                             return (
                               <td key={colIndex}>{chat[col][row]}</td>
+                            )
+                          }
+                          else if (typeof chat[col][row] == 'object') {
+                            return (
+                              Object.keys(chat[col][row]).map((objectKey, objectKeyIndex) => {
+                                <td key={colIndex}><strong>{objectKey}: </strong>{chat[col][row][objectKey]}</td>
+                              })
                             )
                           }
                         })}
@@ -198,9 +227,15 @@ const RecursiveChat = ({chat}) => {
               if (tableRowObjectKeys.length > 0) {
                 return (
                   <tr key={tableRowIndex}>
-                    {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
-                      <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
-                    ))}
+                    {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => {
+                      if (typeof tableRow[tableRowObjectKey] == 'object') {
+
+                      } else {
+                        return (
+                          <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
+                        )
+                      }
+                    })}
                   </tr>
                 )
               } else {
@@ -466,10 +501,11 @@ const AIChat = () => {
 
     let latestMachineResponses = chatHistories.filter(ch => ch.from == "machine" && ch.export_xlsx)
     
-    //let metadataSheet = workbook.addWorksheet("Metadata")
-    //metadataSheet = recursiveChatInExcel(metadataSheet, latestMachineResponses[latestMachineResponses.length - 1])
+    let metadataSheet = workbook.addWorksheet("Metadata")
+    debugger
+    metadataSheet = recursiveChatInExcel(metadataSheet, latestMachineResponses[latestMachineResponses.length - 1].chat)
 
-    for (let i=0; i<latestMachineResponses.length; i++) {
+    /*for (let i=0; i<latestMachineResponses.length; i++) {
       let chatCounter = i + 1
       let rowIndex = 0
       let latestMachineResponse = latestMachineResponses[i].chat
@@ -545,7 +581,7 @@ const AIChat = () => {
             }
           }
       })
-    }
+    }*/
     
     const buffer = await workbook.xlsx.writeBuffer()
     FileSaver.saveAs(new Blob([buffer]), "Cashew AI Chatbot Result.xlsx")

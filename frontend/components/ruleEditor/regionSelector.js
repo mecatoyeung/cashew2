@@ -135,7 +135,7 @@ const RegionSelector = () => {
   const getDocumentPageImage = () => {
     if (parserId == undefined) return
     if (documentId == 0) return
-    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/",
+    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/image/",
       (response) => {
         let data = `data:${
           response.headers["content-type"]
