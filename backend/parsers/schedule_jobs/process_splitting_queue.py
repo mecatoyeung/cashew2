@@ -387,7 +387,7 @@ def process_single_splitting_queue(queue_job):
                                 document_page_file_path = os.path.join(
                                     media_folder_path, "documents", str(document.guid), str(accumulated_page_num) + ".jpg")
                             else:
-                                last_preprocessing = preprocessings[-1]
+                                last_preprocessing = preprocessings[0]
                                 document_page_file_path = os.path.join(
                                     media_folder_path, "documents", str(document.guid), "pre_processed-" + str(last_preprocessing.id), str(accumulated_page_num) + ".jpg")
                                 if not os.path.exists(document_page_file_path):
