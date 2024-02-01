@@ -102,11 +102,11 @@ def detect_orientation_opencv(document_page, preprocessing, last_preprocessing=N
     try:
         osd = pytesseract.image_to_osd(
             im, output_type='dict')
+        if osd["orientation_conf"] < 2.5:
+            osd = {"orientation": 0}
     except Exception as e:
         osd = {"orientation": 0}
     best_rotation_angle = osd["orientation"]
-    if osd["orientation_conf"] < 2.5:
-        best_rotation_angle = 0
 
     rotated_im = rotate_without_crop(im, best_rotation_angle)
 
