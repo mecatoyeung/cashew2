@@ -8,11 +8,15 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
 
+from drf_spectacular.utils import extend_schema_field
+
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
 from parsers.models.queue import QueueClass
 from parsers.models.queue_status import QueueStatus
+    
+from parsers.serializers.nested.document import DocumentSerializer
 
 from backend import settings
 
@@ -77,8 +81,8 @@ class QueueSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    @extend_schema_field(DocumentSerializer)
     def get_document(self, obj):
-        from parsers.serializers.nested.document import DocumentSerializer
         return DocumentSerializer(obj.document).data
 
     def create(self, validated_data):

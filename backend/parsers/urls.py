@@ -6,6 +6,7 @@ from django.urls import (
     path,
     include,
 )
+import traceback
 
 from rest_framework.routers import DefaultRouter
 
@@ -91,20 +92,24 @@ urlpatterns = [
 
 if not running_migration(sys.argv):
     # Set all Queues from In Progress to Ready
-    all_sources = Source.objects.filter(is_running=True)
-    for source in all_sources:
-        source.is_running = False
-        source.save()
+    try:
+        all_sources = Source.objects.filter(is_running=True)
+        for source in all_sources:
+            source.is_running = False
+            source.save()
 
-    all_in_progress_queues = Queue.objects.filter(
-        queue_status=QueueStatus.IN_PROGRESS.value)
-    for queue in all_in_progress_queues:
-        queue.queue_status = QueueStatus.READY.value
-        queue.save()
+        all_in_progress_queues = Queue.objects.filter(
+            queue_status=QueueStatus.IN_PROGRESS.value)
+        for queue in all_in_progress_queues:
+            queue.queue_status = QueueStatus.READY.value
+            queue.save()
 
-    all_stopped_queues = Queue.objects.filter(
-        queue_status=QueueStatus.STOPPED.value)
-    for queue in all_stopped_queues:
-        queue.queue_class = QueueClass.PROCESSED.value
-        queue.queue_status = QueueStatus.COMPLETED.value
-        queue.save()
+        all_stopped_queues = Queue.objects.filter(
+            queue_status=QueueStatus.STOPPED.value)
+        for queue in all_stopped_queues:
+            queue.queue_class = QueueClass.PROCESSED.value
+            queue.queue_status = QueueStatus.COMPLETED.value
+            queue.save()
+    except:
+        traceback.print_exc()
+        pass
