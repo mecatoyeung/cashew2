@@ -448,6 +448,9 @@ class RuleExtractor:
                 else:
                     values = decode_value(values)
 
+                if values == None:
+                    values = ""
+
                 data.append(name + ": " + values)
 
         return data

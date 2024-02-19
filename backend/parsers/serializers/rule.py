@@ -24,7 +24,7 @@ class RuleSerializer(serializers.ModelSerializer):
     anchor_text = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
     anchor_document = AnchorDocumentSerializer(many=False,
-        required=False)
+        required=False, allow_null=True)
 
     class Meta:
         model = Rule
