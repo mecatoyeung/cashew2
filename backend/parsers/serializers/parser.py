@@ -80,6 +80,8 @@ class ParserSerializer(serializers.ModelSerializer):
     
     def _get_or_create_open_ai_metrics_key(self, open_ai_metrics_key, parser):
         """ Handle getting or creating open ai as needed. """
+        if open_ai_metrics_key == None:
+            return
         open_ai_metrics_key["parser"] = parser
         open_ai_metrics_key_obj, created = OpenAIMetricsKey.objects.get_or_create(
             **open_ai_metrics_key,

@@ -35,7 +35,7 @@ export default function Parsers() {
 
   const [showUploadConfigModal , setShowUploadConfigModal] = useState({
     show: false,
-    uploadDefaultParser: parseInt(localStorage.getItem("uploadDefaultParser"))
+    uploadDefaultParser: typeof window == 'undefined' ? 0 : parseInt(localStorage.getItem("uploadDefaultParser"))
   })
 
   const closeUploadConfigModalHandler = () => {
@@ -51,7 +51,9 @@ export default function Parsers() {
       ...showUploadConfigModal,
       uploadDefaultParser: parseInt(e.value)
     })
-    localStorage.setItem("uploadDefaultParser", e.value)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("uploadDefaultParser", e.value)
+    }
   }
 
   const getParsers = () => {
