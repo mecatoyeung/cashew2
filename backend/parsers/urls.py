@@ -14,20 +14,23 @@ from parsers.models.queue import Queue
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue_status import QueueStatus
 from parsers.models.source import Source
+from parsers.models.open_ai_metrics import OpenAIMetrics
 
-from .views.parser import ParserViewSet
-from .views.rule import RuleViewSet
-from .views.stream import StreamViewSet
-from .views.open_ai import OpenAIViewSet
-from .views.queue import QueueViewSet
-from .views.document import DocumentViewSet
-from .views.source import SourceViewSet
-from .views.pre_processing import PreProcessingViewSet
-from .views.splitting import SplittingViewSet
-from .views.splitting_rule import SplittingRuleViewSet
-from .views.chatbot import ChatBotViewSet
-from .views.post_processing import PostProcessingViewSet
-from .views.integration import IntegrationViewSet
+from parsers.views.parser import ParserViewSet
+from parsers.views.rule import RuleViewSet
+from parsers.views.stream import StreamViewSet
+from parsers.views.open_ai import OpenAIViewSet
+from parsers.views.open_ai_metrics_key import OpenAIMetricsKeyViewSet
+from parsers.views.open_ai_metrics import OpenAIMetricsViewSet
+from parsers.views.queue import QueueViewSet
+from parsers.views.document import DocumentViewSet
+from parsers.views.source import SourceViewSet
+from parsers.views.pre_processing import PreProcessingViewSet
+from parsers.views.splitting import SplittingViewSet
+from parsers.views.splitting_rule import SplittingRuleViewSet
+from parsers.views.chatbot import ChatBotViewSet
+from parsers.views.post_processing import PostProcessingViewSet
+from parsers.views.integration import IntegrationViewSet
 
 
 def running_migration(argv):
@@ -61,6 +64,10 @@ splitting_rules_router.register(
     '', SplittingRuleViewSet, basename="splitting_rules")
 chatbots_router = DefaultRouter()
 chatbots_router.register('', ChatBotViewSet, basename="chatbots")
+open_ai_metrics_keys_router = DefaultRouter()
+open_ai_metrics_keys_router.register('', OpenAIMetricsKeyViewSet, basename="open_ai_metrics_keys")
+open_ai_metrics_router = DefaultRouter()
+open_ai_metrics_router.register('', OpenAIMetricsViewSet, basename="open_ai_metrics")
 postprocessings_router = DefaultRouter()
 postprocessings_router.register(
     '', PostProcessingViewSet, basename="postprocessings")
@@ -84,6 +91,10 @@ urlpatterns = [
          name="splitting_rules"),
     path('chatbots/', include(chatbots_router.urls),
          name="chatbots"),
+    path('open_ai_metrics_keys/', include(open_ai_metrics_keys_router.urls),
+         name="open_ai_metrics_keys"),
+    path('open_ai_metrics/', include(open_ai_metrics_router.urls),
+         name="open_ai_metrics"),
     path('postprocessings/', include(postprocessings_router.urls),
          name="postprocessings"),
     path('integrations/', include(integrations_router.urls), name="integrations"),

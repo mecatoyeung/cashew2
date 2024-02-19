@@ -45,10 +45,10 @@ const ProcessedQueue = (props) => {
     setSelectedQueueIds([])
   }
 
-  const moveToPreProcessingQueueClickHandler = async () => {
+  const moveToImportQueueClickHandler = async () => {
     for (let i=0; i<selectedQueueIds.length; i++) {
       let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "PRE_PROCESSING"
+      queue.queueClass = "IMPORT"
       queue.queueStatus = "READY"
       await service.put("queues/" + selectedQueueIds[i] + "/", queue)
     }
@@ -139,7 +139,7 @@ const ProcessedQueue = (props) => {
         <DropdownButton title="Perform Action" className={styles.performActionDropdown}>
           <Dropdown.Item href="#">Download Excel File (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#" onClick={moveToPreProcessingQueueClickHandler}>Move to Pre-Processing Queue</Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToImportQueueClickHandler}>Move to Import Queue</Dropdown.Item>
           {/*<Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToSplittingQueueClickHandler}>Move to Split Queue</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParsingQueueClickHandler}>Move to Parse Queue</Dropdown.Item>

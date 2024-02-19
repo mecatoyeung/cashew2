@@ -19,79 +19,6 @@ import service from '../../../../../service'
 
 import styles from '../../../../../styles/Settings.module.css'
 
-const ocrOptions = [
-  {
-    label: "No OCR",
-    value: "NO_OCR"
-  },
-  {
-    label: "Google Vision OCR (Cloud, Paid, very good at English/Traditional Chinese/Simplified Chinese)",
-    value: "GOOGLE_VISION"
-  },
-  {
-    label: "DocTR (On Premise, Free, very good at English and cannot recognize Traditional Chinese and Simplified Chinese)",
-    value: "DOCTR"
-  },
-  {
-    label: "PaddleOCR (On Premise, Free, very good at Simplified Chinese, good at English/Japanese/Korean and fair at Traditional Chinese)",
-    value: "PADDLE_OCR"
-  },
-  {
-    label: "Omnipage OCR (On Premise, Paid, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)",
-    value: "OMNIPAGE_OCR"
-  }
-]
-
-const paddleOCRLangOptions = [
-  {
-    label: "Simplified Chinese",
-    value: "ch"
-  },
-  {
-    label: "English",
-    value: "en"
-  },
-  {
-    label: "Traditional Chinese",
-    value: "ch_tra"
-  },
-  {
-    label: "Japanese",
-    value: "japan"
-  },
-  {
-    label: "Korean",
-    value: "korean"
-  },
-  {
-    label: "French",
-    value: "fr"
-  },
-  {
-    label: "German",
-    value: "german"
-  },
-  {
-    label: "Vietnamese",
-    value: "vi"
-  }
-]
-
-const omnipageOCRLangOptions = [
-  {
-    label: "Traditional Chinese",
-    value: "LANG_CHT"
-  },
-  {
-    label: "Simplified Chinese",
-    value: "LANG_CHS"
-  },
-  {
-    label: "English",
-    value: "LANG_ENG"
-  }
-]
-
 const chatBotOptions = [
   {
     label: "No Chatbot",
@@ -113,6 +40,8 @@ const Settings = () => {
 
   const [parser, setParser] = useState(null)
 
+  const [updatedParser, setUpdatedParser] = useState(false)
+
   const [importModal , setImportModal] = useState({
     show: false,
     selectedFile: null,
@@ -131,16 +60,15 @@ const Settings = () => {
     getParser()
   }, [router.isReady])
 
-  const importBtnClickHandler = () => {
-
+  const parserNameChangeHandler = (e) => {
+    let updatedParser = {...parser}
+    updatedParser.name = e.target.value
+    setParser(updatedParser)
   }
 
-  const closeImportModalHandler = () => {
-
-  }
-
-  const importFileChangeHandler = () => {
-
+  const parserSaveBtnClickHandler = () => {
+    updateParser()
+    setUpdatedParser(!updatedParser)
   }
 
   const exportBtnClickHandler = () => {
@@ -156,45 +84,6 @@ const Settings = () => {
 
       link.click();
     })
-  }
-
-  const parserNameChangeHandler = () => {
-    
-  }
-
-  const confirmImportParserBtnClickHandler = () => {
-
-  }
-
-  const ocrTypeChangeHandler = (e) => {
-    let updatedOCR = { ...parser.ocr }
-    updatedOCR.ocrType = e.value
-    setParser({
-      ...parser,
-      ocr: updatedOCR
-    })
-  }
-
-  const googleVisionOcrApiKeyChangeHandler = (e) => {
-    let updatedOCR = { ...parser.ocr }
-    updatedOCR.googleVisionOcrApiKey = e.target.value
-    setParser({
-      ...parser,
-      ocr: updatedOCR
-    })
-  }
-
-  const paddleOCRLanguageChangeHandler = (e) => {
-    let updatedOCR = { ...parser.ocr }
-    updatedOCR.paddleOCRLanguage = e.value
-    setParser({
-      ...parser,
-      ocr: updatedOCR
-    })
-  }
-
-  const ocrSaveBtnClickHandler = () => {
-    updateParser()
   }
 
   const chatbotTypeChangeHandler = (e) => {
@@ -287,6 +176,56 @@ const Settings = () => {
     })
   }
 
+  const openAIMetricsTenantIdChangeHandler = (e) => {
+    console.log(e.target.value)
+    let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
+    updatedOpenAiMetricsKey.openAiMetricsTenantId = e.target.value
+    setParser({
+      ...parser,
+      openAiMetricsKey: updatedOpenAiMetricsKey
+    })
+  }
+
+  const openAIMetricsClientIdChangeHandler = (e) => {
+    let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
+    updatedOpenAiMetricsKey.openAiMetricsClientId = e.target.value
+    setParser({
+      ...parser,
+      openAiMetricsKey: updatedOpenAiMetricsKey
+    })
+  }
+
+  const openAIMetricsClientSecretChangeHandler = (e) => {
+    let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
+    updatedOpenAiMetricsKey.openAiMetricsClientSecret = e.target.value
+    setParser({
+      ...parser,
+      openAiMetricsKey: updatedOpenAiMetricsKey
+    })
+  }
+
+  const openAIMetricsSubscriptionIdChangeHandler = (e) => {
+    let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
+    updatedOpenAiMetricsKey.openAiMetricsSubscriptionId = e.target.value
+    setParser({
+      ...parser,
+      openAiMetricsKey: updatedOpenAiMetricsKey
+    })
+  }
+
+  const openAIMetricsServiceNameChangeHandler = (e) => {
+    let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
+    updatedOpenAiMetricsKey.openAiMetricsServiceName = e.target.value
+    setParser({
+      ...parser,
+      openAiMetricsKey: updatedOpenAiMetricsKey
+    })
+  }
+
+  const openAIMetricsSaveBtnClickHandler = () => {
+    updateParser()
+  }
+
   const chatBotSaveBtnClickHandler = () => {
     updateParser()
   }
@@ -310,9 +249,20 @@ const Settings = () => {
   const { parserId } = router.query
 
   return (
-    <WorkspaceLayout>
+    <WorkspaceLayout key={updatedParser}>
       <div className={styles.settingsWrapper}>
         <h1>Settings</h1>
+        {parser && (
+          <Card style={{ width: '100%', marginBottom: 10 }}>
+            <Card.Body>
+              <Card.Title>Parser Name</Card.Title>
+              <Form.Group className="mb-3" controlId="formParserName">
+                <Form.Control onChange={parserNameChangeHandler} value={parser.name}/>
+              </Form.Group>
+              <Button variant="primary" onClick={parserSaveBtnClickHandler}>Save</Button>
+            </Card.Body>
+          </Card>
+        )}
         <Card style={{ width: '100%', marginBottom: 10 }}>
           <Card.Body>
             <Card.Title>Export</Card.Title>
@@ -392,6 +342,35 @@ const Settings = () => {
                 <Form.Control onChange={openAIDeploymentChangeHandler} value={parser.openAi.openAiDeployment}/>
               </Form.Group>
               <Button variant="primary" onClick={openAISaveBtnClickHandler}>Save</Button>
+            </Card.Body>
+          </Card>
+        )}
+        {console.log(parser)}
+        {parser && parser.openAiMetricsKey && (
+          <Card style={{ width: '100%', marginBottom: 10 }}>
+            <Card.Body>
+              <Card.Title>Open AI Metrics</Card.Title>
+              <Form.Group className="mb-3" controlId="formOpenAIMetricsKeyTenantId">
+                <Form.Label>Open AI Metrics Tenant ID</Form.Label>
+                <Form.Control onChange={openAIMetricsTenantIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsTenantId}/>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOpenAIMetricsKeyClientId">
+                <Form.Label>Open AI Metrics Client ID</Form.Label>
+                <Form.Control onChange={openAIMetricsClientIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsClientId}/>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOpenAIMetricsClientSecret">
+                <Form.Label>Open AI Metrics Client Secret</Form.Label>
+                <Form.Control onChange={openAIMetricsClientSecretChangeHandler} value={parser.openAiMetricsKey.openAiMetricsClientSecret}/>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOpenAIMetricsSubscriptionId">
+                <Form.Label>Open AI Metrics Subscription ID</Form.Label>
+                <Form.Control onChange={openAIMetricsSubscriptionIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsSubscriptionId}/>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOpenAIMetricsServiceName">
+                <Form.Label>Open AI Metrics Service Name</Form.Label>
+                <Form.Control onChange={openAIMetricsServiceNameChangeHandler} value={parser.openAiMetricsKey.openAiMetricsServiceName}/>
+              </Form.Group>
+              <Button variant="primary" onClick={openAIMetricsSaveBtnClickHandler}>Save</Button>
             </Card.Body>
           </Card>
         )}

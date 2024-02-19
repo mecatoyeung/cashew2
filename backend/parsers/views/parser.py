@@ -1,5 +1,7 @@
 import re
+import decimal
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import traceback
 
 from rest_framework import (
@@ -81,19 +83,21 @@ class ParserViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         if self.action == "retrieve":
-            return queryset.filter(
+            queryset = queryset.filter(
                 user=self.request.user
-            ).prefetch_related('sources') \
+            ) \
                 .select_related("ocr") \
                 .select_related("chatbot") \
                 .select_related("open_ai") \
+                .select_related("open_ai_metrics_key") \
+                .select_related("splitting") \
+                .prefetch_related('sources') \
                 .prefetch_related('rules') \
                 .prefetch_related('rules__table_column_separators') \
                 .prefetch_related('rules__streams') \
                 .prefetch_related("preprocessings") \
                 .prefetch_related("integrations") \
                 .prefetch_related("postprocessings") \
-                .select_related("splitting") \
                 .prefetch_related(Prefetch("splitting__splitting_rules",
                                            queryset=SplittingRule.objects.prefetch_related("splitting_conditions").filter(
                                                splitting_rule_type=SplittingRuleType.FIRST_PAGE.value)
@@ -102,6 +106,8 @@ class ParserViewSet(viewsets.ModelViewSet):
                                            .prefetch_related(Prefetch("last_page_splitting_rules",
                                                                       queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions")))
                                            ))
+            
+            return queryset
 
         return queryset.filter(
             user=self.request.user
@@ -627,3 +633,82 @@ class ParserViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print(traceback.format_exc())
                 pass
+
+    @action(detail=False,
+            methods=['GET'],
+            name='Open AI Metrics',
+            url_path='(?P<pk>[^/.]+)/open_ai_metrics')
+    def metrics(self, request, pk, *args, **kwargs):
+
+        parser = Parser \
+                    .objects \
+                    .select_related("open_ai_metrics") \
+                    .get(pk=pk)
+        
+        tenant_id = parser.open_ai_metrics.open_ai_metrics_tenant_id
+        client_id = parser.open_ai_metrics.open_ai_metrics_client_id
+        client_secret = parser.open_ai_metrics.open_ai_metrics_client_secret
+        resource = "https://management.core.windows.net/"
+
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+
+        payload = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "resource": resource,
+        }
+
+        token_response = requests.post(token_url, data=payload)
+
+        if token_response.status_code == 200:
+            token_data = token_response.json()
+            access_token = token_data.get("access_token")
+            print(f"Access token: {access_token}")
+
+            subscription_id = parser.open_ai_metrics.open_ai_metrics_subscription_id
+            open_ai_service_name = parser.open_ai_metrics.open_ai_metrics_service_name
+
+            metrics_headers = {
+                'Authorization': 'Bearer ' + access_token,
+            }
+
+            current_datetime = datetime.now()
+            one_month_before_datetime = current_datetime - relativedelta(months=1)
+            timespan = one_month_before_datetime.strftime("%Y-%m-%dT00:00:00Z/") + current_datetime.strftime("%Y-%m-%dT00:00:00Z")
+
+            generated_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=GeneratedTokens&interval=P1D&aggregation=Total&timespan={timespan}"
+            generated_tokens_metrics_response = requests.get(generated_tokens_metrics_url, headers=metrics_headers)
+            generated_tokens_metrics_data = generated_tokens_metrics_response.json()
+
+            processed_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=ProcessedPromptTokens&interval=P1D&aggregation=Total&timespan={timespan}"
+            processed_tokens_metrics_response = requests.get(processed_tokens_metrics_url, headers=metrics_headers)
+            processed_tokens_metrics_data = processed_tokens_metrics_response.json()
+
+            processed_tokens_pricing = 0.0005
+            generated_tokens_pricing = 0.0015
+            processed_tokens_data = processed_tokens_metrics_data['value'][0]['timeseries'][0]['data']
+            generated_tokens_data = generated_tokens_metrics_data['value'][0]['timeseries'][0]['data']
+            pricing_metrics_data = []
+            for i in range(len(generated_tokens_data)):
+                price = decimal.Decimal(processed_tokens_data[i]['total'] * processed_tokens_pricing / 1000 + generated_tokens_data[i]['total'] * generated_tokens_pricing / 1000)
+                rounded_price = decimal.Decimal(price).quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+                remained_value = price - rounded_price
+                if remained_value > 0:
+                    rounded_price += decimal.Decimal(0.01)
+                pricing_metrics_data.append({
+                    "timeStamp": generated_tokens_data[i]["timeStamp"],
+                    "total": rounded_price
+                })
+
+            merged_metrics_data = []
+            for i in range(len(generated_tokens_data)):
+                merged_metrics_data.append({
+                    "timeStamp": generated_tokens_data[i]["timeStamp"],
+                    "processed_tokens": processed_tokens_data[i]["total"],
+                    "generated_tokens": generated_tokens_data[i]["total"],
+                    "price": pricing_metrics_data[i]["total"]
+                })
+
+            return Response(merged_metrics_data, status=status.HTTP_200_OK)
+

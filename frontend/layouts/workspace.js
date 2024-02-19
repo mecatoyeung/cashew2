@@ -14,6 +14,7 @@ import WorkspaceHeader from "./_workspaceHeader"
 
 import service from "../service"
 
+import 'bootstrap-daterangepicker/daterangepicker.css';
 import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css"
 
 export default function WorkspaceLayout({ children }) {
@@ -119,6 +120,9 @@ export default function WorkspaceLayout({ children }) {
                       href={"/workspace/parsers/" + parserId + "/integrations"}
                     >
                       <li>Integrations</li>
+                    </Link>
+                    <Link href={"/workspace/parsers/" + parserId + "/statistics"}>
+                      <li>Statistics</li>
                     </Link>
                     <Link href={"/workspace/parsers/" + parserId + "/settings"}>
                       <li>Settings</li>

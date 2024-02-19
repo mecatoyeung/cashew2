@@ -22,8 +22,8 @@ class ParsersConfig(AppConfig):
         if not running_migration(sys.argv):
             from parsers.schedule_jobs.process_file_sources import file_source_scheduler_start
             file_source_scheduler_start()
-            # from parsers.schedule_jobs.process_import_queue import import_queue_scheduler_start
-            # import_queue_scheduler_start()
+            from parsers.schedule_jobs.process_import_queue import import_queue_scheduler_start
+            import_queue_scheduler_start()
             from parsers.schedule_jobs.process_preprocessing_queue import preprocessing_queue_scheduler_start
             preprocessing_queue_scheduler_start()
             from parsers.schedule_jobs.process_ocr_queue import ocr_queue_scheduler_start
@@ -36,3 +36,5 @@ class ParsersConfig(AppConfig):
             postprocessing_queue_scheduler_start()
             from parsers.schedule_jobs.process_integration_queue import integration_queue_scheduler_start
             integration_queue_scheduler_start()
+            from parsers.schedule_jobs.get_open_ai_metrics import get_open_ai_metrics_scheduler_start
+            get_open_ai_metrics_scheduler_start()

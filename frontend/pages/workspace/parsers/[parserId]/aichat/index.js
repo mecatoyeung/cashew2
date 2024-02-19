@@ -38,7 +38,7 @@ import AIChatLayout from '../../../../../layouts/aichat'
 
 import service from '../../../../../service'
 
-import styles from '../../../../../styles/AIChat.module.css'
+import styles from '../../../../../styles/WorkspaceAIChat.module.css'
 
 const shiftCharCode = Δ => c => String.fromCharCode(c.charCodeAt(0) + Δ);
 
@@ -196,6 +196,10 @@ const RecursiveChat = ({chat}) => {
                                 <td key={colIndex}><strong>{objectKey}: </strong>{chat[col][row][objectKey]}</td>
                               })
                             )
+                          } else {
+                            return (
+                              <td key={colIndex}>{chat[col][row]}</td>
+                            )
                           }
                         })}
                       </tr>
@@ -275,6 +279,8 @@ const AIChat = () => {
   const [document, setDocument] = useState(null)
 
   const [textlines, setTextlines] = useState([])
+
+  const [textFontSize, setTextFontSize] = useState(90)
 
   const [currentChatUuid, setCurrentChatUuid] = useState("")
 
@@ -507,84 +513,6 @@ const AIChat = () => {
     debugger
     metadataSheet = recursiveChatInExcel(metadataSheet, latestMachineResponses[latestMachineResponses.length - 1].chat)
 
-    /*for (let i=0; i<latestMachineResponses.length; i++) {
-      let chatCounter = i + 1
-      let rowIndex = 0
-      let latestMachineResponse = latestMachineResponses[i].chat
-      let metadataWorksheet = workbook.addWorksheet(chatCounter + ".Metadata")
-      Object.entries(latestMachineResponse)
-        .map(([key, value]) => {
-          if (!Array.isArray(value)) {
-            let rowValues = []
-            rowValues[1] = key
-            rowValues[2] = value
-
-            if (typeof value === 'object' && Object.entries(value).length == 1 && Array.isArray(value[0])) {
-              Object.entries(latestMachineResponse)
-                .map(([key, value]) => {
-                let itemTableName = key
-                let itemTableRows = value
-                if (itemTableRows.length > 0) {
-                  let itemTableSheet = workbook.addWorksheet(chatCounter + ". " + itemTableName)
-                  let rowValues = []
-                  let itemTableColIndex = 1
-                  Object.entries(itemTableRows[0])
-                  .map(([tableKey, tableValue]) => {
-                    rowValues[itemTableColIndex] = tableKey
-                    itemTableColIndex++
-                  })
-                  itemTableSheet.addRow(rowValues)
-                  
-                  
-                  for (let j=0; j<itemTableRows.length; j++) {
-                    let itemTableRow = itemTableRows[j]
-                    rowValues = []
-
-                    itemTableColIndex = 1
-                    Object.entries(itemTableRow)
-                    .map(([tableKey, tableValue]) => {
-                      rowValues[itemTableColIndex] = tableValue
-                      itemTableColIndex++
-                    })
-                    itemTableSheet.addRow(rowValues)
-                  }
-                }
-              })
-            }
-
-            metadataWorksheet.addRow(rowValues)
-          } else {
-            let itemTableName = key
-            let itemTableRows = value
-            if (itemTableRows.length > 0) {
-              let itemTableSheet = workbook.addWorksheet(chatCounter + ". " + itemTableName)
-              let rowValues = []
-              let itemTableColIndex = 1
-              Object.entries(itemTableRows[0])
-              .map(([tableKey, tableValue]) => {
-                rowValues[itemTableColIndex] = tableKey
-                itemTableColIndex++
-              })
-              itemTableSheet.addRow(rowValues)
-              
-              
-              for (let j=0; j<itemTableRows.length; j++) {
-                let itemTableRow = itemTableRows[j]
-                rowValues = []
-
-                itemTableColIndex = 1
-                Object.entries(itemTableRow)
-                .map(([tableKey, tableValue]) => {
-                  rowValues[itemTableColIndex] = tableValue
-                  itemTableColIndex++
-                })
-                itemTableSheet.addRow(rowValues)
-              }
-            }
-          }
-      })
-    }*/
-    
     const buffer = await workbook.xlsx.writeBuffer()
     FileSaver.saveAs(new Blob([buffer]), "Cashew AI Chatbot Result.xlsx")
   }
@@ -618,6 +546,14 @@ const AIChat = () => {
     service.getFileBlob("documents/" + documentId + "/searchable-pdf/", (response) => {
       FileDownload(response.data, document.guid + "-searchable.pdf")
     })
+  }
+
+  const zoomInTextBtnClickHandler = () => {
+    setTextFontSize(textFontSize * 1.1)
+  }
+
+  const zoomOutTextBtnClickHandler = () => {
+    setTextFontSize(textFontSize / 1.1)
   }
 
   const downloadTextBtnClickHandler = () => {
@@ -664,6 +600,13 @@ const AIChat = () => {
   const changeDocumentModalOpenHandler = () => {
     setChangeDocumentModal(produce(draft => {
       draft.show = true
+    }))
+  }
+
+  const changeDocumentModalConfirmHandler = () => {
+    refreshChatHistories()
+    setChangeDocumentModal(produce(draft => {
+      draft.show = false
     }))
   }
 
@@ -726,11 +669,6 @@ const AIChat = () => {
     getDocumentPageImage()
     getTextlines()
   }, [router.isReady, parserId, documentId, pageNum])
-
-  useEffect(() => {
-    if (!router.isReady) return
-    refreshChatHistories()
-  }, [router.isReady, documentId])
 
   useEffect(() => {
     if (!router.isReady) return
@@ -879,7 +817,7 @@ const AIChat = () => {
                           </Form.Group>
                         </Modal.Body>
                         <Modal.Footer>
-                          <Button variant="primary" onClick={changeDocumentModalCloseHandler}>
+                          <Button variant="primary" onClick={changeDocumentModalConfirmHandler}>
                             Confirm
                           </Button>
                           <Button variant="secondary" onClick={changeDocumentModalCloseHandler}>
@@ -970,10 +908,12 @@ const AIChat = () => {
               {document && document.documentPages.filter(dp => dp.pageNum == pageNum && dp.ocred).length > 0 && (
               <div className={styles.pageText}>
                 <div className={styles.tools} style={{ display: showDocumentPagePreview ? "block": "none" }}>
+                  <Button className={styles.toolsBtn} onClick={() => zoomInTextBtnClickHandler()}>Zoom in</Button>
+                  <Button className={styles.toolsBtn} onClick={() => zoomOutTextBtnClickHandler()}> Zoom out</Button>
                   <Button className={styles.toolsBtn} onClick={() => downloadTextBtnClickHandler()}><i className="bi bi-card-text"></i> Download</Button>
                 </div>
                 <div className={styles.streamTableDiv}>
-                  <table className={styles.streamTable}>
+                  <table className={styles.streamTable} style={{fontSize: textFontSize + "%"}}>
                     <tbody>
                       {textlines.map((row, rowIndex) => {
                         return (

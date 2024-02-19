@@ -240,7 +240,7 @@ const ImportQueue = (props) => {
                   >
                     <div>
                       <ProgressBar
-                        now={droppedFile.progress}
+                        now={droppedFile.length == 0 ? 0 : droppedFile.progress}
                         label={`${droppedFile.name} ${droppedFile.progress}%`}
                       />
                     </div>

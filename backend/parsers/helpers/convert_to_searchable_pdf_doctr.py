@@ -246,8 +246,8 @@ def convert_to_searchable_pdf_doctr(document,
 
         # doctr to ocr image
 
-        os.add_dll_directory(
-            r"C:\Program Files\GTK3-Runtime Win64\bin")
+        #os.add_dll_directory(
+            #r"C:\Program Files\GTK3-Runtime Win64\bin")
         global doctr_model
         if doctr_model == None:
             device = torch.device("cpu")

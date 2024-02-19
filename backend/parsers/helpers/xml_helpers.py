@@ -301,6 +301,10 @@ class XMLRegion:
         return False
 
     def is_in_same_column(self, another_region):
+        if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
+            return False
+        if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
+            return False
         if self.x1 >= another_region.x1 and self.x1 <= another_region.x2 and self.x2 >= another_region.x1 and self.x2 <= another_region.x2:
             return True
         if self.x1 <= another_region.x1 and self.x2 >= another_region.x2:

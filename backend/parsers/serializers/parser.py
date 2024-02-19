@@ -4,6 +4,7 @@ from parsers.models.parser import Parser
 from parsers.models.ocr import OCR
 from parsers.models.chatbot import ChatBot
 from parsers.models.open_ai import OpenAI
+from parsers.models.open_ai_metrics_key import OpenAIMetricsKey
 from parsers.models.splitting import Splitting
 
 from parsers.serializers.rule import RuleSerializer
@@ -13,6 +14,7 @@ from parsers.serializers.ocr import OCRSerializer
 from parsers.serializers.chatbot import ChatBotSerializer
 from parsers.serializers.splitting import SplittingSerializer
 from parsers.serializers.open_ai import OpenAISerializer
+from parsers.serializers.open_ai_metrics_key import OpenAIMetricsKeySerializer
 from parsers.serializers.splitting import SplittingSerializer
 from parsers.serializers.post_processing import PostProcessingSerializer
 from parsers.serializers.integration import IntegrationSerializer
@@ -41,6 +43,8 @@ class ParserSerializer(serializers.ModelSerializer):
         many=False, required=True, allow_null=True)
     open_ai = OpenAISerializer(
         many=False, required=False, allow_null=True)
+    open_ai_metrics_key = OpenAIMetricsKeySerializer(
+        many=False, required=False, allow_null=True)
     postprocessings = PostProcessingSerializer(
         many=True, required=False, allow_null=False)
     integrations = IntegrationSerializer(
@@ -49,8 +53,8 @@ class ParserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parser
         fields = ['id', 'type', 'guid', 'name', 'sources', 'preprocessings',
-                  'rules', 'ocr', 'splitting', 'chatbot', 'open_ai',
-                  'postprocessings', 'integrations', 'last_modified_at']
+                  'rules', 'ocr', 'splitting', 'chatbot', 'open_ai', 'open_ai_metrics_key',
+                  'postprocessings', 'integrations', 'total_num_of_pages_processed', 'last_modified_at']
         read_only_fields = ['id']
 
     def _get_or_create_ocr(self, ocr, parser):
@@ -73,6 +77,13 @@ class ParserSerializer(serializers.ModelSerializer):
         open_ai_obj, created = OpenAI.objects.get_or_create(
             **open_ai,
         )
+    
+    def _get_or_create_open_ai_metrics_key(self, open_ai_metrics_key, parser):
+        """ Handle getting or creating open ai as needed. """
+        open_ai_metrics_key["parser"] = parser
+        open_ai_metrics_key_obj, created = OpenAIMetricsKey.objects.get_or_create(
+            **open_ai_metrics_key,
+        )
 
     def _get_or_create_splitting(self, splitting, parser):
         """ Handle getting or creating splitting as needed. """
@@ -88,6 +99,7 @@ class ParserSerializer(serializers.ModelSerializer):
         ocr = validated_data.pop("ocr", None)
         chatbot = validated_data.pop("chatbot", None)
         open_ai = validated_data.pop("open_ai", None)
+        open_ai_metrics_key = validated_data.pop("open_ai_metrics_key", None)
         splitting = validated_data.pop("splitting", None)
 
         parser = Parser.objects.create(**validated_data)
@@ -95,6 +107,7 @@ class ParserSerializer(serializers.ModelSerializer):
         self._get_or_create_ocr(ocr, parser)
         self._get_or_create_chatbot(chatbot, parser)
         self._get_or_create_open_ai(open_ai, parser)
+        self._get_or_create_open_ai_metrics_key(open_ai_metrics_key, parser)
         self._get_or_create_splitting(splitting, parser)
 
         return parser
@@ -104,6 +117,7 @@ class ParserSerializer(serializers.ModelSerializer):
         ocr_validated_data = validated_data.pop("ocr", None)
         chatbot_validated_data = validated_data.pop("chatbot", None)
         open_ai_validated_data = validated_data.pop("open_ai", None)
+        open_ai_metrics_key_validated_data = validated_data.pop("open_ai_metrics_key", None)
         splitting = validated_data.pop("splitting", None)
 
         for attr, value in validated_data.items():
@@ -127,6 +141,12 @@ class ParserSerializer(serializers.ModelSerializer):
                 setattr(open_ai, attr, value)
             open_ai.save()
 
+        if open_ai_metrics_key_validated_data is not None:
+            open_ai_metrics_key = OpenAIMetricsKey.objects.get(parser_id=instance.id)
+            for attr, value in open_ai_metrics_key_validated_data.items():
+                setattr(open_ai_metrics_key, attr, value)
+            open_ai_metrics_key.save()
+
         if splitting is not None:
             splitting = Splitting.objects.get(parser_id=instance.id)
             instance.splitting.delete()
@@ -141,7 +161,7 @@ class ParserUpdateSerializer(ParserSerializer):
     class Meta:
         model = Parser
         fields = ['id', 'guid', 'type', 'name', 'ocr',
-                  'chatbot', 'open_ai', 'last_modified_at']
+                  'chatbot', 'open_ai', 'open_ai_metrics_key', 'last_modified_at']
         read_only_fields = ['id']
 
 

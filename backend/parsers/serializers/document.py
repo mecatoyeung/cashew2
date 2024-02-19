@@ -105,6 +105,10 @@ class DocumentUploadSerializer(DocumentSerializer):
         document.save()
 
         parser = Parser.objects.get(id=document.parser_id)
+
+        upload_document(document, file)
+        generate_images_from_pdf(document)
+        
         # Create queue object in database
         q = Queue()
         q.queue_status = QueueStatus.READY.value
@@ -112,16 +116,14 @@ class DocumentUploadSerializer(DocumentSerializer):
         q.document = document
         q.queue_class = QueueClass.IMPORT.value
         q.save()
-
-        upload_document(document, file)
-        generate_images_from_pdf(document)
+        
         # create_queue_when_upload_document(document)
-        pre_processings = PreProcessing.objects.filter(parser_id=q.parser.id)
-        if pre_processings.count() > 0:
-            q.queue_class = QueueClass.PRE_PROCESSING.value
-        else:
-            q.queue_class = QueueClass.OCR.value
-        q.save()
+        #pre_processings = PreProcessing.objects.filter(parser_id=q.parser.id)
+        #if pre_processings.count() > 0:
+        #    q.queue_class = QueueClass.PRE_PROCESSING.value
+        #else:
+        #    q.queue_class = QueueClass.OCR.value
+        #q.save()
 
         return document
 

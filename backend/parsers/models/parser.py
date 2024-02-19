@@ -19,6 +19,7 @@ class Parser(models.Model):
     type = models.CharField(
         max_length=255, choices=ParserType.choices(), default=ParserType.LAYOUT.value)
     name = models.CharField(max_length=255, null=False)
+    total_num_of_pages_processed = models.IntegerField(default=0)
     last_modified_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
