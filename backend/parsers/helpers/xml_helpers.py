@@ -8,7 +8,6 @@ import statistics
 from decimal import Decimal
 from pathlib import Path
 
-from .path_helper import xml_path
 from parsers.helpers.is_chinese import is_chinese
 
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
@@ -33,7 +32,7 @@ class XMLPage:
         page_el = root.find('.//page')
         if page_el != None:
             page_bbox_str = page_el.attrib['bbox']
-            page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
+            page_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*)',
                                          page_bbox_str,
                                          re.IGNORECASE
                                          )
@@ -66,7 +65,7 @@ class XMLPage:
         # put all textlines into page
         for textline_element in textline_elements:
             textline_bbox_str = textline_element.attrib['bbox']
-            textline_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
+            textline_bbox_search = re.search('([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*)',
                                              textline_bbox_str,
                                              re.IGNORECASE
                                              )
@@ -108,7 +107,7 @@ class XMLPage:
 
                     text = XMLText()
                     text_bbox_str = text_el.attrib['bbox']
-                    text_bbox_search = re.search('([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3}),([-]*[0-9]{1,4}.[0-9]{3})',
+                    text_bbox_search = re.search('([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*)',
                                                  text_bbox_str,
                                                  re.IGNORECASE
                                                  )

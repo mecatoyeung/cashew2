@@ -1,6 +1,7 @@
 import re
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 def convert_to_table_by_specify_headers_map(object):
     return object.header.header
@@ -54,3 +55,5 @@ class ConvertToTableBySpecifyHeaderStreamProcessor(StreamBase):
         }
 
         return output
+    
+    

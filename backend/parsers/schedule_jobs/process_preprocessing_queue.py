@@ -125,6 +125,7 @@ def process_single_preprocessing_queue(queue_job):
         document_pages = document.document_pages.all()
         for document_page in document_pages:
             document_page.preprocessed = True
+            document_page.ocred = False
             document_page.save()
         queue_job.save()
 

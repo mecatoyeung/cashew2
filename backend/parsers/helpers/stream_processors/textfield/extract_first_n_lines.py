@@ -1,4 +1,5 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class ExtractFirstNLinesStreamProcessor(StreamBase):
 
@@ -13,3 +14,5 @@ class ExtractFirstNLinesStreamProcessor(StreamBase):
             output = streamed_data[:int(self.n)]
 
         return output
+    
+    

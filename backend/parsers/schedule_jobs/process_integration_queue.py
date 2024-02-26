@@ -138,31 +138,33 @@ def process_single_integration_queue(queue_job):
         # queue_job.queue_status = QueueStatus.COMPLETED.value
         # queue_job.save()
 
-        # Mark the job as preprocessing in progress
-        queue_job.queue_class = QueueClass.PROCESSED.value
-        queue_job.queue_status = QueueStatus.COMPLETED.value
-        queue_job.save()
-
     except Exception as e:
         print(traceback.format_exc())
-        queue_job.queue_class = QueueClass.PROCESSED.value
-        queue_job.queue_status = QueueStatus.COMPLETED.value
+        queue_job.queue_class = QueueClass.INTEGRATION.value
+        queue_job.queue_status = QueueStatus.READY.value
         #queue_job.queue_class = QueueClass.INTEGRATION.value
         #queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
 
     try:
         if document.document_type == DocumentType.IMPORT.value:
-            # Delete queue after integration
-            queue_job.delete()
-            # Delete documents after integration
-            document_folder = os.path.join(
-                settings.MEDIA_ROOT, 'documents', document.guid)
-            shutil.rmtree(document_folder)
-            Document.objects.filter(pk=document.id).delete()
+
+            # Mark the job as preprocessing in progress
+            queue_job.queue_class = QueueClass.TRASH.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+
+        else:
+
+            # Mark the job as preprocessing in progress
+            queue_job.queue_class = QueueClass.PROCESSED.value
+            queue_job.queue_status = QueueStatus.COMPLETED.value
+            queue_job.save()
+
     except Exception as e:
-        print(traceback.format_exc())
+
         queue_job.queue_class = QueueClass.TRASH.value
+        queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
         document.document_type = DocumentType.TRASH.value
         document.save()

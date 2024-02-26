@@ -36,5 +36,7 @@ class ParsersConfig(AppConfig):
             postprocessing_queue_scheduler_start()
             from parsers.schedule_jobs.process_integration_queue import integration_queue_scheduler_start
             integration_queue_scheduler_start()
+            from parsers.schedule_jobs.process_trash_queue import trash_queue_scheduler_start
+            trash_queue_scheduler_start()
             from parsers.schedule_jobs.get_open_ai_metrics import get_open_ai_metrics_scheduler_start
             get_open_ai_metrics_scheduler_start()

@@ -208,7 +208,7 @@ class DocumentParser:
         page_nums = get_document_nos_from_range(
             rule.pages[:], 1, self.document.total_page_num)
 
-        if len(self.document.document_pages.filter(ocred=False, page_num__in=page_nums)) > 0:
+        if self.document.document_pages.filter(ocred=False, page_num__in=page_nums).count() > 0:
             if rule.rule_type == RuleType.TABLE.value:
                 return [["Please wait until the document finishes OCR"]]
             else:

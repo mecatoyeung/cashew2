@@ -1,7 +1,6 @@
 import re
-import json
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
 
 class RemoveRowsBeforeRowWithConditionsStreamProcessor(StreamBase):
 
@@ -58,3 +57,5 @@ class RemoveRowsBeforeRowWithConditionsStreamProcessor(StreamBase):
         }
 
         return output
+    
+    

@@ -319,7 +319,7 @@ def process_single_splitting_queue(queue_job):
                             documents_path, 'ocred.pdf')
 
                         new_document = Document()
-                        new_document.document_type = DocumentType.IMPORT.value
+                        new_document.document_type = document.document_type
                         new_document.guid = str(uuid.uuid4())
                         new_document.filename_without_extension = document.filename_without_extension + \
                             "_pages_" + \

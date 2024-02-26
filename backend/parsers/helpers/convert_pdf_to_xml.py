@@ -128,3 +128,4 @@ def convert_pdf_bytes_to_xml(
     text = text.replace('\n', '').replace('\'', '')
     text = text + "</pages>"
     return text
+

@@ -34,11 +34,11 @@ const ocrOptions = [
   },
   {
     label: "PaddleOCR (On Premise, Free, very good at Simplified Chinese, good at English/Japanese/Korean and fair at Traditional Chinese)",
-    value: "PADDLE_OCR"
+    value: "PADDLE"
   },
   {
     label: "Omnipage OCR (On Premise, Paid, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)",
-    value: "OMNIPAGE_OCR"
+    value: "OMNIPAGE"
   }
 ]
 
@@ -141,6 +141,16 @@ const OCR = () => {
     })
   }
 
+  const debugChangeHandler = (e) => {
+    console.log(e)
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.debug = e.target.checked
+    setParser({
+      ...parser,
+      ocr: updatedOCR
+    })
+  }
+
   const ocrSaveBtnClickHandler = () => {
     updateParser()
   }
@@ -184,7 +194,7 @@ const OCR = () => {
                   </Form.Group>
                 </>
               )}
-              {parser.ocr.ocrType == "PADDLE_OCR" && (
+              {parser.ocr.ocrType == "PADDLE" && (
                 <>
                   <Form.Group className="mb-3" controlId="formPaddleOcrApiKey">
                     <Form.Label>Paddle OCR Language</Form.Label>
@@ -197,7 +207,7 @@ const OCR = () => {
                   </Form.Group>
                 </>
               )}
-              {parser.ocr.ocrType == "OMNIPAGE_OCR" && (
+              {parser.ocr.ocrType == "OMNIPAGE" && (
                 <>
                   <Form.Group className="mb-3" controlId="formOmnipageOcrApiKey">
                     <Form.Label>Omnipage OCR Language</Form.Label>
@@ -210,6 +220,16 @@ const OCR = () => {
                   </Form.Group>
                 </>
               )}
+              <Form.Group className="mb-3" controlId="formDebug">
+                <Form.Label>Debug</Form.Label>
+                <Form.Check // prettier-ignore
+                  type="checkbox"
+                  id={`default-debug`}
+                  label={`Debug`}
+                  onChange={(e) => debugChangeHandler(e)}
+                  checked={parser.ocr.debug}
+                />
+              </Form.Group>
               <Button variant="primary" onClick={ocrSaveBtnClickHandler}>Save</Button>
             </Card.Body>
           </Card>

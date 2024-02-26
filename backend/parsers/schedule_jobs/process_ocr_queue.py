@@ -24,6 +24,8 @@ from parsers.schedule_jobs.process_splitting_queue import process_single_splitti
 
 from backend.settings import MEDIA_ROOT
 
+from parsers.helpers.convert_to_searchable_pdf import convert_to_searchable_pdf
+
 def process_single_ocr_queue(queue_job):
 
     all_in_process_ocr_queue_jobs = Queue.objects.filter(
@@ -33,7 +35,7 @@ def process_single_ocr_queue(queue_job):
         return
     
     parser = queue_job.parser
-    document = queue_job.document
+    document = Document.objects.prefetch_related(Prefetch("document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
     preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
     ocr = OCR.objects.get(parser_id=parser.id)
 
@@ -45,7 +47,7 @@ def process_single_ocr_queue(queue_job):
     try:
         # Do the job
         # Create Working Dir if not exist
-        media_folder_path = MEDIA_ROOT
+        """media_folder_path = MEDIA_ROOT
         documents_path = os.path.join(
             media_folder_path, "documents", str(document.guid))
         working_path = os.path.join(documents_path, "ocr")
@@ -81,7 +83,8 @@ def process_single_ocr_queue(queue_job):
                                                 searchable_pdf_path,
                                                 documents_path,
                                                 preprocessings=preprocessings,
-                                                lang=ocr.omnipage_ocr_language)
+                                                lang=ocr.omnipage_ocr_language)"""
+        convert_to_searchable_pdf(parser, document, ocr)
 
         # Mark the job as preprocessing in progress
         updated_queue_job = Queue.objects.get(pk=queue_job.id)
@@ -205,12 +208,22 @@ def process_stopped_ocr_queue_job():
         queue_job.queue_status = QueueStatus.COMPLETED.value
         queue_job.save()
 
+def process_inprogress_ocr_queue_job():
+
+    all_inprogress_ocr_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.OCR.value, queue_status=QueueStatus.IN_PROGRESS.value)
+
+    for queue_job in all_inprogress_ocr_queue_jobs:
+        queue_job.queue_status = QueueStatus.READY.value
+        queue_job.save()
+
 
 def ocr_queue_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 5})
     # scheduler.add_jobstore(DjangoJobStore(), "ocr_queue_job_store")
     # run this job every 60 seconds
+    process_inprogress_ocr_queue_job()
     scheduler.add_job(process_ocr_queue_job, 'interval', seconds=5)
     scheduler.add_job(process_no_ocr_queue_job, 'interval', seconds=5)
     scheduler.add_job(process_stopped_ocr_queue_job, 'interval', seconds=5)

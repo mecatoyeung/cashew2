@@ -46,6 +46,12 @@ def process_import_queue_job():
         parser.total_num_of_pages_processed += document.total_page_num
         parser.save()
 
+        document_pages = document.document_pages.all()
+        for document_page in document_pages:
+            document_page.preprocessed = False
+            document_page.ocred = False
+            document_page.save()
+
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.PRE_PROCESSING.value
         queue_job.queue_status = QueueStatus.READY.value

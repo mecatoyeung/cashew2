@@ -1,10 +1,9 @@
-import re
 import requests
 import json
 
 from parsers.models.parser import Parser
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
 
 
 class OpenAIStreamProcessor(StreamBase):
@@ -50,3 +49,4 @@ class OpenAIStreamProcessor(StreamBase):
                 output.append(key + ": " + str(value))
 
         return output
+

@@ -1,6 +1,7 @@
 import re
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class RemoveTextBeforeEndOfTextStreamProcessor(StreamBase):
 
@@ -28,3 +29,5 @@ class RemoveTextBeforeEndOfTextStreamProcessor(StreamBase):
             output = [""]
 
         return output
+    
+    

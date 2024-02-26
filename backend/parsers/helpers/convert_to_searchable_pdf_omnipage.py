@@ -331,9 +331,6 @@ CMGjwvxTsr74/f/F95m3TH9x8o0/TU//N+7/D/ScVcA=
     pdfmetrics.registerFont(TTFont('invisible', ttf))
 
 
-doctr_model = None
-
-
 def convert_to_searchable_pdf_omnipage(document,
                                        searchable_pdf_path,
                                        document_path,

@@ -52,7 +52,15 @@ const StreamEditor = () => {
 
   const getParserDocuments = () => {
     service.get("documents/?parserId=" + parserId , response => {
-      setParserDocuments(response.data)
+      let parserDocuments = response.data
+      setParserDocuments(parserDocuments)
+      if (parserDocuments.length > 0 && documentId == 0) {
+        selectedDocumentChangeHandler({
+          target: {
+            value: parserDocuments[0].id
+          }
+        })
+      }
     })
   }
 

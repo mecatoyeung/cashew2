@@ -1,15 +1,8 @@
 import os
 
-from django.db import transaction
-
 import fitz
 
-import PIL
 from PIL import Image
-
-import numpy as np
-
-import cv2
 
 from parsers.models.document_page import DocumentPage
 

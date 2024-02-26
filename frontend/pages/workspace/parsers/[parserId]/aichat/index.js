@@ -507,11 +507,14 @@ const AIChat = () => {
 
     const workbook = new ExcelJS.Workbook()
 
-    let latestMachineResponses = chatHistories.filter(ch => ch.from == "machine" && ch.export_xlsx)
+    let machineResponses = chatHistories.filter(ch => ch.from == "machine" && ch.export_xlsx)
     
-    let metadataSheet = workbook.addWorksheet("Metadata")
-    debugger
-    metadataSheet = recursiveChatInExcel(metadataSheet, latestMachineResponses[latestMachineResponses.length - 1].chat)
+
+    for (let m=0; m<machineResponses.length; m++) {
+      let counter = m + 1
+      let metadataSheet = workbook.addWorksheet(counter + ". Metadata")
+      metadataSheet = recursiveChatInExcel(metadataSheet, machineResponses[m].chat)
+    }
 
     const buffer = await workbook.xlsx.writeBuffer()
     FileSaver.saveAs(new Blob([buffer]), "Cashew AI Chatbot Result.xlsx")

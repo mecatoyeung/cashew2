@@ -13,7 +13,9 @@ def get_open_ai_metrics(start_date=None, end_date=None):
     parsers = Parser.objects.select_related("open_ai_metrics_key").all()
     for parser in parsers:
 
-        if parser.open_ai_metrics_key.open_ai_metrics_tenant_id != "" and \
+        if hasattr(parser, 'open_ai_metrics_key') and \
+            parser.open_ai_metrics_key != None and \
+            parser.open_ai_metrics_key.open_ai_metrics_tenant_id != "" and \
             parser.open_ai_metrics_key.open_ai_metrics_client_id != "" and \
             parser.open_ai_metrics_key.open_ai_metrics_client_secret != "" and \
             parser.open_ai_metrics_key.open_ai_metrics_subscription_id != "" and \

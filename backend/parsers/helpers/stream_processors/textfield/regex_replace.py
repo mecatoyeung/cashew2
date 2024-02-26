@@ -1,6 +1,7 @@
 import re
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class RegexReplaceStreamProcessor(StreamBase):
 
@@ -19,3 +20,5 @@ class RegexReplaceStreamProcessor(StreamBase):
                 output.append(re.sub(self.regex, self.text, line))
 
         return output
+    
+    

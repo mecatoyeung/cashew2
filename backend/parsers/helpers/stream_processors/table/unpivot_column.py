@@ -1,7 +1,8 @@
 import re
 import json
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class UnpivotColumnStreamProcessor(StreamBase):
 
@@ -107,3 +108,5 @@ class UnpivotColumnStreamProcessor(StreamBase):
         }
 
         return output
+    
+    

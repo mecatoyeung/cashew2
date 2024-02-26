@@ -13,6 +13,7 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
 from parsers.models.rule import Rule
@@ -39,7 +40,7 @@ def process_single_parsing_queue(queue_job):
     try:
 
         parser = queue_job.parser
-        document = queue_job.document
+        document = Document.objects.prefetch_related(Prefetch("document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
 
         # Do the job
         rules = Rule.objects.filter(parser_id=parser.id)
@@ -85,7 +86,7 @@ def process_single_parsing_queue(queue_job):
         queue_job.queue_class = QueueClass.PARSING.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
-        print(e)
+        raise e
 
 def process_parsing_queue_job():
 

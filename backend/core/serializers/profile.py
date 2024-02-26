@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
 
 from core.models.profile import Profile
 
@@ -15,22 +14,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'full_name', 'company_name', 'country']
         read_only_fields = ['id']
 
-
 class ProfileCreateSerializer(ProfileSerializer):
     pass
-
 
 class ProfileListSerializer(ProfileSerializer):
     pass
 
-
 class ProfileRetrieveSerializer(ProfileSerializer):
     pass
-
 
 class ProfileUpdateSerializer(ProfileSerializer):
     pass
 
-
 class ProfileDeleteSerializer(ProfileSerializer):
     pass
+

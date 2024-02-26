@@ -15,7 +15,7 @@ def create_queue_when_upload_document(document):
     q.document = document
     pre_processings = PreProcessing.objects.filter(parser_id=q.parser.id)
     # if pre_processings.count() > 0:
-    q.queue_class = QueueClass.PRE_PROCESSING.value
+    q.queue_class = QueueClass.IMPORT.value
     # else:
     #    q.queue_class = QueueClass.OCR.value
     q.save()

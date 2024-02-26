@@ -1,8 +1,8 @@
 import re
 import copy
-import json
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class GetCharsFromNextColIfRegexNotMatchStreamProcessor(StreamBase):
 
@@ -42,3 +42,5 @@ class GetCharsFromNextColIfRegexNotMatchStreamProcessor(StreamBase):
         }
 
         return output
+    
+    

@@ -6,11 +6,6 @@ import shutil
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
-from parsers.models.document_page import DocumentPage
-from parsers.models.queue import Queue
-from parsers.models.queue_class import QueueClass
-from parsers.models.queue_status import QueueStatus
-
 from backend.settings import MEDIA_ROOT
 
 

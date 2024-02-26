@@ -1,4 +1,5 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class CombineFirstNLinesStreamProcessor(StreamBase):
 
@@ -25,3 +26,4 @@ class CombineFirstNLinesStreamProcessor(StreamBase):
         }
 
         return output
+    

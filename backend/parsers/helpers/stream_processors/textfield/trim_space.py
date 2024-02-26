@@ -1,4 +1,5 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class TrimSpaceStreamProcessor(StreamBase):
 
@@ -16,3 +17,5 @@ class TrimSpaceStreamProcessor(StreamBase):
             output = [""]
 
         return output
+    
+    

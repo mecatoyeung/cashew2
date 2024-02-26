@@ -29,7 +29,7 @@ class GCVAnnotation:
     <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_par ocr_line ocrx_word ocrp_lang'/>
   </head>
   <body>
-    <div class='ocr_page' lang='$lang' title='image; bbox 0 0 $page_width $page_height; ppageno 1'>
+    <div class='ocr_page' lang='$lang' title='image "$title";bbox 0 0 $page_width $page_height'>
         <div class='ocr_carea' lang='$lang' title='bbox $x0 $y0 $x1 $y1'>$content</div>
     </div>
   </body>
@@ -39,7 +39,7 @@ class GCVAnnotation:
             <span class='ocr_line' id='$htmlid' title='bbox $x0 $y0 $x1 $y1; baseline $baseline'>$content
             </span>"""),
         'ocrx_word': Template("""
-                <span class='ocrx_word' id='$htmlid' title='bbox $x0 $y0 $x1 $y1; x_wconf $conf'>$content</span>"""),
+                <span class='ocrx_word' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</span>"""),
         'ocr_carea': Template("""
                 <div class='ocr_carea' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</div>"""),
         'ocr_par': Template("""
@@ -56,7 +56,6 @@ class GCVAnnotation:
                  page_width=None,
                  content=None,
                  box=None,
-                 conf=1,
                  title='',
                  savefile=False):
         if content == None:
@@ -70,7 +69,6 @@ class GCVAnnotation:
         self.page_width = GCVAnnotation.width if GCVAnnotation.width else page_width
         self.lang = lang
         self.ocr_class = ocr_class
-        self.conf = conf
         try:
             self.x0 = int(
                 float(self.page_width*(box[0]['x'] if 'x' in box[0] and box[0]['x'] > 0 else 0)))
@@ -200,9 +198,8 @@ def fromResponse(resp, file_name, width, height, baseline_tolerance=2, **kwargs)
                             word_text = ''.join([
                                 symbol['text'] for symbol in word_json['symbols']
                             ])
-                            conf = word_json['confidence']
                             word = GCVAnnotation(ocr_class='ocrx_word', htmlid="word_" + str(
-                                block_id) + "_" + str(paragraph_id)+"_" + str(word_id), content=word_text, box=box, conf=conf)
+                                block_id) + "_" + str(paragraph_id)+"_" + str(word_id), content=word_text, box=box)
 
                             curline.content.append(word)
                             for symbol_id, symbol_json in enumerate(word_json['symbols']):

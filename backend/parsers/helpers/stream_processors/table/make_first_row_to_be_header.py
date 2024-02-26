@@ -1,4 +1,4 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
 
 
 class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
@@ -24,3 +24,4 @@ class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
         }
 
         return output
+

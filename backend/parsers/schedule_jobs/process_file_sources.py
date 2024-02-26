@@ -7,24 +7,14 @@ import pathlib
 
 from io import BytesIO
 
-from django.db.models import Prefetch
-
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
 from django.utils import timezone
-from django_apscheduler.models import DjangoJobExecution
-from django_apscheduler.jobstores import register_job
 from django.core.files import File
 
 from PyPDF2 import PdfReader
 
 
-from parsers.models.parser import Parser
 from parsers.models.source import Source
-from parsers.models.queue import Queue
-from parsers.models.queue_status import QueueStatus
-from parsers.models.queue_class import QueueClass
-from parsers.models.document import Document
 from parsers.models.document_type import DocumentType
 from parsers.models.document_extension import DocumentExtension
 from parsers.serializers.document import DocumentUploadSerializer

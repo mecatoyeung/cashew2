@@ -15,3 +15,4 @@ def convert_pdf_to_image(pdf_path, working_path, poppler_path):
         png_path = os.path.join(str(page_num) + ".jpg")
         full_png_path = os.path.join(working_path, png_path)
         pdf_image.save(full_png_path, format='jpg')
+

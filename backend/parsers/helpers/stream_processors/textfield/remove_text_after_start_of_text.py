@@ -1,6 +1,7 @@
 import re
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class RemoveTextAfterStartOfTextStreamProcessor(StreamBase):
 
@@ -25,3 +26,5 @@ class RemoveTextAfterStartOfTextStreamProcessor(StreamBase):
             output = [""]
 
         return output
+    
+    

@@ -1,5 +1,6 @@
-from ..base import StreamBase
-from ....helpers.get_line_nos_from_range import get_line_nos_from_range
+from parsers.helpers.stream_processors.base import StreamBase
+from parsers.helpers.get_line_nos_from_range import get_line_nos_from_range
+
 
 class ExtractNthLinesStreamProcessor(StreamBase):
 
@@ -21,3 +22,5 @@ class ExtractNthLinesStreamProcessor(StreamBase):
                 output.append(streamed_data[line_no - 1])
 
         return output
+    
+    

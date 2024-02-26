@@ -42,16 +42,17 @@ def parse_pdf_to_xml(document):
                 if document_page.ocred == True:
                     continue
 
-                xml = convert_pdf_to_xml(
-                    path=source_file_path,
-                    pagenos=[page_idx]
-                )
+                if document_page.xml == "":
+                    xml = convert_pdf_to_xml(
+                        path=source_file_path,
+                        pagenos=[page_idx]
+                    )
+                    document_page.xml = xml
 
-                document_page.xml = xml
                 document_page.ocred = True
                 document_page.save()
 
             document.total_page_num = len(doc)
             document.save()
     except Exception as e:
-        print(e)
+        raise e

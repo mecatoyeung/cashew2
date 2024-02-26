@@ -16,8 +16,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 
-from django.db import transaction
-
 from lxml import etree, html
 from PIL import Image
 
@@ -25,8 +23,6 @@ from parsers.models.queue import Queue
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue_status import QueueStatus
 from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
-
-from django.db import transaction
 
 
 class StdoutWrapper:
@@ -358,3 +354,4 @@ def convert_to_searchable_pdf_doctr(document,
 
     # Convert .hocr to .pdf
     export_pdf(working_path, 72, searchable_pdf_path)
+

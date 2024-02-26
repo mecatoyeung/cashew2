@@ -1,7 +1,3 @@
-"""
-URL mappings for the recipe app.
-"""
-import sys
 from django.urls import (
     path,
     include,
@@ -20,3 +16,4 @@ app_name = "core"
 urlpatterns = [
     path('profiles/', include(profiles_router.urls), name="profiles"),
 ]
+

@@ -1,8 +1,7 @@
 import re
-import json
 import copy
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
 
 class MergeRowsWithConditionsStreamProcessor(StreamBase):
 
@@ -67,3 +66,5 @@ class MergeRowsWithConditionsStreamProcessor(StreamBase):
         }
 
         return output
+    
+    

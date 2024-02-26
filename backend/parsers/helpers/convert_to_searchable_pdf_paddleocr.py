@@ -96,6 +96,9 @@ def export_as_xml(im, result):
         },
     )
 
+    if result[0] == None:
+        return ET.tostring(page_hocr, encoding="utf-8", method="xml")
+
     # iterate over the blocks / lines / words and create the XML elements in body line by line with the attributes
     for line in result[0]:
         xmin = line[0][0][0]

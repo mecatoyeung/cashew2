@@ -1,4 +1,5 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class RemoveEmptyLinesStreamProcessor(StreamBase):
 
@@ -17,3 +18,5 @@ class RemoveEmptyLinesStreamProcessor(StreamBase):
             output = [""]
 
         return output
+    
+    

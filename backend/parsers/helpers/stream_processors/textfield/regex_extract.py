@@ -1,6 +1,7 @@
 import re
 
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class RegexExtractStreamProcessor(StreamBase):
 
@@ -23,3 +24,5 @@ class RegexExtractStreamProcessor(StreamBase):
                     output.append(" ".join(found))
 
         return output
+    
+    

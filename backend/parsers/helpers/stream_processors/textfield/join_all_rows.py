@@ -1,4 +1,5 @@
-from ..base import StreamBase
+from parsers.helpers.stream_processors.base import StreamBase
+
 
 class JoinAllRowsStreamProcessor(StreamBase):
 
@@ -13,3 +14,5 @@ class JoinAllRowsStreamProcessor(StreamBase):
             output = [self.join_string.join(streamed_data)]
 
         return output
+    
+    
