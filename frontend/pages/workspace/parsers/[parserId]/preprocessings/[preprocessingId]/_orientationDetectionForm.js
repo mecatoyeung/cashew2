@@ -20,6 +20,15 @@ import service from '../../../../../../service'
 
 import preProcessingsStyles from "../../../../../../styles/PreProcessings.module.css"
 
+const orientationDetectionTypeOptions = [{
+  label: "Orientation Detection (Tesseract)",
+  value: "ORIENTATION_DETECTION_TESSERACT"
+},
+{
+  label: "Orientation Detection (OpenCV)",
+  value: "ORIENTATION_DETECTION_OPENCV"
+}]
+
 export default function PreProcessingForm(props) {
 
   const router = useRouter()
@@ -28,8 +37,10 @@ export default function PreProcessingForm(props) {
 
   const [form, setForm] = useState({
     name: "",
-    preProcessingType: "ORIENTATION_DETECTION",
+    preProcessingType: "ORIENTATION_DETECTION_TESSERACT",
+    orientationDetectionTesseractConfidenceAbove: 0.5,
     step: 10,
+    debug: false,
     errorMessage: ""
   })
 
@@ -47,9 +58,11 @@ export default function PreProcessingForm(props) {
       return
     }
     service.post("/preprocessings/", {
-      parser: parserId,
-      preProcessingType: "ORIENTATION_DETECTION",
       name: form.name,
+      parser: parserId,
+      preProcessingType: form.preProcessingType,
+      orientationDetectionTesseractConfidenceAbove: form.orientationDetectionTesseractConfidenceAbove,
+      debug: form.debug,
       step: form.step
     }, (response) => {
       router.push("/workspace/parsers/" + parserId + "/preprocessings/")
@@ -62,9 +75,11 @@ export default function PreProcessingForm(props) {
 
   const saveBtnClickHandler = () => {
     service.put("/preprocessings/" + preprocessingId + "/", {
+      name: form.name,
       parser: parserId,
       preProcessingType: form.preProcessingType,
-      name: form.name,
+      orientationDetectionTesseractConfidenceAbove: form.orientationDetectionTesseractConfidenceAbove,
+      debug: form.debug,
       step: form.step
     }, (response) => {
       router.push("/workspace/parsers/" + parserId + "/preprocessings/")
@@ -76,10 +91,18 @@ export default function PreProcessingForm(props) {
     service.get("/preprocessings/" + preprocessingId + "/", (response) => {
       setForm(produce((draft) => {
         draft.name = response.data.name
-        draft.preProcessingType = form.preProcessingType,
+        draft.preProcessingType = response.data.preProcessingType,
+        draft.orientationDetectionTesseractConfidenceAbove = response.data.orientationDetectionTesseractConfidenceAbove
+        draft.debug = response.data.debug
         draft.step = response.data.step
       }))
     })
+  }
+
+  const selectOrientationDetectionTypeChangeHandler = (e) => {
+    setForm(produce((draft) => {
+      draft.preProcessingType = e.value
+    }))
   }
 
   useEffect(() => {
@@ -107,6 +130,39 @@ export default function PreProcessingForm(props) {
                     )
                   }}/>
                 </Form.Group>
+                <Form.Group className="col-12" controlId="addForm.orientationDetectionType">
+                  <Form.Label>Orientation Detection Type</Form.Label>
+                  <Select
+                    classNamePrefix="react-select"
+                    options={orientationDetectionTypeOptions}
+                    value={orientationDetectionTypeOptions.find(o => o.value == form.preProcessingType)}
+                    onChange={(e) => selectOrientationDetectionTypeChangeHandler(e)}
+                    menuPlacement="auto"
+                    menuPosition="fixed" />
+                </Form.Group>
+                {form.preProcessingType == "ORIENTATION_DETECTION_TESSERACT" && (
+                  <Form.Group className="col-12" controlId="addForm.orientationDetectionTesseractConfidenceAbove" style={{marginBottom: 10 }}>
+                    <Form.Label>Confidence above this value would take effect</Form.Label>
+                    <Form.Control type="number" placeholder="(Default: 0.5)" value={form.orientationDetectionTesseractConfidenceAbove} onChange={(e) => {
+                      setForm(
+                        produce((draft) => {
+                          draft.orientationDetectionTesseractConfidenceAbove = e.target.value
+                        })
+                      )
+                    }}/>
+                  </Form.Group>
+                )}
+                {form.preProcessingType == "ORIENTATION_DETECTION_OPENCV" && (
+                  <Form.Group className="col-12" controlId="addForm.debug">
+                    <Form.Check type="checkbox" placeholder="Debug" label="Debug" checked={form.debug} onChange={(e) => {
+                      setForm(
+                        produce((draft) => {
+                          draft.debug = e.target.checked
+                        })
+                      )
+                    }}/>
+                  </Form.Group>
+                )}
                 <Form.Group className="col-12" controlId="addForm.step" style={{marginBottom: 10 }}>
                   <Form.Label>Sort Order (from smallest to largest)</Form.Label>
                   <Form.Control type="number" placeholder="(from smallest to largest)" value={form.step} onChange={(e) => {

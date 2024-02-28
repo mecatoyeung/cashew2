@@ -135,7 +135,7 @@ export default function Parsers(props) {
                   }}/>
                 </Form.Group>
                 <Form.Group className="col-12" controlId="addForm.activated">
-                  <Form.Check type="checkbox" placeholder="Activated" label="activated" checked={form.activated} onChange={(e) => {
+                  <Form.Check type="checkbox" placeholder="Activated" label="Activated" checked={form.activated} onChange={(e) => {
                     setForm(
                       produce((draft) => {
                         draft.activated = e.target.checked

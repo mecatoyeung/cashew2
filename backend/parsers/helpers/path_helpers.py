@@ -9,6 +9,15 @@ def source_file_pdf_path(document):
 
     return pdf_path
 
+def pre_processing_folder_path(document, pre_processing):
+
+    document_path = os.path.join(
+            MEDIA_ROOT, "documents", str(document.guid))
+    folder_path = os.path.join(
+            document_path, "pre_processed-" + str(pre_processing.id))
+
+    return folder_path
+
 def ocr_folder_path(document):
 
     document_path = os.path.join(

@@ -21,7 +21,7 @@ from parsers.serializers.pre_processing import PreProcessingSerializer
     list=extend_schema(
         parameters=[
             OpenApiParameter(
-                'parser_id',
+                'parserId',
                 OpenApiTypes.STR,
                 description="Filter by parser id."
             )

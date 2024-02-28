@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import json
+import traceback
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -86,7 +87,7 @@ def process_single_parsing_queue(queue_job):
         queue_job.queue_class = QueueClass.PARSING.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
-        raise e
+        traceback.print_exc()
 
 def process_parsing_queue_job():
 

@@ -9,6 +9,7 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_page import DocumentPage
 from parsers.schedule_jobs.process_preprocessing_queue import process_single_preprocessing_queue
 import sys
 
@@ -42,7 +43,7 @@ def process_import_queue_job():
         # Mark the job as completed
         # queue_job.queue_status = QueueStatus.COMPLETED.value
         # queue_job.save()
-        document = queue_job.document
+        document = Document.objects.prefetch_related(Prefetch("document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
         parser.total_num_of_pages_processed += document.total_page_num
         parser.save()
 

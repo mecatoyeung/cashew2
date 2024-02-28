@@ -15,10 +15,12 @@ class PreProcessing(models.Model):
     step = models.IntegerField(null=True, blank=True)
     parser = models.ForeignKey(
         "Parser", on_delete=models.CASCADE, null=False, related_name='preprocessings')
+    orientation_detection_tesseract_confidence_above = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=True, blank=True)
     threshold_binarization = models.IntegerField(null=True, blank=True, validators=[
             MaxValueValidator(255),
             MinValueValidator(0)
         ], default=170)
+    debug = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'pre_processings'

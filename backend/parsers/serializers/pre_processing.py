@@ -13,7 +13,10 @@ class PreProcessingSerializer(serializers.ModelSerializer):
                   'pre_processing_type',
                   'name',
                   'parser',
-                  'step']
+                  'orientation_detection_tesseract_confidence_above',
+                  'threshold_binarization',
+                  'step',
+                  'debug']
         read_only_fields = ['id']
 
     def create(self, validated_data):

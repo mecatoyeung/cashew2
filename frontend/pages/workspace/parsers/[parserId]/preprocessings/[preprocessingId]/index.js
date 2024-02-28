@@ -28,8 +28,9 @@ export default function PreProcessing() {
   const [preProcessing, setPreProcessing] = useState(null)
 
   const getPreProcessing = () => {
+    if(!parserId) return
     if (!preprocessingId) return
-    service.get("/preprocessings/" + preprocessingId + "/", (response) => {
+    service.get("/preprocessings/" + preprocessingId + "/?parser_id=" + parserId, (response) => {
       setPreProcessing(response.data)
     })
   }
@@ -40,10 +41,13 @@ export default function PreProcessing() {
 
   return (
     <>
-      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION" && (
+      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION_OPENCV" && (
         <OrientationDetectionFormForm type="edit" />
       )}
-      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION" && (
+      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION_TESSERACT" && (
+        <OrientationDetectionFormForm type="edit" />
+      )}
+      {preProcessing && preProcessing.preProcessingType == "THRESHOLD_BINARIZATION" && (
         <ThresholdBinarizationForm type="edit" />
       )}
     </>

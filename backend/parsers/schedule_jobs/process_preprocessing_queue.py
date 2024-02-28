@@ -29,6 +29,7 @@ from parsers.models.pre_processing_type import PreProcessingType
 from parsers.models.pre_processing import PreProcessing
 
 from parsers.helpers.detect_orientation_opencv import detect_orientation_opencv
+from parsers.helpers.detect_orientation_tesseract import detect_orientation_tesseract
 from parsers.helpers.threshold_binarization import threshold_binarization
 
 from parsers.schedule_jobs.process_ocr_queue import process_single_no_ocr_queue, process_single_ocr_queue
@@ -49,7 +50,7 @@ def process_single_preprocessing_queue(queue_job):
 
     try:
         parser = queue_job.parser
-        document = queue_job.document
+        document = Document.objects.prefetch_related(Prefetch("document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
 
         # Do the job
         media_folder_path = MEDIA_ROOT
@@ -88,9 +89,14 @@ def process_single_preprocessing_queue(queue_job):
                     os.makedirs(working_path)
 
                 pre_processings_type = pre_processing.pre_processing_type
-                if pre_processings_type == PreProcessingType.ORIENTATION_DETECTION.value:
+                if pre_processings_type == PreProcessingType.ORIENTATION_DETECTION_OPENCV.value:
 
-                    detect_orientation_opencv(document_page, pre_processing,
+                    detect_orientation_opencv(document, page_num, pre_processing,
+                                                last_pre_processing)
+                    
+                if pre_processings_type == PreProcessingType.ORIENTATION_DETECTION_TESSERACT.value:
+
+                    detect_orientation_tesseract(document, page_num, pre_processing,
                                                 last_pre_processing)
                     
                 elif pre_processings_type == PreProcessingType.THRESHOLD_BINARIZATION.value:
