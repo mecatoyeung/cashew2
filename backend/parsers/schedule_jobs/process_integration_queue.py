@@ -33,16 +33,12 @@ def process_single_integration_queue(queue_job):
     if all_in_process_integration_queue_jobs.count() > 0:
         return
 
-    # Mark the job as in progress
     try:
+
+        # Mark the job as in progress
         queue_job.queue_class = QueueClass.INTEGRATION.value
         queue_job.queue_status = QueueStatus.IN_PROGRESS.value
         queue_job.save()
-    except:
-        queue_job.delete()
-        return
-
-    try:
 
         parser = queue_job.parser
         document = queue_job.document
@@ -135,18 +131,6 @@ def process_single_integration_queue(queue_job):
                 shutil.copyfile(pdf_from_path, pdf_to_path)
 
         # Mark the job as completed
-        # queue_job.queue_status = QueueStatus.COMPLETED.value
-        # queue_job.save()
-
-    except Exception as e:
-        print(traceback.format_exc())
-        queue_job.queue_class = QueueClass.INTEGRATION.value
-        queue_job.queue_status = QueueStatus.READY.value
-        #queue_job.queue_class = QueueClass.INTEGRATION.value
-        #queue_job.queue_status = QueueStatus.READY.value
-        queue_job.save()
-
-    try:
         if document.document_type == DocumentType.IMPORT.value:
 
             # Mark the job as preprocessing in progress
@@ -162,13 +146,10 @@ def process_single_integration_queue(queue_job):
             queue_job.save()
 
     except Exception as e:
-
-        queue_job.queue_class = QueueClass.TRASH.value
+        traceback.format_exc()
+        queue_job.queue_class = QueueClass.INTEGRATION.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
-        document.document_type = DocumentType.TRASH.value
-        document.save()
-        pass
 
 def process_integration_queue_job():
 

@@ -225,12 +225,17 @@ def convert_to_searchable_pdf(parser, document, ocr):
                     outfile.close()
 
         elif ocr_engine == "OMNIPAGE":
+            from omnipage import kRecInit, kRecQuit, kRecSetLicense, kRecLoadImgF, \
+    kRecRecognize, kRecSetLanguages, kRecSetDefaultRecognitionModule, \
+    kRecSetCodePage, kRecFreeImg, kRecSetDefaults, kRecSetDTXTFormat, kRecGetLetters
             from .omnipage_utils import LICENSE_FILE, OEM_CODE, SID, PAGE_NUMBER_0, \
         InfoMsg, ErrMsg, USE_OEM_LICENSE, YOUR_COMPANY, YOUR_PRODUCT, \
         API_INIT_WARN, API_LICENSEVALIDATION_WARN, DTXT_HOCR, DTXT_IOTPDF, CreateEnabledLanguagesArray, \
-        LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO
+        LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO, II_CURRENT, LoopMsg, ApiMsg
 
             from omnipage import REC_OK
+
+            lang = ocr.omnipage_ocr_language
 
             rc = REC_OK
 
@@ -294,7 +299,7 @@ def convert_to_searchable_pdf(parser, document, ocr):
                 return
 
             InfoMsg("Set output format -- kRecSetDTXTFormat()")
-            rc = kRecSetDTXTFormat(SID, DTXT_IOTPDF)
+            rc = kRecSetDTXTFormat(SID, DTXT_HOCR)
             if (rc != REC_OK):
                 ErrMsg("Error code = {}\n", rc)
                 kRecSetDefaults(SID)
@@ -310,7 +315,7 @@ def convert_to_searchable_pdf(parser, document, ocr):
                 return
 
             InfoMsg("Loading the specified image -- kRecLoadImgF()")
-            rc, hPage = kRecLoadImgF(SID, png_path, PAGE_NUMBER_0)
+            rc, hPage = kRecLoadImgF(SID, abs_ocred_image_path, PAGE_NUMBER_0)
             if (rc != REC_OK):
                 ErrMsg("Error code = {}\n", rc)
                 kRecSetDefaults(SID)
@@ -325,6 +330,27 @@ def convert_to_searchable_pdf(parser, document, ocr):
                 kRecQuit()
                 return
 
+            InfoMsg("Get an output array of the recognized text -- kRecGetLetters()")
+            rc, pText = kRecGetLetters(hPage, II_CURRENT)
+            if (rc != REC_OK):
+                ErrMsg("Error code = {}", rc)
+                kRecFreeImg(hPage)
+                kRecQuit()
+                return
+            
+            ApiMsg("# Now your application can process the recognized data #")
+            ApiMsg("We just display the recognized OMR information.")
+            pResult = ""
+            for letter in pText:
+                if (letter.code != ' '):
+                    if (letter.code == '0'):
+                        pResult = "NO"
+                    elif (letter.code == '1'):
+                        pResult = "YES"
+                    else:
+                        pResult = "Rejected"
+                    LoopMsg("{}: '{}' = {}", letter.zone, letter.code, pResult)
+
             InfoMsg("Free the image -- kRecFreeImg()")
             rc = kRecFreeImg(hPage)
             if (rc != REC_OK):
@@ -337,7 +363,13 @@ def convert_to_searchable_pdf(parser, document, ocr):
             InfoMsg("Free all resources allocated by the Engine -- kRecQuit()")
             kRecQuit()
 
-        # convert hocr to xml
+            # Fix Omnipage Bug
+            with open(abs_hocr_path, "r", encoding="utf-8") as f:
+                updated_hocr = f.read()
+                updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
+            with open(abs_hocr_path, "w", encoding="utf-8") as f:
+                f.write(updated_hocr)
+
         xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
         document_page.xml = xml
         document_page.ocred = True
@@ -422,9 +454,18 @@ def convert_to_searchable_pdf(parser, document, ocr):
                         y = (height*inch)-(float(coords[3])/ocr_dpi[1])*inch
                         text_width = (float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
                         text_height = (float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                        fontsize = text_height * 0.52
+                        fontsize = text_height * 0.75
                         text.setFont(fontname, fontsize)
-                        text.setTextOrigin(x, y + 1)
+                        text.setTextOrigin(x, y + 2)
+
+                    elif ocr_engine == "OMNIPAGE":
+                        x = (float(coords[0])/ocr_dpi[0]) * inch
+                        y = (height*inch)-(float(coords[3])/ocr_dpi[1])*inch
+                        text_width = (float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                        text_height = (float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                        fontsize = text_height * 0.70
+                        text.setFont(fontname, fontsize)
+                        text.setTextOrigin(x, y + 4)
                         
                     # redline the word
                     if ocr.debug:
@@ -591,7 +632,8 @@ def convert_hocr_to_xml(hocr_path, xml_path):
 
         for ocr_page in hocr.cssselect('div.ocr_page'):
             page_bbox_str = ocr_page.attrib['title']
-            page_bbox_search = re.search('image; bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+); ppageno [0-9]+',
+            print(page_bbox_str)
+            page_bbox_search = re.search(r'image[ \";:\\/\-\&.A-Za-z0-9]*bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+); ppageno [0-9]+[ ;A-Za-z_0-9]*',
                                          page_bbox_str,
                                          re.IGNORECASE
                                          )
@@ -604,15 +646,17 @@ def convert_hocr_to_xml(hocr_path, xml_path):
 
         for ocrx_word in hocr.cssselect('span.ocrx_word'):
             ocrx_word_bbox_str = ocrx_word.attrib['title']
-            ocrx_word_bbox_search = re.search('bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+);\s+x_wconf\s+([0-9.]+)',
+            ocrx_word_bbox_search = re.search('bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)(?:;\s+x_wconf\s+([0-9.]+))?',
                                          ocrx_word_bbox_str,
                                          re.IGNORECASE
                                          )
             ocrx_word_x1 = int(ocrx_word_bbox_search.group(1))
-            ocrx_word_y1 = int(ocrx_word_bbox_search.group(2))
+            ocrx_word_y1 = page_height - int(ocrx_word_bbox_search.group(4))
             ocrx_word_x2 = int(ocrx_word_bbox_search.group(3))
-            ocrx_word_y2 = int(ocrx_word_bbox_search.group(4))
+            ocrx_word_y2 = page_height - int(ocrx_word_bbox_search.group(2))
             ocrx_word_conf = ocrx_word_bbox_search.group(5)
+            if ocrx_word_conf == None:
+                ocrx_word_conf = 1
             ocrx_word_text = ocrx_word.text
             #print("ocrx_word_x1: " + str(ocrx_word_x1))
             #print("ocrx_word_y1: " + str(ocrx_word_y1))

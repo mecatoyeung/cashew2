@@ -47,7 +47,7 @@ def process_single_ocr_queue(queue_job):
     try:
         # Do the job
         # Create Working Dir if not exist
-        """media_folder_path = MEDIA_ROOT
+        media_folder_path = MEDIA_ROOT
         documents_path = os.path.join(
             media_folder_path, "documents", str(document.guid))
         working_path = os.path.join(documents_path, "ocr")
@@ -83,8 +83,8 @@ def process_single_ocr_queue(queue_job):
                                                 searchable_pdf_path,
                                                 documents_path,
                                                 preprocessings=preprocessings,
-                                                lang=ocr.omnipage_ocr_language)"""
-        convert_to_searchable_pdf(parser, document, ocr)
+                                                lang=ocr.omnipage_ocr_language)
+        # convert_to_searchable_pdf(parser, document, ocr)
 
         # Mark the job as preprocessing in progress
         updated_queue_job = Queue.objects.get(pk=queue_job.id)

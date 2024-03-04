@@ -1,6 +1,7 @@
 from omnipage import kRecInit, kRecQuit, kRecSetLicense, kRecLoadImgF, \
     kRecRecognize, kRecSetLanguages, kRecSetDefaultRecognitionModule, \
-    kRecSetCodePage, kRecFreeImg, kRecSetDefaults, kRecSetDTXTFormat
+    kRecSetCodePage, kRecFreeImg, kRecSetDefaults, kRecSetDTXTFormat, kRecGetImgInfo, \
+    kRecInsertZone
 import os
 from pathlib import Path
 import base64
@@ -38,7 +39,7 @@ def convert_png_to_pdf(png_path, hocr_path, lang="LANG_ENG"):
     from .omnipage_utils import LICENSE_FILE, OEM_CODE, SID, PAGE_NUMBER_0, \
         InfoMsg, ErrMsg, USE_OEM_LICENSE, YOUR_COMPANY, YOUR_PRODUCT, \
         API_INIT_WARN, API_LICENSEVALIDATION_WARN, DTXT_HOCR, DTXT_IOTPDF, CreateEnabledLanguagesArray, \
-        LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO
+        LANG_CHS, LANG_CHT, LANG_ENG, RM_AUTO, II_CURRENT, ZONE, FM_HANDPRINT, RM_RER, FILTER_ALL, WT_FLOW
 
     from omnipage import REC_OK
 
@@ -126,6 +127,23 @@ def convert_png_to_pdf(png_path, hocr_path, lang="LANG_ENG"):
         kRecSetDefaults(SID)
         kRecQuit()
         return
+    
+    InfoMsg("Get information about the specified image -- kRecGetImgInfo()")
+    rc, ii = kRecGetImgInfo(SID, hPage, II_CURRENT)
+
+    zone = ZONE()
+    # kRecInitZone(zone)        # set all fields to default, then modify some
+    zone.rectBBox.left = 0
+    zone.rectBBox.top = 0
+    zone.rectBBox.right = ii.Size.cx
+    zone.rectBBox.bottom = ii.Size.cy
+    zone.fm = FM_HANDPRINT
+    zone.rm = RM_RER
+    zone.filter = FILTER_ALL
+    zone.type = WT_FLOW
+
+    InfoMsg("Inserting a zone -- kRecInsertZone()")
+    rc = kRecInsertZone(hPage, II_CURRENT, zone, PAGE_NUMBER_0)
 
     InfoMsg("Processing page from selected image -- kRecRecognize()")
     rc = kRecRecognize(SID, hPage, hocr_path)
