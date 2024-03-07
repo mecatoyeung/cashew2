@@ -17,11 +17,11 @@ import { useDropzone } from "react-dropzone"
 
 import ProgressBar from 'react-bootstrap/ProgressBar'
 
-import ParserLayout from '../../../../layouts/parser'
+import ParserLayout from '../../../layouts/parser'
 
-import service from '../../../../service'
+import service from '../../../service'
 
-import aichatStyles from "../../../../styles/AIChat.module.css"
+import aichatStyles from "../../../styles/AIChat.module.css"
 
 export default function Parsers() {
 
@@ -282,8 +282,12 @@ export default function Parsers() {
       <ul className={aichatStyles.parsersUl}>
         {parsers && parsers.length > 0 && parsers.map(parser => (
           <li key={parser.id}>
-            <div className={aichatStyles.parserName} onClick={() => router.push("/workbench/aichat/parsers/" + parser.id + "/")}>
+            <div className={aichatStyles.parserName}>
               <span>{parser.name}</span>
+            </div>
+            <div className={aichatStyles.parserActions}>
+              <Button onClick={() => router.push("/workbench/parsers/" + parser.id + "/aichat/")}>AI Chat</Button>
+              <Button>Verifier</Button>
             </div>
           </li>
         ))}

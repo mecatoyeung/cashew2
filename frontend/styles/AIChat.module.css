@@ -21,7 +21,6 @@
     list-style: none;
     vertical-align: middle;
     float: left;
-    cursor: pointer;
     position: relative;
 }
 
@@ -50,6 +49,17 @@
     position: absolute;
     right: 5px;
     top: 5px;
+}
+
+.parserActions {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+}
+
+.parserActions button {
+  margin-left: 10px;
+  cursor: pointer;
 }
 
 .documentsQueueTabWrapper {

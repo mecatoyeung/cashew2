@@ -71,7 +71,7 @@ export default function SignIn() {
             if (callbackUrl) {
               router.push(callbackUrl);
             } else {
-              router.push("/workbench/aichat/parsers");
+              router.push("/workbench/parsers");
             }
           } else {
             setFormErrorSummaryMessages("Cannot connect to the server. Please contact system administrator.");

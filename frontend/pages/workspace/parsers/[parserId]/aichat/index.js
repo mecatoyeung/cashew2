@@ -769,6 +769,19 @@ const AIChat = (props) => {
                 </div>
                 <h2>Cashew</h2>
                 &nbsp;&nbsp;&nbsp;
+                {props.type == "workbench" && (
+                <Nav.Link
+                  href="/workbench/parsers"
+                  style={{ display: "inline-block", verticalAlign: "top" }}
+                >
+                  <i
+                    className={
+                      styles.parsersIcon + " bi bi-grid"
+                    }
+                  ></i>
+                </Nav.Link>
+                )}
+                {!props.type == "workbench" && (
                 <Nav.Link
                   href="/workspace/parsers"
                   style={{ display: "inline-block", verticalAlign: "top" }}
@@ -779,6 +792,7 @@ const AIChat = (props) => {
                     }
                   ></i>
                 </Nav.Link>
+                )}
                 {!props.type == "workbench" && (
                   <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
                     <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
