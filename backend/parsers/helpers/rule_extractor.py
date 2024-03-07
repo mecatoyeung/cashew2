@@ -87,6 +87,9 @@ class RuleExtractor:
 
             xml_page = [x for x in xml_pages if x.page_num == page_num][0]
 
+            MEDIAN_OF_TEXT_HEIGHTS = xml_page.median_of_text_heights * Decimal(2000.00) / xml_page.height
+            MEDIAN_OF_TEXT_WIDTHS = xml_page.median_of_text_widths * Decimal(2000.00) / xml_page.width
+
             xml_rule = XMLRule(xml_page, self.rule)
 
             # Get All Textlines within Area
@@ -101,10 +104,6 @@ class RuleExtractor:
 
             text_in_rows = []
             textlines_in_rows = []
-            # Organize Textlines in Row by Row
-            # textlines_in_current_row = []
-            # while len(textlines_within_area) > 0:
-            #    current_textline = textlines_within_area.pop(0)
 
             toppest_textline = None
             toppest_textline_index = 0
@@ -133,8 +132,11 @@ class RuleExtractor:
                     toppest_textline)
                 textlines_within_area.pop(toppest_textline_index)
                 textline_index = 0
-                # for textline_index in range(0, len(textlines_within_area)):
+                
                 while textline_index < len(textlines_within_area):
+
+                    if "#" in textlines_within_area[textline_index].text:
+                        luck = 1
 
                     if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
                         break
@@ -145,7 +147,13 @@ class RuleExtractor:
                         for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:
                             if textline_that_are_the_same_line_with_toppest == toppest_textline:
                                 continue
-                            if textline_that_are_the_same_line_with_toppest.region.is_in_same_column(toppest_textline.region):
+                            if textlines_within_area[textline_index].region.is_in_same_line(textlines_that_are_the_same_line_with_toppest[-1].region):
+                                if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
+                                    overlapping_column_with_existing_textlines = True
+                                    break
+                                else:
+                                    continue
+                            if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
                                 overlapping_column_with_existing_textlines = True
                                 break
 
@@ -171,30 +179,15 @@ class RuleExtractor:
 
             if len(textlines_in_rows) > 0 and len(textlines_in_rows[0]) > 0:
                 num_of_empty_lines_to_be_prepend = math.floor(
-                    (xml_rule.region.y2 - textlines_in_rows[0][0].region.y2) / xml_page.median_of_text_heights)
+                    (xml_rule.region.y2 - textlines_in_rows[0][0].region.y2) / MEDIAN_OF_TEXT_HEIGHTS)
                 for i in range(num_of_empty_lines_to_be_prepend):
                     num_of_spaces_to_be_prepend = math.floor(
-                        (xml_rule.region.x2 - xml_rule.region.x1) / xml_page.median_of_text_widths)
+                        (xml_rule.region.x2 - xml_rule.region.x1) / MEDIAN_OF_TEXT_WIDTHS)
                     spaces = " " * num_of_spaces_to_be_prepend
                     text_in_rows.append(spaces)
 
             previous_textline = None
             for textlines_in_row in textlines_in_rows:
-
-                """text_widths = []
-                text_heights = []
-                for textline in textlines_in_row:
-                    for text in textline.text_elements:
-                        text_width = text.region.x2 - text.region.x1
-                        text_height = text.region.y2 - text.region.y1
-                        text_widths.append(text_width)
-                        text_heights.append(text_height)
-
-                median_of_text_widths = statistics.median(text_widths)
-                median_of_text_heights = statistics.median(text_heights)"""
-
-                median_of_text_widths = xml_page.median_of_text_widths
-                median_of_text_heights = xml_page.median_of_text_heights
 
                 text_in_current_row = ""
                 for current_textline_index in range(0, len(textlines_in_row)):
@@ -205,30 +198,32 @@ class RuleExtractor:
                         # add empty lines before
                         if previous_textline != None:
                             num_of_empty_lines_to_be_prepend = math.floor(
-                                (previous_textline.region.y1 - current_textline.region.y2) / median_of_text_heights)
+                                (previous_textline.region.y1 - current_textline.region.y2) / MEDIAN_OF_TEXT_HEIGHTS)
                             for i in range(num_of_empty_lines_to_be_prepend):
                                 num_of_spaces_to_be_prepend = math.floor(
-                                    (xml_rule.region.x2 - xml_rule.region.x1) / median_of_text_widths)
+                                    (xml_rule.region.x2 - xml_rule.region.x1) / MEDIAN_OF_TEXT_WIDTHS)
                                 spaces = " " * num_of_spaces_to_be_prepend
                                 text_in_rows.append(spaces)
                         # if current textline is the first line in the row,
                         # add spaces before
                         num_of_spaces_to_be_prepend = math.floor(
-                            (current_textline.region.x1 - xml_rule.region.x1) / median_of_text_widths)
+                            (current_textline.region.x1 - xml_rule.region.x1) / MEDIAN_OF_TEXT_WIDTHS)
                         spaces = " " * num_of_spaces_to_be_prepend
                         text_in_current_row = spaces + current_textline.text
                     # if current textline has previous line,
                     # add spaces before
                     else:
                         num_of_spaces_to_be_prepend = math.floor(
-                            (current_textline.region.x1 - xml_rule.region.x1) / median_of_text_widths) - len(text_in_current_row)
+                            (current_textline.region.x1 - xml_rule.region.x1) / MEDIAN_OF_TEXT_WIDTHS) - len(text_in_current_row)
+                        if num_of_spaces_to_be_prepend <= 0:
+                            num_of_spaces_to_be_prepend = 1
                         spaces = " " * num_of_spaces_to_be_prepend
                         text_in_current_row = text_in_current_row + spaces + current_textline.text
 
                     # add spaces if textline is the last
                     if current_textline_index == (len(textlines_in_row) - 1):
                         num_of_spaces_to_be_prepend = math.floor(
-                            (xml_rule.region.x2 - xml_rule.region.x1) / median_of_text_widths) - len(text_in_current_row)
+                            (xml_rule.region.x2 - xml_rule.region.x1) / MEDIAN_OF_TEXT_WIDTHS) - len(text_in_current_row)
                         spaces = " " * num_of_spaces_to_be_prepend
                         text_in_current_row = text_in_current_row + spaces
 
@@ -356,32 +351,32 @@ class RuleExtractor:
                         # if it is the first line, add empty lines
                         if len(textlines_in_rows) == 0:
                             num_of_empty_lines_to_be_prepend = math.floor(
-                                (anchored_textline_region.y2 - current_textline.region.y2) / xml_page.median_text_height)
+                                (anchored_textline_region.y2 - current_textline.region.y2) / xml_page.median_of_text_heights)
                             for i in range(num_of_empty_lines_to_be_prepend):
                                 textlines_in_rows.append("")
                         # if it is not the first line and there is a line difference between current line and previous line,
                         # add empty lines between them
                         else:
                             num_of_empty_lines_to_be_prepend = math.floor(
-                                (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_text_height)
+                                (previous_textline.region.y1 - current_textline.region.y2) / xml_page.median_of_text_heights)
                             for i in range(num_of_empty_lines_to_be_prepend):
                                 textlines_in_rows.append("")
 
                         num_of_spaces_to_be_prepend = math.floor(
-                            (current_textline.region.x1 - anchored_textline_region.x1) / prev_text_width)
+                            (current_textline.region.x1 - anchored_textline_region.x1) / xml_page.median_of_text_widths)
                         spaces = " " * num_of_spaces_to_be_prepend
                         text_in_current_row = text_in_current_row + spaces + text_to_add
 
                     # else, calculate spaces to prepend from previous textline
                     else:
                         num_of_spaces_to_be_prepend = math.floor(
-                            (current_textline.region.x1 - anchored_textline_region.x1) / prev_text_width) - len(text_in_current_row)
+                            (current_textline.region.x1 - anchored_textline_region.x1) / xml_page.median_of_text_widths) - len(text_in_current_row)
                         spaces = " " * num_of_spaces_to_be_prepend
                         text_in_current_row = text_in_current_row + spaces + text_to_add
 
                     # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
                     if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
-                        num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - anchored_textline_region.x1) / prev_text_width) - \
+                        num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - anchored_textline_region.x1) / xml_page.median_of_text_widths) - \
                             len(text_in_current_row)
                         spaces = " " * num_of_spaces_to_be_append
                         text_in_current_row = text_in_current_row + spaces
@@ -391,7 +386,7 @@ class RuleExtractor:
                     # append empty textlines in the end
                     if len(textlines_within_area) == 0:
                         num_of_empty_lines_to_be_append = math.floor(
-                            (current_textline.region.y1 - anchored_textline_region.y1) / xml_page.median_text_height)
+                            (current_textline.region.y1 - anchored_textline_region.y1) / xml_page.median_of_text_heights)
                         for i in range(num_of_empty_lines_to_be_append):
                             textlines_in_rows.append("")
 
@@ -526,9 +521,9 @@ class RuleExtractor:
 
                 textlines_organized_in_columns.append(textlines_within_area)
 
-        median_of_text_widths = statistics.median(text_widths)
+        median_of_text_widths = statistics.median(text_widths) * xml_page.width / Decimal(1000.00)
         # median_of_text_widths = ASSUMED_TEXT_WIDTH
-        median_of_text_heights = statistics.median(text_heights)
+        median_of_text_heights = statistics.median(text_heights) * xml_page.height / Decimal(1000.00)
         #median_of_text_heights = ASSUMED_TEXT_HEIGHT
 
         textlines_organized_in_rows = []

@@ -44,11 +44,30 @@ def original_image_path(document, page_num=1):
 
 def pre_processed_image_path(document, pre_processing, page_num=1):
 
+    abs_preprocessed_folder_path = os.path.join(
+        MEDIA_ROOT, "documents", str(document.guid),
+            "pre_processed-" + str(pre_processing.id))
+    image_path = os.path.join(abs_preprocessed_folder_path, str(page_num) + ".jpg")
+
+    return image_path
+
+def pre_processed_pdf_path(document, pre_processing):
+
     document_path = os.path.join(
             MEDIA_ROOT, "documents", str(document.guid))
     preprocessed_folder_path = os.path.join(
             document_path, "pre_processed-" + str(pre_processing.id))
-    image_path = os.path.join(preprocessed_folder_path, str(page_num) + ".jpg")
+    image_path = os.path.join(preprocessed_folder_path, "output.pdf")
+
+    return image_path
+
+def pre_processed_rotated_image_path(document, pre_processing, page_num=1):
+
+    document_path = os.path.join(
+            MEDIA_ROOT, "documents", str(document.guid))
+    preprocessed_folder_path = os.path.join(
+            document_path, "pre_processed-" + str(pre_processing.id))
+    image_path = os.path.join(preprocessed_folder_path, str(page_num) + "-rotated.jpg")
 
     return image_path
 

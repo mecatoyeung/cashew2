@@ -98,7 +98,9 @@ const RegionSelector = () => {
   const getRule = () => {
     service.get("rules/" + ruleId + "?parserId" + parserId, response => {
       if (documentId != null) {
-        response.data.anchorDocument = documentId
+        response.data.anchorDocument = {
+          id: parseInt(documentId)
+        }
       }
       console.log(response.data)
       setRule(response.data)

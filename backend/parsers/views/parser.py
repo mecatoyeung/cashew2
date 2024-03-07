@@ -83,10 +83,7 @@ class ParserViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         if self.action == "retrieve":
-            queryset = queryset.filter(
-                user=self.request.user
-            ) \
-                .select_related("ocr") \
+            queryset = queryset.select_related("ocr") \
                 .select_related("chatbot") \
                 .select_related("open_ai") \
                 .select_related("open_ai_metrics_key") \
@@ -109,9 +106,7 @@ class ParserViewSet(viewsets.ModelViewSet):
             
             return queryset
 
-        return queryset.filter(
-            user=self.request.user
-        ).prefetch_related("rules") \
+        return queryset.prefetch_related("rules") \
             .select_related("chatbot") \
             .select_related("ocr") \
             .order_by('id').distinct()

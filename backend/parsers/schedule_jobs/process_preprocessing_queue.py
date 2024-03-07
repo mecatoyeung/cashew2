@@ -30,6 +30,7 @@ from parsers.models.pre_processing import PreProcessing
 
 from parsers.helpers.detect_orientation_opencv import detect_orientation_opencv
 from parsers.helpers.detect_orientation_tesseract import detect_orientation_tesseract
+from parsers.helpers.detect_orientation_doctr import detect_orientation_doctr
 from parsers.helpers.threshold_binarization import threshold_binarization
 
 from parsers.schedule_jobs.process_ocr_queue import process_single_no_ocr_queue, process_single_ocr_queue
@@ -99,6 +100,11 @@ def process_single_preprocessing_queue(queue_job):
                     detect_orientation_tesseract(document, page_num, pre_processing,
                                                 last_pre_processing)
                     
+                if pre_processings_type == PreProcessingType.ORIENTATION_DETECTION_DOCTR.value:
+
+                    detect_orientation_doctr(document, page_num, pre_processing,
+                                                last_pre_processing)
+                    
                 elif pre_processings_type == PreProcessingType.THRESHOLD_BINARIZATION.value:
 
                     threshold_binarization(document_page, pre_processing,
@@ -109,14 +115,14 @@ def process_single_preprocessing_queue(queue_job):
             document_page.preprocessed = True
             document_page.save()
 
-        for pre_processing_index, pre_processing in enumerate(pre_processings):
+        """for pre_processing_index, pre_processing in enumerate(pre_processings):
 
             image_paths = glob.glob('*.jpg')
             image_paths.sort(key=lambda x: int(Path(x).stem))
 
             output_pdf_path = os.path.join(
                 documents_folder_path, "pre_processed-" + str(pre_processing.id), "output.pdf")
-            convert_images_to_pdf(image_paths, output_pdf_path)
+            convert_images_to_pdf(image_paths, output_pdf_path)"""
 
         # Mark the job as completed
         # queue_job.queue_status = QueueStatus.COMPLETED.value

@@ -45,8 +45,6 @@ def detect_orientation_tesseract(document, page_num, pre_processing, last_prepro
             documents_folder_path, "pre_processed-" + str(last_preprocessing.id), str(page_num) + ".jpg")
     shutil.copy(last_preprocessed_image_path, new_preprocessed_image_path)
 
-    im = cv2.imread(new_preprocessed_image_path)
-
     scores = []
     im = cv2.imread(new_preprocessed_image_path)
     img_gray = cv2.imread(new_preprocessed_image_path,

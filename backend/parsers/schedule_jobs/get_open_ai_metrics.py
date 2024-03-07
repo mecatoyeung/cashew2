@@ -105,6 +105,6 @@ def get_open_ai_metrics(start_date=None, end_date=None):
 def get_open_ai_metrics_scheduler_start():
     scheduler = BackgroundScheduler(
         {'apscheduler.job_defaults.max_instances': 5})
-    scheduler.add_job(get_open_ai_metrics, 'interval', seconds=60)
+    scheduler.add_job(get_open_ai_metrics, 'interval', days=1)
     scheduler.start()
     print("Processing File Source", file=sys.stdout)

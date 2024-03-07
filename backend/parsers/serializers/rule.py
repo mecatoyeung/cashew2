@@ -25,6 +25,8 @@ class RuleSerializer(serializers.ModelSerializer):
         required=False, allow_null=True, allow_blank=True)
     anchor_document = AnchorDocumentSerializer(many=False,
         required=False, allow_null=True)
+    table_column_separators = TableColumnSeparatorSerializer(
+        many=True, required=False, allow_null=True)
 
     class Meta:
         model = Rule
@@ -52,9 +54,6 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_page_num',
                   'last_modified_at']
         read_only_fields = ['id']
-
-    table_column_separators = TableColumnSeparatorSerializer(
-        many=True, required=False, allow_null=True)
 
     def _get_or_create_table_column_separators(self, table_column_separators, rule):
         """ Handle getting or creating tags as needed. """

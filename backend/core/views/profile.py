@@ -24,9 +24,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        return self.queryset.select_related("user").filter(
-            user=self.request.user
-        ).order_by('id').distinct()
+        return self.queryset.select_related("user").order_by('id').distinct()
 
     def get_serializer_class(self):
         if self.action == 'create':

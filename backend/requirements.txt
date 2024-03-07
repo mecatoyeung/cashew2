@@ -52,6 +52,8 @@ paddlepaddle>=2.5.2,<2.6
 APScheduler>=3.10.4,<3.11
 google-api-python-client>=2.108.0,<2.109
 
+imutils>=0.5.4,<0.6
+
 #six>=1.16.0,<1.17
 #numpy>=1.26.2,<1.27
 #packaging>=23.2,<24.0

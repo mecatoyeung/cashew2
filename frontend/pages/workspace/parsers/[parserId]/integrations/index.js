@@ -34,19 +34,19 @@ export default function Parsers() {
       resizable: true,
       width: 170,
       cellRenderer: (params) => {
-        let source = params.data;
+        let integration = params.data;
         return (
           <div style={{ display: "flex", flexDirection: "row" }}>
             <Button
               variant="primary"
-              onClick={() => modifyBtnClickHandler(source)}
+              onClick={() => modifyBtnClickHandler(integration)}
               style={{ height: 38, marginRight: 10 }}
             >
               Modify
             </Button>
             <Button
               variant="danger"
-              onClick={() => deleteBtnClickHandler(source)}
+              onClick={() => deleteBtnClickHandler(integration)}
               style={{ height: 38 }}
             >
               Delete
@@ -81,6 +81,7 @@ export default function Parsers() {
   };
 
   const modifyBtnClickHandler = (integration) => {
+    console.log(integration)
     router.push(
       "/workspace/parsers/" + parserId + "/integrations/" + integration.id + "/"
     );
@@ -96,40 +97,44 @@ export default function Parsers() {
   }, [parserId]);
 
   return (
-    <WorkspaceLayout>
-      <div className={integrationsStyles.wrapper}>
-        <h1 className={integrationsStyles.h1}>Integrations</h1>
-        <div className={integrationsStyles.actionsDiv}>
-          <DropdownButton
-            title="Perform Action"
-            className={integrationsStyles.performActionDropdown}
-          >
-            <Dropdown.Item href="#" onClick={addXMLIntegrationBtnClickHandler}>
-              Add XML Integration
-            </Dropdown.Item>
-            <Dropdown.Item href="#" onClick={addPDFIntegrationBtnClickHandler}>
-              Add PDF Integration
-            </Dropdown.Item>
-          </DropdownButton>
-        </div>
-        <div
-          className={integrationsStyles.agGridDiv + " ag-theme-alpine"}
-          style={{ width: "100%", height: "100%", marginTop: 20 }}
-        >
-          <AgGridReact
-            ref={gridRef}
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            animateRows={true}
-            rowSelection="multiple"
-            onCellClicked={cellClickedListener}
-            onModelUpdated={(params) => {
-              params.columnApi.autoSizeColumns(["id"]);
-            }}
-          />
-        </div>
-      </div>
-    </WorkspaceLayout>
+    <>
+      {parserId && rowData && rowData.length > 0 && (
+        <WorkspaceLayout>
+          <div className={integrationsStyles.wrapper}>
+            <h1 className={integrationsStyles.h1}>Integrations</h1>
+            <div className={integrationsStyles.actionsDiv}>
+              <DropdownButton
+                title="Perform Action"
+                className={integrationsStyles.performActionDropdown}
+              >
+                <Dropdown.Item href="#" onClick={addXMLIntegrationBtnClickHandler}>
+                  Add XML Integration
+                </Dropdown.Item>
+                <Dropdown.Item href="#" onClick={addPDFIntegrationBtnClickHandler}>
+                  Add PDF Integration
+                </Dropdown.Item>
+              </DropdownButton>
+            </div>
+            <div
+              className={integrationsStyles.agGridDiv + " ag-theme-alpine"}
+              style={{ width: "100%", height: "100%", marginTop: 20 }}
+            >
+              <AgGridReact
+                ref={gridRef}
+                rowData={rowData}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                animateRows={true}
+                rowSelection="multiple"
+                onCellClicked={cellClickedListener}
+                onModelUpdated={(params) => {
+                  params.columnApi.autoSizeColumns(["id"]);
+                }}
+              />
+            </div>
+          </div>
+        </WorkspaceLayout>
+      )}
+    </>
   );
 }

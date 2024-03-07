@@ -138,43 +138,47 @@ const ParserDocuments = () => {
       getParsingQueues()
       getPostProcessingQueues()
       getIntegrationQueues()
-    }, 5000);
+    }, 15000);
     return () => {
       clearTimeout(interval);
     };
   }, [router.isReady])
 
   return (
-    <WorkspaceLayout>
-      <div className={styles.documentsQueueTabWrapper}>
-        <Tabs id="Queues" defaultActiveKey="importQueue">
-          <Tab id="processedQueue" eventKey="processedQueue" title={"Processed Queue (" + processedQueues.length + ")"}>
-            <ProcessedQueue parserId={parserId} queues={processedQueues}/>
-          </Tab>
-          <Tab id="importQueue" eventKey="importQueue" title={"Import Queue (" + importQueues.length + ")"}>
-            <ImportQueue parserId={parserId} queues={importQueues} />
-          </Tab>
-          <Tab id="preProcessingQueue" eventKey="preProcessingQueue" title={"Pre Processing Queue (" + preProcessingQueues.length + ")"}>
-            <PreProcessingQueue parserId={parserId} queues={preProcessingQueues} />
-          </Tab>
-          <Tab id="dataOCRQueue" eventKey="dataOCRQueue" title={"OCR Queue (" + ocrQueues.length + ")"}>
-            <OCRQueue parserId={parserId} queues={ocrQueues} />
-          </Tab>
-          <Tab id="dataSplitingQueue" eventKey="dataSplitQueue" title={"Splitting Queue (" + splittingQueues.length + ")"}>
-            <SplittingQueue parserId={parserId} queues={splittingQueues} />
-          </Tab>
-          <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title={"Parsing Queue (" + parsingQueues.length + ")"}>
-            <ParsingQueue parserId={parserId} queues={parsingQueues} />
-          </Tab>
-          <Tab id="postProcessingQueue" eventKey="postProcessingQueue" title={"Post Processing Queue (" + postProcessingQueues.length + ")"}>
-            <PostProcessingQueue parserId={parserId} queues={postProcessingQueues} />
-          </Tab>
-          <Tab id="integrationQueue" eventKey="integrationQueue" title={"Integration Queue (" + integrationQueues.length + ")"}>
-            <IntegrationQueue parserId={parserId} queues={integrationQueues} />
-          </Tab>
-        </Tabs>
-      </div>
-    </WorkspaceLayout>
+    <>
+      {parserId && (
+      <WorkspaceLayout>
+        <div className={styles.documentsQueueTabWrapper}>
+          <Tabs id="Queues" defaultActiveKey="importQueue">
+            <Tab id="processedQueue" eventKey="processedQueue" title={"Processed Queue (" + processedQueues.length + ")"}>
+              <ProcessedQueue parserId={parserId} queues={processedQueues}/>
+            </Tab>
+            <Tab id="importQueue" eventKey="importQueue" title={"Import Queue (" + importQueues.length + ")"}>
+              <ImportQueue parserId={parserId} queues={importQueues} />
+            </Tab>
+            <Tab id="preProcessingQueue" eventKey="preProcessingQueue" title={"Pre Processing Queue (" + preProcessingQueues.length + ")"}>
+              <PreProcessingQueue parserId={parserId} queues={preProcessingQueues} />
+            </Tab>
+            <Tab id="dataOCRQueue" eventKey="dataOCRQueue" title={"OCR Queue (" + ocrQueues.length + ")"}>
+              <OCRQueue parserId={parserId} queues={ocrQueues} />
+            </Tab>
+            <Tab id="dataSplitingQueue" eventKey="dataSplitQueue" title={"Splitting Queue (" + splittingQueues.length + ")"}>
+              <SplittingQueue parserId={parserId} queues={splittingQueues} />
+            </Tab>
+            <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title={"Parsing Queue (" + parsingQueues.length + ")"}>
+              <ParsingQueue parserId={parserId} queues={parsingQueues} />
+            </Tab>
+            <Tab id="postProcessingQueue" eventKey="postProcessingQueue" title={"Post Processing Queue (" + postProcessingQueues.length + ")"}>
+              <PostProcessingQueue parserId={parserId} queues={postProcessingQueues} />
+            </Tab>
+            <Tab id="integrationQueue" eventKey="integrationQueue" title={"Integration Queue (" + integrationQueues.length + ")"}>
+              <IntegrationQueue parserId={parserId} queues={integrationQueues} />
+            </Tab>
+          </Tabs>
+        </div>
+      </WorkspaceLayout>
+      )}
+    </>
   )
 }
 

@@ -5,6 +5,7 @@ class DocumentType(Enum):
 
     TEMPLATE = "TEMPLATE"
     IMPORT = "IMPORT"
+    AICHAT = "AICHAT"
     TRASH = "TRASH"
 
     @classmethod

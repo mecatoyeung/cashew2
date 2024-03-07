@@ -51,7 +51,6 @@ class ChatBotViewSet(viewsets.ModelViewSet):
 
         return queryset \
             .filter(
-                parser__user=self.request.user,
                 parser_id=parser_id
             ).order_by('id').distinct()
 

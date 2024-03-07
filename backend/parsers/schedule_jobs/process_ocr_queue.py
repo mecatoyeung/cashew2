@@ -13,10 +13,12 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
+from parsers.models.document_type import DocumentType
 from parsers.models.document_page import DocumentPage
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
 from parsers.models.ocr_type import OCRType
+from parsers.models.splitting import Splitting
 
 from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 
@@ -57,7 +59,7 @@ def process_single_ocr_queue(queue_job):
 
         searchable_pdf_path = os.path.join(
             documents_path, 'ocred.pdf')
-        if ocr.ocr_type == OCRType.GOOGLE_VISION.value:
+        """if ocr.ocr_type == OCRType.GOOGLE_VISION.value:
             from parsers.helpers.convert_to_searchable_pdf_gcv import convert_to_searchable_pdf_gcv
             convert_to_searchable_pdf_gcv(document,
                                             searchable_pdf_path,
@@ -70,33 +72,44 @@ def process_single_ocr_queue(queue_job):
                                             searchable_pdf_path,
                                             documents_path,
                                             preprocessings=preprocessings)
-        elif ocr.ocr_type == OCRType.PADDLE_OCR.value:
+        elif ocr.ocr_type == OCRType.PADDLE.value:
             from parsers.helpers.convert_to_searchable_pdf_paddleocr import convert_to_searchable_pdf_paddleocr
             convert_to_searchable_pdf_paddleocr(document,
                                                 searchable_pdf_path,
                                                 documents_path,
                                                 preprocessings=preprocessings,
                                                 lang=ocr.paddle_ocr_language)
-        elif ocr.ocr_type == OCRType.OMNIPAGE_OCR.value:
+        elif ocr.ocr_type == OCRType.OMNIPAGE.value:
             from parsers.helpers.convert_to_searchable_pdf_omnipage import convert_to_searchable_pdf_omnipage
             convert_to_searchable_pdf_omnipage(document,
                                                 searchable_pdf_path,
                                                 documents_path,
                                                 preprocessings=preprocessings,
-                                                lang=ocr.omnipage_ocr_language)
-        # convert_to_searchable_pdf(parser, document, ocr)
+                                                lang=ocr.omnipage_ocr_language)"""
+        convert_to_searchable_pdf(parser, document, ocr)
 
         # Mark the job as preprocessing in progress
         updated_queue_job = Queue.objects.get(pk=queue_job.id)
         if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
             return
 
-        # Mark the job as preprocessing in progress
-        queue_job.queue_class = QueueClass.SPLITTING.value
-        queue_job.queue_status = QueueStatus.READY.value
-        queue_job.save()
+        if document.document_type == DocumentType.AICHAT.value:
 
-        process_single_splitting_queue(queue_job)
+            splitting = Splitting.objects.get(parser_id=parser.id)
+            if not splitting.activated:
+                # Mark the job as preprocessing in progress
+                queue_job.queue_class = QueueClass.AICHAT.value
+                queue_job.queue_status = QueueStatus.READY.value
+                queue_job.save()
+
+        else:
+
+            # Mark the job as preprocessing in progress
+            queue_job.queue_class = QueueClass.SPLITTING.value
+            queue_job.queue_status = QueueStatus.READY.value
+            queue_job.save()
+
+            process_single_splitting_queue(queue_job)
         
     except Exception as e:
         print(traceback.format_exc())

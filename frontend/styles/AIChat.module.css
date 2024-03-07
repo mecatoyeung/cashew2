@@ -46,10 +46,10 @@
     vertical-align: middle;
 }
 
-.parserActions {
+.parserSettingActions {
     position: absolute;
     right: 5px;
-    bottom: 5px;
+    top: 5px;
 }
 
 .documentsQueueTabWrapper {
@@ -74,8 +74,11 @@
   border: 3px dotted #E31A2F;
   border-radius: 6px;
   text-align: center;
-  cursor: pointer;
   position: relative;
+}
+
+.uploadBox p {
+  cursor: pointer;
 }
 
 .wrapper {

@@ -10,15 +10,18 @@ import { Button } from 'react-bootstrap'
 
 import Select from 'react-select'
 
+import Toast from 'react-bootstrap/Toast'
+import ToastContainer from 'react-bootstrap/ToastContainer'
+
 import { useDropzone } from "react-dropzone"
 
 import ProgressBar from 'react-bootstrap/ProgressBar'
 
-import ParserLayout from '../../../layouts/parser'
+import ParserLayout from '../../../../layouts/parser'
 
-import service from '../../../service'
+import service from '../../../../service'
 
-import aichatStyles from "../../../styles/AIChat.module.css"
+import aichatStyles from "../../../../styles/AIChat.module.css"
 
 export default function Parsers() {
 
@@ -49,11 +52,8 @@ export default function Parsers() {
     console.log(e)
     setShowUploadConfigModal({
       ...showUploadConfigModal,
-      uploadDefaultParser: parseInt(e.value)
+      uploadDefaultParser: e.value
     })
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("uploadDefaultParser", e.value)
-    }
   }
 
   const getParsers = () => {
@@ -71,9 +71,6 @@ export default function Parsers() {
   }
 
   const confirmTrashHandler = (parserId) => {
-    console.log(trashConfirmForm)
-    console.log(parsers)
-    console.log(parserId)
     if (trashConfirmForm.name != parsers.find(p => p.id == trashConfirmForm.parserId).name) {
       setTrashConfirmForm(
         produce((draft) => {
@@ -119,7 +116,10 @@ export default function Parsers() {
   }
 
   const defaultUploadConfigClickHandler = () => {
-
+    setShowUploadConfigModal({
+      ...showUploadConfigModal,
+      show: true
+    })
   }
 
   const uploadDocumentsAfterDroppingFiles = async (droppedFiles) => {
@@ -127,13 +127,17 @@ export default function Parsers() {
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i];
       let formData = new FormData();
-      formData.set("parser", props.parserId)
-      formData.set("documentType", documentType)
+      let uploadDefaultParser = 0
+      if (typeof window !== 'undefined') {
+        uploadDefaultParser = localStorage.getItem("uploadDefaultParser")
+        formData.set("parser", uploadDefaultParser)
+      }
+      formData.set("documentType", "AICHAT")
       formData.append("file", droppedFile, droppedFile.name)
 
       const response = service
         .post(
-          "documents/?parserId=" + props.parserId,
+          "documents/?parserId=" + uploadDefaultParser,
           formData,
           () => {},
           () => {},
@@ -160,6 +164,14 @@ export default function Parsers() {
 
   const [droppedFiles, setDroppedFiles] = useState([]);
   const onDrop = useCallback((acceptedFiles) => {
+
+    if (typeof window !== 'undefined') {
+      let uploadDefaultParser = localStorage.getItem("uploadDefaultParser")
+      if (uploadDefaultParser == null) {
+        return
+      }
+    }
+
     let result = [];
     for (let i = 0; i < acceptedFiles.length; i++) {
       if (acceptedFiles[i].progress == undefined) {
@@ -171,13 +183,20 @@ export default function Parsers() {
     uploadDocumentsAfterDroppingFiles(result);
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
-
-  const confirmUploadDocumentsBtnClickHandler = () => {
-
+  let rootProps = getRootProps()
+  if (typeof window !== 'undefined') {
+    let uploadDefaultParser = localStorage.getItem("uploadDefaultParser")
+    if (uploadDefaultParser == null) {
+      delete rootProps.onClick
+      delete rootProps.onDragEnter
+    }
   }
 
-  const closeUploadDocumentsModalHandler = () => {
-
+  const confirmUploadConfigBtnClickHandler = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("uploadDefaultParser", showUploadConfigModal.uploadDefaultParser)
+    }
+    closeUploadConfigModalHandler()
   }
 
   useEffect(() => {
@@ -189,12 +208,23 @@ export default function Parsers() {
       <h1 className={aichatStyles.parsersH1}>Parsers</h1>
       <div className={aichatStyles.uploadBoxWrapper}>
         <div className={aichatStyles.uploadBox}>
-          <div className={aichatStyles.dragZone} {...getRootProps()}>
+          <div className={aichatStyles.dragZone} {...rootProps}>
             <input {...getInputProps()} />
             {isDragActive ? (
               <p>Drag and drop the PDFs here ...</p>
             ) : (
               <p>Drag and drop the PDFs here or click to upload...</p>
+            )}
+            {!rootProps.onClick && (
+              <ToastContainer
+                className="p-3"
+                position={'bottom-center'}
+                style={{ zIndex: 1 }}
+              >
+                <Toast>
+                  <Toast.Body>Please config default parser first...</Toast.Body>
+                </Toast>
+              </ToastContainer>
             )}
           </div>
           <div className={aichatStyles.progressBarDiv}>
@@ -203,8 +233,10 @@ export default function Parsers() {
               label={`Uploading ` + droppedFiles.filter(f => f.uploaded).length + ` of ` + droppedFiles.length}
             />
           </div>
-          <div className={aichatStyles.parserActions}>
-            <i class="bi bi-gear" onClick={() => defaultUploadConfigClickHandler()}></i>
+          <div className={aichatStyles.parserSettingActions}>
+            <i className="bi bi-gear" 
+              onClick={() => defaultUploadConfigClickHandler()}
+              style={{ cursor: "pointer"}}></i>
             <Modal
               show={showUploadConfigModal.show}
               onHide={closeUploadConfigModalHandler}
@@ -213,26 +245,32 @@ export default function Parsers() {
                 <Modal.Title>Upload Configurations</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <Select instanceId="uploadDefaultParserSelectId" 
-                options={parsers.map(p => {
-                  return {
-                    lable: p.name,
-                    value: p.id
-                  }
-                })} 
-                onChange={uploadDefaultParserChangeHandler}
-                value={parsers.find(d => d.id == showUploadConfigModal.uploadDefaultParser)}/>
+                <Form.Group className="mb-3" controlId="uploadDefaultParser">
+                  <Form.Label>Default Parser</Form.Label>
+                  <Select instanceId="uploadDefaultParserSelectId" 
+                  options={parsers.map(p => {
+                    return {
+                      label: p.name,
+                      value: p.id
+                    }
+                  })} 
+                  onChange={uploadDefaultParserChangeHandler}
+                  value={{ 
+                    value: parsers.find(d => d.id == showUploadConfigModal.uploadDefaultParser)?.id,
+                    label: parsers.find(d => d.id == showUploadConfigModal.uploadDefaultParser)?.name
+                  }}/>
+                </Form.Group>
               </Modal.Body>
               <Modal.Footer>
                 <Button
                   variant="primary"
-                  onClick={confirmUploadDocumentsBtnClickHandler}
+                  onClick={confirmUploadConfigBtnClickHandler}
                 >
-                  Upload Documents
+                  Save
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={closeUploadDocumentsModalHandler}
+                  onClick={closeUploadConfigModalHandler}
                 >
                   Close
                 </Button>
@@ -244,7 +282,7 @@ export default function Parsers() {
       <ul className={aichatStyles.parsersUl}>
         {parsers && parsers.length > 0 && parsers.map(parser => (
           <li key={parser.id}>
-            <div className={aichatStyles.parserName} onClick={() => router.push("/workspace/parsers/" + parser.id + "/rules")}>
+            <div className={aichatStyles.parserName} onClick={() => router.push("/workbench/aichat/parsers/" + parser.id + "/")}>
               <span>{parser.name}</span>
             </div>
           </li>

@@ -106,7 +106,7 @@ def convert_to_searchable_pdf(parser, document, ocr):
     if not os.path.exists(abs_ocr_folder_path):
         os.makedirs(abs_ocr_folder_path)
 
-    if (len(preprocessings) > 0):
+    if (preprocessings.count() > 0):
         last_preprocessing = preprocessings.order_by('-step')[0]
         for document_page in document_pages:
             abs_ocred_image_path = ocred_image_path(document, document_page.page_num)
@@ -205,7 +205,8 @@ def convert_to_searchable_pdf(parser, document, ocr):
                             "imageContext": {
                                 "textDetectionParams": {
                                     "enableTextDetectionConfidenceScore": True
-                                }
+                                },
+                                "languageHints": ["zh-Hant", "en"]
                             }
                         }
                     ]
@@ -415,6 +416,8 @@ def convert_to_searchable_pdf(parser, document, ocr):
             
         if page_num == 1:
             pdf = Canvas(abs_ocred_pdf_path, pagesize=(width*inch, height*inch), pageCompression=1)
+        else:
+            pdf.setPageSize((width*inch, height*inch))
         pdf.drawInlineImage(im, 0, 0, width=width*inch, height=height*inch)
 
         im.close()

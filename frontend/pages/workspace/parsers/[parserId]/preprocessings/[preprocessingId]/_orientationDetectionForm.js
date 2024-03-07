@@ -20,14 +20,12 @@ import service from '../../../../../../service'
 
 import preProcessingsStyles from "../../../../../../styles/PreProcessings.module.css"
 
-const orientationDetectionTypeOptions = [{
-  label: "Orientation Detection (Tesseract)",
-  value: "ORIENTATION_DETECTION_TESSERACT"
-},
-{
-  label: "Orientation Detection (OpenCV)",
-  value: "ORIENTATION_DETECTION_OPENCV"
-}]
+const orientationDetectionTypeOptions = [
+  {
+    label: "Orientation Detection (DocTR)",
+    value: "ORIENTATION_DETECTION_DOCTR"
+  }
+]
 
 export default function PreProcessingForm(props) {
 

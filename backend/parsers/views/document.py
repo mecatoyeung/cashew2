@@ -1,5 +1,6 @@
 import os
 
+from django.http import HttpResponse
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
@@ -77,7 +78,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
             parser_id = int(self.request.query_params.get("parserId"))
 
             return queryset.filter(
-                parser__user=self.request.user,
                 parser_id=parser_id
             ).order_by('-last_modified_at').distinct()
 
@@ -85,7 +85,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
             parser_id = int(self.request.query_params.get("parserId"))
 
             return queryset.filter(
-                parser__user=self.request.user,
                 parser_id=parser_id
             ).order_by('-last_modified_at').distinct()
 
@@ -142,8 +141,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         pdf_file = open(abs_pdf_path, 'rb')
         return_filename = document.guid + "-searchable.pdf"
 
-        response = Response(File(pdf_file), content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % return_filename
+        response = HttpResponse(File(pdf_file).read(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="%s"' % return_filename
         return response
 
     @action(detail=True,

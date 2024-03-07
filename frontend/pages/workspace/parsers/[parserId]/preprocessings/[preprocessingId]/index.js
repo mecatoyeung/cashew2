@@ -47,6 +47,9 @@ export default function PreProcessing() {
       {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION_TESSERACT" && (
         <OrientationDetectionFormForm type="edit" />
       )}
+      {preProcessing && preProcessing.preProcessingType == "ORIENTATION_DETECTION_DOCTR" && (
+        <OrientationDetectionFormForm type="edit" />
+      )}
       {preProcessing && preProcessing.preProcessingType == "THRESHOLD_BINARIZATION" && (
         <ThresholdBinarizationForm type="edit" />
       )}

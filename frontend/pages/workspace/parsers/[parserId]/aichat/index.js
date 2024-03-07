@@ -268,7 +268,7 @@ const RecursiveChat = ({chat}) => {
   }
 }
 
-const AIChat = () => {
+const AIChat = (props) => {
 
   const router = useRouter()
 
@@ -779,9 +779,11 @@ const AIChat = () => {
                     }
                   ></i>
                 </Nav.Link>
-                <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
-                  <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
-                </div>
+                {!props.type == "workbench" && (
+                  <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
+                    <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
+                  </div>
+                )}
               </div>
               <div
                 className="col-4 col-md-4"

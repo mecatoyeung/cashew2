@@ -181,7 +181,6 @@ export default function XMLForm(props) {
                     padding={15}
                     style={{
                       border: "1px solid #333",
-                      backgroundColor: "#333333",
                     }}
                   />
                 </Form.Group>

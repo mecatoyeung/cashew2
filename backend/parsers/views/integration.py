@@ -43,14 +43,11 @@ class IntegrationViewSet(viewsets.ModelViewSet):
             parser_id = int(self.request.query_params.get("parserId"))
 
             return queryset.filter(
-                parser__user=self.request.user,
                 parser_id=parser_id
             ).order_by('id').distinct()
 
         else:
-            return queryset.filter(
-                parser__user=self.request.user
-            ).order_by('id').distinct()
+            return queryset.order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """

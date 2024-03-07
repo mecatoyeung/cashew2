@@ -10,7 +10,7 @@ from pathlib import Path
 
 from parsers.helpers.is_chinese import is_chinese
 
-SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
+SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
 ASSUMED_TEXT_WIDTH = Decimal(0.3)
 ASSUMED_TEXT_HEIGHT = Decimal(0.6)
 
@@ -45,8 +45,8 @@ class XMLPage:
                 page_num=page_num).height
         self.text_widths = []
         self.text_heights = []
-        self.median_of_text_widths = ASSUMED_TEXT_WIDTH
-        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT
+        self.median_of_text_widths = ASSUMED_TEXT_WIDTH * self.width / Decimal(1000.00)
+        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT * self.height / Decimal(1000.00)
         self.textlines = []
         self.load_all_textlines()
 
@@ -197,8 +197,8 @@ class XMLPage:
 
         self.median_of_text_widths = statistics.median(text_widths) * 2 / 3
         self.median_of_text_heights = statistics.median(text_heights) * 2 / 3"""
-        self.median_of_text_widths = ASSUMED_TEXT_WIDTH
-        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT
+        self.median_of_text_widths = ASSUMED_TEXT_WIDTH * self.width / Decimal(1000.00)
+        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT * self.height / Decimal(1000.00)
 
         return
 
@@ -216,32 +216,34 @@ class XMLPage:
                 key = arr[i]
                 j = i-1
                 # Move elements greater than key one position ahead
-                while j >= 0 and compare(key, arr[j], arr[:j]) > 0:
+                while j >= 0 and compare(key, arr[j]) >= 0:
                     arr[j+1] = arr[j]  # Shift elements to the right
                     j -= 1
                 arr[j+1] = key
-                pass
+                luck = 1
 
             return arr
 
-        def compare(a, b, arr_before):
+        def compare(a, b):
             if a.region.x1 == None or a.region.x2 == None or a.region.y1 == None or a.region.y2 == None:
                 return 0
             if b.region.x1 == None or b.region.x2 == None or b.region.y1 == None or b.region.y2 == None:
                 return 0
 
-            if (a.region.is_in_same_line(b.region)):
-                for item_before in arr_before:
+            if (a.region.y1 > b.region.y1):
+                return 1
+            elif (a.region.y2 > b.region.y2):
+                return 1
+            elif (a.region.is_in_same_line(b.region)):
+                """for item_before in arr_before:
                     if a.region.is_in_same_column(item_before.region):
-                        return -1
+                        return -1"""
                 if a.region.x1 < b.region.x1:
                     return 1
                 elif a.region.x2 < b.region.x2:
                     return 1
-            elif (a.region.y1 > b.region.y1):
-                return 1
-            elif (a.region.y2 > b.region.y2):
-                return 1
+                else:
+                    return -1
             return -1
 
         self.textlines = insertionSort(self.textlines)
@@ -285,32 +287,34 @@ class XMLRegion:
             return True
 
     def is_in_same_line(self, another_region):
+        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(0.25)
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
             return False
-        if (self.y1 + SAME_LINE_ACCEPTANCE_RANGE) <= another_region.y2 and self.y1 >= (another_region.y1) and self.y2 >= (another_region.y2):
+        if self.y1 >= another_region.y1 and (self.y1 + SAME_LINE_ACCEPTANCE_RANGE) <= another_region.y2:
             return True
-        if (self.y1) <= another_region.y1 and (self.y2) <= another_region.y2 and self.y2 >= (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE):
+        if (self.y2 - SAME_LINE_ACCEPTANCE_RANGE) >= another_region.y1 and self.y2 <= another_region.y2:
             return True
-        if self.y2 >= (another_region.y2) and (self.y1) <= another_region.y1:
+        if another_region.y1 >= self.y1 and (another_region.y1 + SAME_LINE_ACCEPTANCE_RANGE) <= self.y2:
             return True
-        if (self.y2) <= another_region.y2 and self.y1 >= (another_region.y1):
+        if (another_region.y2 - SAME_LINE_ACCEPTANCE_RANGE) >= self.y1 and another_region.y2 <= self.y2:
             return True
         return False
 
     def is_in_same_column(self, another_region):
+        SAME_COLUMN_ACCEPTANCE_RANGE = (self.x2 - self.x1) * Decimal(0.25)
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
             return False
-        if self.x1 >= another_region.x1 and self.x1 <= another_region.x2 and self.x2 >= another_region.x1 and self.x2 <= another_region.x2:
+        if self.x1 >= another_region.x1 and (self.x1 + SAME_COLUMN_ACCEPTANCE_RANGE) <= another_region.x2:
             return True
-        if self.x1 <= another_region.x1 and self.x2 >= another_region.x2:
+        if (self.x2 - SAME_COLUMN_ACCEPTANCE_RANGE) >= another_region.x1 and self.x2 <= another_region.x2:
             return True
-        if self.x1 <= another_region.x1 and self.x2 >= another_region.x1:
+        if another_region.x1 >= self.x1 and (another_region.x1 + SAME_COLUMN_ACCEPTANCE_RANGE) <= self.x2:
             return True
-        if self.x1 <= another_region.x2 and self.x2 >= another_region.x2:
+        if (another_region.x2 - SAME_COLUMN_ACCEPTANCE_RANGE) >= self.x1 and another_region.x2 <= self.x2:
             return True
         return False
 
