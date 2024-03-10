@@ -9,6 +9,7 @@ import json
 import glob
 
 from django.db.models import Prefetch
+from django.db.models import Q
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events
@@ -26,11 +27,12 @@ from parsers.models.pdf_integration_type import PDFIntegrationType
 
 from django.conf import settings
 
+
 def process_single_trash_queue(queue_job):
 
-    all_in_process_integration_queue_jobs = Queue.objects.filter(
+    all_in_process_trash_queue_jobs = Queue.objects.filter(
         queue_class=QueueClass.TRASH.value, queue_status=QueueStatus.IN_PROGRESS.value)
-    if all_in_process_integration_queue_jobs.count() > 0:
+    if all_in_process_trash_queue_jobs.count() > 0:
         return
 
     # Mark the job as in progress
@@ -57,6 +59,7 @@ def process_single_trash_queue(queue_job):
         document.document_type = DocumentType.TRASH.value
         document.save()
         pass
+
 
 def process_trash_queue_job():
 

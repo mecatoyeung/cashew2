@@ -1,43 +1,42 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 
-import Col from 'react-bootstrap/Col'
-import Tabs from 'react-bootstrap/Tabs'
-import Tab from 'react-bootstrap/Tab'
-import Table from 'react-bootstrap/Table'
-import Form from 'react-bootstrap/Form'
+import Col from "react-bootstrap/Col";
+import Tabs from "react-bootstrap/Tabs";
+import Tab from "react-bootstrap/Tab";
+import Table from "react-bootstrap/Table";
+import Form from "react-bootstrap/Form";
 
-import WorkspaceLayout from '../../../../../layouts/workspace'
-import ParserLayout from '../../../../../layouts/parser'
+import WorkspaceLayout from "../../../../../layouts/workspace";
+import ParserLayout from "../../../../../layouts/parser";
 
-import ProcessedQueue from '../../../../../components/queues/processedQueue'
-import ImportQueue from '../../../../../components/queues/importQueue'
-import PreProcessingQueue from '../../../../../components/queues/preProcessingQueue'
-import OCRQueue from '../../../../../components/queues/ocrQueue'
-import ParsingQueue from '../../../../../components/queues/parsingQueue'
-import SplittingQueue from '../../../../../components/queues/splittingQueue'
-import PostProcessingQueue from '../../../../../components/queues/postProcessingQueue'
-import IntegrationQueue from '../../../../../components/queues/integrationQueue'
+import ProcessedQueue from "../../../../../components/queues/processedQueue";
+import ImportQueue from "../../../../../components/queues/importQueue";
+import PreProcessingQueue from "../../../../../components/queues/preProcessingQueue";
+import OCRQueue from "../../../../../components/queues/ocrQueue";
+import ParsingQueue from "../../../../../components/queues/parsingQueue";
+import SplittingQueue from "../../../../../components/queues/splittingQueue";
+import PostProcessingQueue from "../../../../../components/queues/postProcessingQueue";
+import IntegrationQueue from "../../../../../components/queues/integrationQueue";
 
-import service from '../../../../../service'
+import service from "../../../../../service";
 
-import styles from '../../../../../styles/Parser.module.css'
+import styles from "../../../../../styles/Parser.module.css";
 
 const ParserDocuments = () => {
+  const router = useRouter();
 
-  const router = useRouter()
+  const { parserId } = router.query;
 
-  const { parserId } = router.query
-
-  const [processedQueues, setProcessedQueues] = useState([])
-  const [importQueues, setImportQueues] = useState([])
-  const [preProcessingQueues, setPreProcessingQueues] = useState([])
-  const [ocrQueues, setOCRQueues] = useState([])
-  const [splittingQueues, setSplittingQueues] = useState([])
-  const [parsingQueues, setParsingQueues] = useState([])
-  const [postProcessingQueues, setPostProcessingQueues] = useState([])
-  const [integrationQueues, setIntegrationQueues] = useState([])
+  const [processedQueues, setProcessedQueues] = useState([]);
+  const [importQueues, setImportQueues] = useState([]);
+  const [preProcessingQueues, setPreProcessingQueues] = useState([]);
+  const [ocrQueues, setOCRQueues] = useState([]);
+  const [splittingQueues, setSplittingQueues] = useState([]);
+  const [parsingQueues, setParsingQueues] = useState([]);
+  const [postProcessingQueues, setPostProcessingQueues] = useState([]);
+  const [integrationQueues, setIntegrationQueues] = useState([]);
 
   const getProcessedQueues = () => {
     if (!parserId) return;
@@ -46,8 +45,8 @@ const ParserDocuments = () => {
       (response) => {
         setProcessedQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getImportQueues = () => {
     if (!parserId) return;
@@ -56,8 +55,8 @@ const ParserDocuments = () => {
       (response) => {
         setImportQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getPreProcessingQueues = () => {
     if (!parserId) return;
@@ -66,8 +65,8 @@ const ParserDocuments = () => {
       (response) => {
         setPreProcessingQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getOCRQueues = () => {
     if (!parserId) return;
@@ -76,8 +75,8 @@ const ParserDocuments = () => {
       (response) => {
         setOCRQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getSplittingQueues = () => {
     if (!parserId) return;
@@ -86,8 +85,8 @@ const ParserDocuments = () => {
       (response) => {
         setSplittingQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getParsingQueues = () => {
     if (!parserId) return;
@@ -96,8 +95,8 @@ const ParserDocuments = () => {
       (response) => {
         setParsingQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getPostProcessingQueues = () => {
     if (!parserId) return;
@@ -106,8 +105,8 @@ const ParserDocuments = () => {
       (response) => {
         setPostProcessingQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   const getIntegrationQueues = () => {
     if (!parserId) return;
@@ -116,70 +115,115 @@ const ParserDocuments = () => {
       (response) => {
         setIntegrationQueues(response.data);
       }
-    )
-  }
+    );
+  };
 
   useEffect(() => {
-    if (!router.isReady) return
-    getProcessedQueues()
-    getImportQueues()
-    getPreProcessingQueues()
-    getOCRQueues()
-    getSplittingQueues()
-    getParsingQueues()
-    getPostProcessingQueues()
-    getIntegrationQueues()
+    if (!router.isReady) return;
+    getProcessedQueues();
+    getImportQueues();
+    getPreProcessingQueues();
+    getOCRQueues();
+    getSplittingQueues();
+    getParsingQueues();
+    getPostProcessingQueues();
+    getIntegrationQueues();
     const interval = setInterval(() => {
-      getProcessedQueues()
-      getImportQueues()
-      getPreProcessingQueues()
-      getOCRQueues()
-      getSplittingQueues()
-      getParsingQueues()
-      getPostProcessingQueues()
-      getIntegrationQueues()
-    }, 15000);
+      getProcessedQueues();
+      getImportQueues();
+      getPreProcessingQueues();
+      getOCRQueues();
+      getSplittingQueues();
+      getParsingQueues();
+      getPostProcessingQueues();
+      getIntegrationQueues();
+    }, 5000);
     return () => {
       clearTimeout(interval);
     };
-  }, [router.isReady])
+  }, [router.isReady]);
 
   return (
     <>
       {parserId && (
-      <WorkspaceLayout>
-        <div className={styles.documentsQueueTabWrapper}>
-          <Tabs id="Queues" defaultActiveKey="importQueue">
-            <Tab id="processedQueue" eventKey="processedQueue" title={"Processed Queue (" + processedQueues.length + ")"}>
-              <ProcessedQueue parserId={parserId} queues={processedQueues}/>
-            </Tab>
-            <Tab id="importQueue" eventKey="importQueue" title={"Import Queue (" + importQueues.length + ")"}>
-              <ImportQueue parserId={parserId} queues={importQueues} />
-            </Tab>
-            <Tab id="preProcessingQueue" eventKey="preProcessingQueue" title={"Pre Processing Queue (" + preProcessingQueues.length + ")"}>
-              <PreProcessingQueue parserId={parserId} queues={preProcessingQueues} />
-            </Tab>
-            <Tab id="dataOCRQueue" eventKey="dataOCRQueue" title={"OCR Queue (" + ocrQueues.length + ")"}>
-              <OCRQueue parserId={parserId} queues={ocrQueues} />
-            </Tab>
-            <Tab id="dataSplitingQueue" eventKey="dataSplitQueue" title={"Splitting Queue (" + splittingQueues.length + ")"}>
-              <SplittingQueue parserId={parserId} queues={splittingQueues} />
-            </Tab>
-            <Tab id="dataParsingQueue" eventKey="dataParsingQueue" title={"Parsing Queue (" + parsingQueues.length + ")"}>
-              <ParsingQueue parserId={parserId} queues={parsingQueues} />
-            </Tab>
-            <Tab id="postProcessingQueue" eventKey="postProcessingQueue" title={"Post Processing Queue (" + postProcessingQueues.length + ")"}>
-              <PostProcessingQueue parserId={parserId} queues={postProcessingQueues} />
-            </Tab>
-            <Tab id="integrationQueue" eventKey="integrationQueue" title={"Integration Queue (" + integrationQueues.length + ")"}>
-              <IntegrationQueue parserId={parserId} queues={integrationQueues} />
-            </Tab>
-          </Tabs>
-        </div>
-      </WorkspaceLayout>
+        <WorkspaceLayout>
+          <div className={styles.documentsQueueTabWrapper}>
+            <Tabs id="Queues" defaultActiveKey="importQueue">
+              <Tab
+                id="processedQueue"
+                eventKey="processedQueue"
+                title={"Processed Queue (" + processedQueues.length + ")"}
+              >
+                <ProcessedQueue parserId={parserId} queues={processedQueues} />
+              </Tab>
+              <Tab
+                id="importQueue"
+                eventKey="importQueue"
+                title={"Import Queue (" + importQueues.length + ")"}
+              >
+                <ImportQueue parserId={parserId} queues={importQueues} />
+              </Tab>
+              <Tab
+                id="preProcessingQueue"
+                eventKey="preProcessingQueue"
+                title={
+                  "Pre Processing Queue (" + preProcessingQueues.length + ")"
+                }
+              >
+                <PreProcessingQueue
+                  parserId={parserId}
+                  queues={preProcessingQueues}
+                />
+              </Tab>
+              <Tab
+                id="dataOCRQueue"
+                eventKey="dataOCRQueue"
+                title={"OCR Queue (" + ocrQueues.length + ")"}
+              >
+                <OCRQueue parserId={parserId} queues={ocrQueues} />
+              </Tab>
+              <Tab
+                id="dataSplitingQueue"
+                eventKey="dataSplitQueue"
+                title={"Splitting Queue (" + splittingQueues.length + ")"}
+              >
+                <SplittingQueue parserId={parserId} queues={splittingQueues} />
+              </Tab>
+              <Tab
+                id="dataParsingQueue"
+                eventKey="dataParsingQueue"
+                title={"Parsing Queue (" + parsingQueues.length + ")"}
+              >
+                <ParsingQueue parserId={parserId} queues={parsingQueues} />
+              </Tab>
+              <Tab
+                id="postProcessingQueue"
+                eventKey="postProcessingQueue"
+                title={
+                  "Post Processing Queue (" + postProcessingQueues.length + ")"
+                }
+              >
+                <PostProcessingQueue
+                  parserId={parserId}
+                  queues={postProcessingQueues}
+                />
+              </Tab>
+              <Tab
+                id="integrationQueue"
+                eventKey="integrationQueue"
+                title={"Integration Queue (" + integrationQueues.length + ")"}
+              >
+                <IntegrationQueue
+                  parserId={parserId}
+                  queues={integrationQueues}
+                />
+              </Tab>
+            </Tabs>
+          </div>
+        </WorkspaceLayout>
       )}
     </>
-  )
-}
+  );
+};
 
-export default ParserDocuments
+export default ParserDocuments;

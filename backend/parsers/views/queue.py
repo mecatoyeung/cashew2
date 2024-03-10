@@ -87,19 +87,19 @@ class QueueViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
 
-        with transaction.atomic():
         # delete documents folder first
-            document = Document.objects.get(queue__id=instance.id)
-            document_folder = os.path.join(
-                settings.MEDIA_ROOT, 'documents', document.guid)
-            """files = glob.glob(document_folder)
-            for f in files:
-                os.remove(f)"""
-            shutil.rmtree(document_folder, ignore_errors=False)
+        document = Document.objects.get(queue__id=instance.id)
+        document_folder = os.path.join(
+            settings.MEDIA_ROOT, 'documents', document.guid)
+        """files = glob.glob(document_folder)
+        for f in files:
+            os.remove(f)"""
+        shutil.rmtree(document_folder, ignore_errors=True)
 
-            # delete document pages first
-            DocumentPage.objects.filter(document__queue__id=instance.id).delete()
-            # delete document first
-            Document.objects.filter(queue__id=instance.id).delete()
+        # delete document pages first
+        DocumentPage.objects.filter(
+            document__queue__id=instance.id).delete()
+        # delete document first
+        Document.objects.filter(queue__id=instance.id).delete()
 
-            return super().perform_destroy(instance)
+        return super().perform_destroy(instance)

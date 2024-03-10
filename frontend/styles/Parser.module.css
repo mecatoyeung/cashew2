@@ -1,58 +1,59 @@
 .h1 {
-    padding: 10px 0 0 0;
-    text-align: center;
-    text-decoration: underline;
+  padding: 10px 0 0 0;
+  text-align: center;
+  text-decoration: underline;
 }
 
 .parsersUl {
-    padding: 10px 0;
-    margin: 0;
+  padding: 0 0;
+  margin: 0;
+  display: grid;
+  column-gap: 10px;
+  row-gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .parsersUl li {
-    border: 3px solid #E31A2F;
-    border-radius: 6px;
-    margin: 10px;
-    width: 200px;
-    max-width: calc(50% - 20px);
-    height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    list-style: none;
-    vertical-align: middle;
-    float: left;
-    cursor: pointer;
-    position: relative;
+  border: 3px solid #e31a2f;
+  border-radius: 6px;
+  margin: 10px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  vertical-align: middle;
+  cursor: pointer;
+  position: relative;
 }
 
 .parsersUl li:hover {
-    border: 3px solid #E31A2F;
+  border: 3px solid #e31a2f;
 }
 
 .parsersUl li.addParserLi {
-    border: 3px dotted #E31A2F;
+  border: 3px dotted #e31a2f;
 }
 
 .parserName {
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    line-height: 114px;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  line-height: 114px;
 }
 
 .parserName span {
-    line-height: 24px;
-    display: inline-block;
-    vertical-align: middle;
+  line-height: 24px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .parserActions {
-    position: absolute;
-    right: 5px;
-    bottom: 5px;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
 }
 
 .documentsQueueTabWrapper {
-    width: 100%;
+  width: 100%;
 }

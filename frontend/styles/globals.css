@@ -1,11 +1,11 @@
 html {
   min-height: 100vh;
-  height: 100%
+  height: 100%;
 }
 
 body {
   min-height: 100vh;
-  height: 100%
+  height: 100%;
 }
 
 a {
@@ -14,7 +14,7 @@ a {
 
 #__next {
   min-height: 100vh;
-  height: 100%
+  height: 100%;
 }
 
 h1 {
@@ -32,7 +32,8 @@ h2 {
   display: inline-block;
 }
 
-div, p {
+div,
+p {
   font-family: Merriweather Sans, sans;
 }
 
@@ -78,7 +79,9 @@ button.btn {
   }
 }
 
-.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+.bi::before,
+[class^="bi-"]::before,
+[class*=" bi-"]::before {
   font-weight: bold !important;
 }
 
@@ -152,7 +155,7 @@ button.btn {
 }
 
 .errorMessage {
-  color: #E31A2F;
+  color: #e31a2f;
 }
 
 .react-draggable {
@@ -170,8 +173,8 @@ button.btn {
 }
 
 .modal-dialog {
-    width: 80%;
-    max-width: unset;
+  width: 80%;
+  max-width: unset;
 }
 
 h2.accordion-header {
@@ -209,7 +212,8 @@ h2.accordion-header {
   overflow-x: auto;
 }
 
-.talk-table th, .talk-table td {
+.talk-table th,
+.talk-table td {
   white-space: nowrap;
   padding: 5px 10px;
   border: 1px solid #000;
@@ -217,4 +221,22 @@ h2.accordion-header {
 
 .anchorReactCrop .ReactCrop__crop-selection {
   background: rgba(255, 0, 0, 0.2);
+}
+
+#parserTabs .nav-tabs .nav-link.active {
+  background: #e31a2f;
+  color: #fff;
+}
+
+#parserTabs .nav-tabs .nav-link {
+  color: #e31a2f;
+}
+
+.tab-content {
+  border-top: 1px solid #e31a2f;
+  border-right: 1px solid #e31a2f;
+  border-bottom: 1px solid #e31a2f;
+  border-left: 1px solid #e31a2f;
+  padding: 10px;
+  margin-bottom: 10px;
 }

@@ -15,7 +15,7 @@ from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
 from parsers.models.queue import QueueClass
 from parsers.models.queue_status import QueueStatus
-    
+
 from parsers.serializers.nested.document import DocumentSerializer
 
 from backend import settings
@@ -92,45 +92,43 @@ class QueueSerializer(serializers.ModelSerializer):
         return queue
 
     def update(self, instance, validated_data):
-        with transaction.atomic():
-            """ Update queue. """
-            for attr, value in validated_data.items():
-                if attr == "document":
-                    continue
-                if attr == "queue_class" and value == QueueClass.PROCESSED.value:
-                    document_pages = DocumentPage.objects.filter(
-                        document__queue__id=instance.pk)
-                    for document_page in document_pages:
-                        document_page.preprocessed = False
-                        document_page.ocred = False
-                        document_page.postprocessed = False
-                        document_page.save()
-                if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
-                    document_pages = DocumentPage.objects.filter(
-                        document__queue__id=instance.pk)
-                    for document_page in document_pages:
-                        document_page.preprocessed = False
-                        document_page.ocred = False
-                        document_page.postprocessed = False
-                        document_page.save()
-                if attr == "queue_class" and value == QueueClass.OCR.value:
-                    document_pages = DocumentPage.objects.filter(
-                        document__queue__id=instance.pk)
-                    for document_page in document_pages:
-                        document_page.preprocessed = False
-                        document_page.ocred = False
-                        document_page.postprocessed = False
-                        document_page.save()
-                if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
-                    document_pages = DocumentPage.objects.filter(
-                        document__queue__id=instance.pk)
-                    for document_page in document_pages:
-                        document_page.preprocessed = False
-                        document_page.ocred = False
-                        document_page.postprocessed = False
-                        document_page.save()
-                setattr(instance, attr, value)
+        """ Update queue. """
+        for attr, value in validated_data.items():
+            if attr == "document":
+                continue
+            if attr == "queue_class" and value == QueueClass.PROCESSED.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
+            if attr == "queue_class" and value == QueueClass.PRE_PROCESSING.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
+            if attr == "queue_class" and value == QueueClass.OCR.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
+            if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
+            setattr(instance, attr, value)
 
-            instance.save()
-            return instance
-
+        instance.save()
+        return instance

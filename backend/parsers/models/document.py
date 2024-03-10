@@ -28,6 +28,7 @@ class Document(models.Model):
     filename_without_extension = models.CharField(max_length=255, null=False)
     extension = models.CharField(max_length=255, null=False)
     total_page_num = models.IntegerField(null=True)
+    splitted = models.BooleanField(default=False)
     last_modified_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:

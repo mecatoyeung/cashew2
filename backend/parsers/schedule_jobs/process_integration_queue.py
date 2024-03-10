@@ -1,5 +1,6 @@
 import sys
 import os
+import io
 import traceback
 from pathlib import Path
 from datetime import datetime
@@ -7,6 +8,8 @@ from jinja2 import Template
 import shutil
 import json
 import glob
+import base64
+import re
 
 from reportlab.pdfgen.canvas import Canvas
 from PIL import Image
@@ -28,10 +31,15 @@ from parsers.models.document_type import DocumentType
 from parsers.models.integration import Integration
 from parsers.models.integration_type import IntegrationType
 from parsers.models.pdf_integration_type import PDFIntegrationType
+from parsers.models.ocr import OCR
 
-from parsers.helpers.path_helpers import pre_processed_image_path, pre_processed_pdf_path
+import zlib
+
+from parsers.helpers.path_helpers import pre_processed_image_path, pre_processed_pdf_path, ocred_image_path, \
+    hocr_path, ocred_pdf_path
 
 from django.conf import settings
+
 
 def convert_images_to_pdf(images, output_file_path):
     """Create a searchable PDF from a pile of HOCR + JPEG"""
@@ -50,6 +58,7 @@ def convert_images_to_pdf(images, output_file_path):
         pdf.drawImage(image, 0, 0, width=width, height=height)
         pdf.showPage()
     pdf.save()
+
 
 def process_single_integration_queue(queue_job):
 
@@ -75,17 +84,17 @@ def process_single_integration_queue(queue_job):
                     single_parsed_result["rule"]["type"] == "ANCHORED_TEXTFIELD" or \
                     single_parsed_result["rule"]["type"] == "BARCODE":
                 updated_parsed_result[single_parsed_result["rule"]
-                                        ["name"]] = single_parsed_result["streamed"]
+                                      ["name"]] = single_parsed_result["streamed"]
             elif single_parsed_result["rule"]["type"] == "TABLE":
                 flattened_parsed_result = []
                 for s in single_parsed_result["streamed"]:
                     for ss in s:
                         flattened_parsed_result.append(ss)
                 updated_parsed_result[single_parsed_result["rule"]
-                                        ["name"]] = " ".join(flattened_parsed_result)
+                                      ["name"]] = " ".join(flattened_parsed_result)
             else:
                 updated_parsed_result[single_parsed_result["rule"]
-                                        ["name"]] = "Unknwon Rule Type"
+                                      ["name"]] = "Unknwon Rule Type"
 
         # Do the job
         integrations = Integration.objects.filter(parser_id=parser.id)
@@ -104,11 +113,12 @@ def process_single_integration_queue(queue_job):
                     parsed_result=updated_parsed_result, document=document, datetime=datetime, builtin_vars=builtin_vars, str=str)
 
                 if Path(rendered_path_template).stem.split(".")[0] == "":
-                    no_filename_path = os.path.join(os.path.dirname(rendered_path_template), "No Filename")
+                    no_filename_path = os.path.join(os.path.dirname(
+                        rendered_path_template), "No Filename")
                     if not os.path.exists(no_filename_path):
                         os.makedirs(no_filename_path)
                     failed_path = os.path.join(no_filename_path, "Document Name = " + document.filename_without_extension + "."
-                                                + Path(rendered_path_template).stem.split(".")[1])
+                                               + Path(rendered_path_template).stem.split(".")[1])
                     rendered_path_template = failed_path
 
                 t = Template(template)
@@ -124,30 +134,34 @@ def process_single_integration_queue(queue_job):
 
                 if integration.pdf_integration_type == PDFIntegrationType.SOURCE.value:
                     pdf_from_path = os.path.join(settings.MEDIA_ROOT, 'documents', document.guid,
-                                                    "source_file.pdf")
+                                                 "source_file.pdf")
                 elif integration.pdf_integration_type == PDFIntegrationType.PRE_PROCESSING.value:
 
-                    pre_processing = PreProcessing.objects.get(pk=integration.pre_processing_id)
+                    pre_processing = PreProcessing.objects.get(
+                        pk=integration.pre_processing_id)
 
-                    document_pages = list(DocumentPage.objects.filter(document_id=document.id).all())
+                    document_pages = list(DocumentPage.objects.filter(
+                        document_id=document.id).all())
 
                     image_paths = []
                     for document_page in document_pages:
-                        image_path = pre_processed_image_path(document, pre_processing, document_page.page_num)
+                        image_path = pre_processed_image_path(
+                            document, pre_processing, document_page.page_num)
                         image_paths.append(image_path)
-                    output_pdf_path = pre_processed_pdf_path(document, pre_processing)
+                    output_pdf_path = pre_processed_pdf_path(
+                        document, pre_processing)
                     convert_images_to_pdf(image_paths, output_pdf_path)
 
                     pdf_from_path = os.path.join(output_pdf_path)
                 elif integration.pdf_integration_type == PDFIntegrationType.OCR.value:
-                    pdf_from_path = os.path.join(settings.MEDIA_ROOT, 'documents', document.guid,
-                                                    "ocred.pdf")
+                    abs_ocred_pdf_path = ocred_pdf_path(document)
+                    pdf_from_path = abs_ocred_pdf_path
                 elif integration.pdf_integration_type == PDFIntegrationType.POST_PROCESSING.value:
                     pdf_from_path = os.path.join(settings.MEDIA_ROOT, 'documents',
-                                                    document.guid,
-                                                    "post_processed-" +
-                                                    str(integration.post_processing.id),
-                                                    "output.pdf")
+                                                 document.guid,
+                                                 "post_processed-" +
+                                                 str(integration.post_processing.id),
+                                                 "output.pdf")
 
                 pdf_path = integration.pdf_path
 
@@ -160,11 +174,12 @@ def process_single_integration_queue(queue_job):
                     parsed_result=updated_parsed_result, document=document, datetime=datetime, builtin_vars=builtin_vars, str=str)
 
                 if Path(pdf_to_path).stem.split(".")[0] == "":
-                    no_filename_path = os.path.join(os.path.dirname(pdf_to_path), "No Filename")
+                    no_filename_path = os.path.join(
+                        os.path.dirname(pdf_to_path), "No Filename")
                     if not os.path.exists(no_filename_path):
                         os.makedirs(no_filename_path)
                     failed_path = os.path.join(no_filename_path, "Document Name = " + document.filename_without_extension + "."
-                                                + Path(pdf_to_path).stem.split(".")[1])
+                                               + Path(pdf_to_path).stem.split(".")[1])
                     pdf_to_path = failed_path
 
                 shutil.copyfile(pdf_from_path, pdf_to_path)
@@ -190,6 +205,7 @@ def process_single_integration_queue(queue_job):
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
 
+
 def process_integration_queue_job():
 
     all_ready_integration_queue_jobs = Queue.objects \
@@ -200,6 +216,7 @@ def process_integration_queue_job():
 
         process_single_integration_queue(queue_job)
 
+
 def process_stopped_integration_queue_job():
 
     all_stopped_integration_queue_jobs = Queue.objects.filter(
@@ -209,6 +226,7 @@ def process_stopped_integration_queue_job():
         queue_job.queue_class = QueueClass.PROCESSED.value
         queue_job.queue_status = QueueStatus.COMPLETED.value
         queue_job.save()
+
 
 def process_inprogress_integration_queue_job():
 
@@ -227,7 +245,8 @@ def integration_queue_scheduler_start():
     # run this job every 60 seconds
     process_inprogress_integration_queue_job()
     scheduler.add_job(process_integration_queue_job, 'interval', seconds=15)
-    scheduler.add_job(process_stopped_integration_queue_job, 'interval', seconds=15)
+    scheduler.add_job(process_stopped_integration_queue_job,
+                      'interval', seconds=15)
     # register_events(scheduler)
     scheduler.start()
     print("Processing Integration Queue", file=sys.stdout)

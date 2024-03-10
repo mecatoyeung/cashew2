@@ -67,7 +67,7 @@ export default function Parsers() {
   const getIntegrations = () => {
     if (!parserId) return;
     service.get(`parsers/${parserId}/integrations/`, (response) => {
-      console.log(response.data)
+      console.log(response.data);
       setRowData(response.data);
     });
   };
@@ -81,15 +81,15 @@ export default function Parsers() {
   };
 
   const modifyBtnClickHandler = (integration) => {
-    console.log(integration)
+    console.log(integration);
     router.push(
       "/workspace/parsers/" + parserId + "/integrations/" + integration.id + "/"
     );
   };
 
   const deleteBtnClickHandler = async (integration) => {
-    await service.delete("integrations/" + integration.id + "/")
-    getIntegrations()
+    await service.delete("integrations/" + integration.id + "/");
+    getIntegrations();
   };
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function Parsers() {
 
   return (
     <>
-      {parserId && rowData && rowData.length > 0 && (
+      {parserId && rowData && (
         <WorkspaceLayout>
           <div className={integrationsStyles.wrapper}>
             <h1 className={integrationsStyles.h1}>Integrations</h1>
@@ -107,10 +107,16 @@ export default function Parsers() {
                 title="Perform Action"
                 className={integrationsStyles.performActionDropdown}
               >
-                <Dropdown.Item href="#" onClick={addXMLIntegrationBtnClickHandler}>
+                <Dropdown.Item
+                  href="#"
+                  onClick={addXMLIntegrationBtnClickHandler}
+                >
                   Add XML Integration
                 </Dropdown.Item>
-                <Dropdown.Item href="#" onClick={addPDFIntegrationBtnClickHandler}>
+                <Dropdown.Item
+                  href="#"
+                  onClick={addPDFIntegrationBtnClickHandler}
+                >
                   Add PDF Integration
                 </Dropdown.Item>
               </DropdownButton>

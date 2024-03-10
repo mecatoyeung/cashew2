@@ -87,8 +87,10 @@ class RuleExtractor:
 
             xml_page = [x for x in xml_pages if x.page_num == page_num][0]
 
-            MEDIAN_OF_TEXT_HEIGHTS = xml_page.median_of_text_heights * Decimal(2000.00) / xml_page.height
-            MEDIAN_OF_TEXT_WIDTHS = xml_page.median_of_text_widths * Decimal(2000.00) / xml_page.width
+            MEDIAN_OF_TEXT_HEIGHTS = xml_page.median_of_text_heights * \
+                Decimal(2000.00) / xml_page.height
+            MEDIAN_OF_TEXT_WIDTHS = xml_page.median_of_text_widths * \
+                Decimal(2000.00) / xml_page.width
 
             xml_rule = XMLRule(xml_page, self.rule)
 
@@ -96,8 +98,8 @@ class RuleExtractor:
             textlines_within_area = []
             for textline in xml_page.textlines:
                 # Tailored for Google Invoices
-                if re.match(r'[.]+', textline.text):
-                    continue
+                # if re.match(r'[.]+', textline.text):
+                # continue
 
                 if xml_rule.region.overlaps(textline.region) and textline.text != "":
                     textlines_within_area.append(textline)
@@ -132,11 +134,8 @@ class RuleExtractor:
                     toppest_textline)
                 textlines_within_area.pop(toppest_textline_index)
                 textline_index = 0
-                
-                while textline_index < len(textlines_within_area):
 
-                    if "#" in textlines_within_area[textline_index].text:
-                        luck = 1
+                while textline_index < len(textlines_within_area):
 
                     if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
                         break
@@ -521,10 +520,12 @@ class RuleExtractor:
 
                 textlines_organized_in_columns.append(textlines_within_area)
 
-        median_of_text_widths = statistics.median(text_widths) * xml_page.width / Decimal(1000.00)
+        median_of_text_widths = statistics.median(
+            text_widths) * xml_page.width / Decimal(1000.00)
         # median_of_text_widths = ASSUMED_TEXT_WIDTH
-        median_of_text_heights = statistics.median(text_heights) * xml_page.height / Decimal(1000.00)
-        #median_of_text_heights = ASSUMED_TEXT_HEIGHT
+        median_of_text_heights = statistics.median(
+            text_heights) * xml_page.height / Decimal(1000.00)
+        # median_of_text_heights = ASSUMED_TEXT_HEIGHT
 
         textlines_organized_in_rows = []
         toppest_textline = None

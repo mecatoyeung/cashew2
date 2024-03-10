@@ -51,7 +51,7 @@ class SplittingSerializer(serializers.ModelSerializer):
 
             self._get_or_create_consecutive_page_splitting_conditions(
                 consecutive_page_splitting_conditions, consecutive_page_splitting_rule_obj)
-            
+
             sort_order = sort_order + 1
 
     def _get_or_create_consecutive_page_splitting_conditions(self,
@@ -93,7 +93,7 @@ class SplittingSerializer(serializers.ModelSerializer):
 
             self._get_or_create_last_page_splitting_conditions(
                 last_page_splitting_conditions, last_page_splitting_rule_obj)
-            
+
             sort_order = sort_order + 1
 
     def _get_or_create_last_page_splitting_conditions(self,
@@ -124,9 +124,9 @@ class SplittingSerializer(serializers.ModelSerializer):
             last_page_splitting_rules = splitting_rule.pop(
                 "last_page_splitting_rules", [])
 
-            #splitting_rule_obj, splitting_rule_created = SplittingRule.objects.create(
+            # splitting_rule_obj, splitting_rule_created = SplittingRule.objects.create(
             #    **splitting_rule,
-            #)
+            # )
             splitting_rule_obj = SplittingRule(**splitting_rule)
             splitting_rule_obj.save()
 
@@ -185,35 +185,34 @@ class SplittingSerializer(serializers.ModelSerializer):
         return splitting_obj
 
     def update(self, instance, validated_data):
-        with transaction.atomic():
-            """ Create a splitting rule. """
-            splitting_id = instance.id
-            SplittingCondition.objects.filter(
-                splitting_rule__splitting_id=splitting_id
-            ).delete()
-            SplittingRule.objects.filter(
-                splitting_id=splitting_id
-            ).delete()
-            ConsecutivePageSplittingRule.objects.filter(
-                parent_splitting_rule__splitting_id=splitting_id
-            ).delete()
-            LastPageSplittingRule.objects.filter(
-                parent_splitting_rule__splitting_id=splitting_id
-            ).delete()
+        """ Create a splitting rule. """
+        splitting_id = instance.id
+        SplittingCondition.objects.filter(
+            splitting_rule__splitting_id=splitting_id
+        ).delete()
+        SplittingRule.objects.filter(
+            splitting_id=splitting_id
+        ).delete()
+        ConsecutivePageSplittingRule.objects.filter(
+            parent_splitting_rule__splitting_id=splitting_id
+        ).delete()
+        LastPageSplittingRule.objects.filter(
+            parent_splitting_rule__splitting_id=splitting_id
+        ).delete()
 
-            splitting_rules = validated_data.pop("splitting_rules", [])
+        splitting_rules = validated_data.pop("splitting_rules", [])
 
-            instance.no_first_page_rules_matched_operation_type = validated_data.pop(
-                "no_first_page_rules_matched_operation_type")
-            instance.no_first_page_rules_matched_route_to_parser = validated_data.pop(
-                "no_first_page_rules_matched_route_to_parser")
-            instance.activated = validated_data.pop(
-                "activated")
-            instance.save()
+        instance.no_first_page_rules_matched_operation_type = validated_data.pop(
+            "no_first_page_rules_matched_operation_type")
+        instance.no_first_page_rules_matched_route_to_parser = validated_data.pop(
+            "no_first_page_rules_matched_route_to_parser")
+        instance.activated = validated_data.pop(
+            "activated")
+        instance.save()
 
-            self._get_or_create_splitting_rules(splitting_rules, instance)
+        self._get_or_create_splitting_rules(splitting_rules, instance)
 
-            return instance
+        return instance
 
 
 class PostSplittingSerializer(SplittingSerializer):

@@ -57,13 +57,14 @@ def get_streamed_by_rule(rule_id, parsed_result):
             return r["streamed"]
     raise Exception("Cannot find streamed by rule from parsed result.")
 
+
 def process_single_splitting_queue(queue_job):
 
     all_in_process_splitting_queue_jobs = Queue.objects.filter(
         queue_class=QueueClass.SPLITTING.value, queue_status=QueueStatus.IN_PROGRESS.value)
     if all_in_process_splitting_queue_jobs.count() > 0:
         return
-    
+
     # Mark the job as in progress
     queue_job.queue_class = QueueClass.SPLITTING.value
     queue_job.queue_status = QueueStatus.IN_PROGRESS.value
@@ -84,14 +85,14 @@ def process_single_splitting_queue(queue_job):
                 .prefetch_related("splitting_conditions")
                 .prefetch_related(
                     Prefetch("consecutive_page_splitting_rules",
-                                queryset=ConsecutivePageSplittingRule.objects.
-                                order_by("sort_order").prefetch_related("consecutive_page_splitting_conditions")))
+                             queryset=ConsecutivePageSplittingRule.objects.
+                             order_by("sort_order").prefetch_related("consecutive_page_splitting_conditions")))
                 .prefetch_related(
                     Prefetch("last_page_splitting_rules",
-                                queryset=LastPageSplittingRule.objects
-                                .order_by("sort_order").prefetch_related("last_page_splitting_conditions"))))).get(parser_id=parser.id)
+                             queryset=LastPageSplittingRule.objects
+                             .order_by("sort_order").prefetch_related("last_page_splitting_conditions"))))).get(parser_id=parser.id)
 
-            if splitting.activated == False:
+            if splitting.activated == False or document.splitted == True:
                 queue_job.queue_class = QueueClass.PARSING.value
                 queue_job.queue_status = QueueStatus.READY.value
                 queue_job.save()
@@ -330,7 +331,10 @@ def process_single_splitting_queue(queue_job):
                         new_document.total_page_num = len(
                             accumulated_page_nums)
                         route_to_parser_id = first_page_splitting_rule.route_to_parser_id
+                        # Fix for NO OCR
+                        route_to_parser_id = parser.id
                         new_document.parser_id = route_to_parser_id
+                        new_document.splitted = True
                         new_document.last_modified_at = datetime.now()
                         new_parser_ocr = OCR.objects.get(
                             parser_id=route_to_parser_id)
@@ -428,6 +432,7 @@ def process_single_splitting_queue(queue_job):
         queue_job.save()
         print(e)
 
+
 def process_splitting_queue_job():
 
     all_ready_splitting_queue_jobs = Queue.objects \
@@ -448,8 +453,9 @@ def process_splitting_queue_job():
         .filter(queue_class=QueueClass.SPLITTING.value, queue_status=QueueStatus.READY.value) \
         .all()
     for queue_job in all_ready_splitting_queue_jobs:
-        
+
         process_single_splitting_queue(queue_job)
+
 
 def splitting_queue_scheduler_start():
     scheduler = BackgroundScheduler(

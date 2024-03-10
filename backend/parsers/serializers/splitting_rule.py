@@ -13,6 +13,8 @@ from parsers.serializers.last_page_splitting_rule import LastPageSplittingRuleSe
 class SplittingRuleSerializer(serializers.ModelSerializer):
     """ Serializer for splitting rules. """
     sort_order = serializers.IntegerField(required=False)
+    route_to_parser = serializers.IntegerField(
+        required=False, allow_null=True)
     splitting_conditions = SplittingConditionSerializer(
         many=True, required=False)
     consecutive_page_splitting_rules = ConsecutivePageSplittingRuleSerializer(
@@ -64,6 +66,8 @@ class SplittingRuleSerializer(serializers.ModelSerializer):
 
 class PostSplittingRuleSerializer(serializers.ModelSerializer):
     sort_order = serializers.IntegerField(required=False)
+    route_to_parser = serializers.IntegerField(
+        required=False, allow_null=True)
     splitting_conditions = SplittingConditionSerializer(
         many=True, required=False)
     consecutive_page_splitting_rules = ConsecutivePageSplittingRuleSerializer(
