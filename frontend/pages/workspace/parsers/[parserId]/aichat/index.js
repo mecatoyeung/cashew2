@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createElement } from 'react'
 
 import Head from "next/head";
 
@@ -411,7 +412,7 @@ const AIChat = (props) => {
   };
 
   const chatTextKeyDownHandler = (e) => {
-    if ((e.keyCode == 10 || e.keyCode == 13) && e.ctrlKey) {
+    if ((e.keyCode == 10 || e.keyCode == 13) && e.shiftKey) {
       chatTextSendHandler(e.target.value);
       setChatText("");
     }
@@ -603,7 +604,8 @@ const AIChat = (props) => {
   };
 
   const zoomInTextBtnClickHandler = () => {
-    setTextFontSize(textFontSize * 1.1);
+    let tmpFontSize = textFontSize * 1.1
+    setTextFontSize(tmpFontSize);
   };
 
   const zoomOutTextBtnClickHandler = () => {
