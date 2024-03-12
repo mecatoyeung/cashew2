@@ -2,8 +2,12 @@ import axios from 'axios'
 
 class Service {
   constructor() {
+    let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    if (typeof window !== 'undefined') {
+      baseUrl = "http://" + window.location.hostname + ":8000/api"
+    }
     let service = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL
+      baseURL: baseUrl
     });
     service.interceptors.response.use(this.handleSuccess, this.handleError)
     service.interceptors.request.use(function (config) {
@@ -58,8 +62,12 @@ class Service {
   }
 
   getFile(path, callback) {
+    let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    if (typeof window !== 'undefined') {
+      baseUrl = "http://" + window.location.hostname + ":8000/api"
+    }
     let service = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      baseURL: baseUrl,
       responseType: "arraybuffer",
     })
     service.interceptors.response.use(this.handleSuccess, this.handleError)
@@ -76,8 +84,12 @@ class Service {
   }
 
   getFileBlob(path, callback) {
+    let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    if (typeof window !== 'undefined') {
+      baseUrl = "http://" + window.location.hostname + ":8000/api"
+    }
     let service = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      baseURL: baseUrl,
       responseType: "blob",
     })
     service.interceptors.response.use(this.handleSuccess, this.handleError)

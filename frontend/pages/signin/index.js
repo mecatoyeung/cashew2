@@ -16,7 +16,7 @@ import OnePageLayout from "../../layouts/onePage";
 
 import signInStyles from "../../styles/SignIn.module.css";
 
-export default function SignIn() {
+function SignIn() {
   const router = useRouter();
 
   const { callbackUrl } = router.query;
@@ -229,3 +229,5 @@ export default function SignIn() {
     </>
   );
 }
+
+export default SignIn
