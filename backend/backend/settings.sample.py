@@ -199,6 +199,10 @@ REST_REGISTRATION = {
     },
 }
 
+REST_AUTH_SERIALIZERS = {
+    'PASSWORD_CHANGE_SERIALIZER ': 'user.serializers.MyPasswordChangeSerializer',
+}
+
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

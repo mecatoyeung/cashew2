@@ -35,6 +35,9 @@ export default function Parsers() {
       width: 170,
       cellRenderer: (params) => {
         let integration = params.data;
+        if (integration == undefined) {
+          return
+        }
         return (
           <div style={{ display: "flex", flexDirection: "row" }}>
             <Button

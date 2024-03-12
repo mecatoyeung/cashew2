@@ -17,7 +17,7 @@ class LastPageSplittingConditionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def get_last_page_splitting_rule(self, obj):
-        from parsers.serializers.last_page_splitting_rule import LastPageSplittingRuleSerializer
+        from parsers.serializers.nested.last_page_splitting_rule import LastPageSplittingRuleSerializer
         return LastPageSplittingRuleSerializer(obj.last_page_splitting_rule).data
 
 
@@ -34,5 +34,5 @@ class LastPagePostSplittingConditionSerializer(serializers.ModelSerializer):
                   'operator', 'value', 'sort_order']
         
     def get_last_page_splitting_rule(self, obj):
-        from parsers.serializers.last_page_splitting_rule import LastPageSplittingRuleSerializer
+        from parsers.serializers.nested.last_page_splitting_rule import LastPageSplittingRuleSerializer
         return LastPageSplittingRuleSerializer(obj.last_page_splitting_rule).data

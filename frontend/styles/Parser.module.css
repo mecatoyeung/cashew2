@@ -8,15 +8,14 @@
   padding: 0 0;
   margin: 0;
   display: grid;
-  column-gap: 10px;
-  row-gap: 10px;
+  column-gap: 20px;
+  row-gap: 20px;
   grid-template-columns: repeat(5, 1fr);
 }
 
 .parsersUl li {
   border: 3px solid #e31a2f;
   border-radius: 6px;
-  margin: 10px;
   height: 120px;
   display: flex;
   justify-content: center;
@@ -25,10 +24,17 @@
   vertical-align: middle;
   cursor: pointer;
   position: relative;
+  &:hover {
+    .parserActions {
+      color: white;
+    }
+  }
 }
 
 .parsersUl li:hover {
   border: 3px solid #e31a2f;
+  color: white;
+  background: #e31a2f;
 }
 
 .parsersUl li.addParserLi {

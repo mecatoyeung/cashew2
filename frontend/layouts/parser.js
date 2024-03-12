@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "react-bootstrap";
 import Dropdown from "react-bootstrap/Dropdown";
@@ -14,6 +14,14 @@ import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css";
 export default function ParserLayout({ children }) {
   const router = useRouter();
 
+  const [userProfile, setUserProfile] = useState(null)
+
+  const getUserProfile = () => {
+    service.get("profiles/", (response) => {
+      setUserProfile(response.data[0])
+    })
+  }
+
   const logoutBtnClickHandler = () => {
     service.post("rest-auth/logout/", {}, () => {
       localStorage.removeItem("token");
@@ -21,7 +29,9 @@ export default function ParserLayout({ children }) {
     });
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    getUserProfile()
+  }, []);
 
   return (
     <>
@@ -48,16 +58,25 @@ export default function ParserLayout({ children }) {
                   />
                 </div>
                 <h2>Cashew</h2>
+                <a
+                    href="#"
+                    onClick={() => router.back()}
+                    style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
+                >
+                  <i className={ workspaceLayoutStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                </a>
               </div>
               <div className="col-8 col-md-8">
                 <nav className={workspaceLayoutStyles.nav}>
                   <ul>
-                    <li>Welcome!</li>
                     <li>
                       <DropdownButton
                         id="dropdown-basic-button"
                         title="Account"
                       >
+                        {userProfile && (
+                            <Dropdown.Item href="#">Welcome, {userProfile.fullName}</Dropdown.Item>
+                        )}
                         <Dropdown.Item
                           href={
                             router.pathname.split("/")[1] == "workspace"

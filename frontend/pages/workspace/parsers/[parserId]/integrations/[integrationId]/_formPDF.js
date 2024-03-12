@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useRouter } from "next/router"
+import dynamic from "next/dynamic";
 import Image from "next/image"
 
 import { produce } from "immer"
@@ -14,6 +15,11 @@ import Select from "react-select"
 
 import { AgGridReact } from "ag-grid-react"
 
+const CodeEditor = dynamic(
+  () => import("@uiw/react-textarea-code-editor").then((mod) => mod.default),
+  { ssr: false }
+)
+
 import WorkspaceLayout from "../../../../../../layouts/workspace"
 
 import service from "../../../../../../service"
@@ -25,6 +31,17 @@ export default function Parsers(props) {
   const router = useRouter()
 
   const { parserId, integrationId } = router.query
+
+  const [rules, setRules] = useState([])
+
+  const [pdfPathSelectionStart, setPdfPathSelectionStart] = useState(0)
+
+  const getRules = () => {
+    if (!parserId) return
+    service.get(`rules/?parserId=${parserId}`, response => {
+      setRules(response.data)
+    })
+  }
 
   let pdfIntegrationTypeOptions = [
     {
@@ -172,11 +189,89 @@ export default function Parsers(props) {
     })
   }
 
+  const pdfPathChangeHandler = (e) => {
+    setPdfPathSelectionStart(0)
+    e.target.value = e.target.value.replace(/[\r\n]+/g, " ");
+    setForm(
+      produce((draft) => {
+        draft.pdfPath = e.target.value
+      })
+    )
+  }
+
+  const addParsedResultClickHandler = (e, rule) => {
+    let textToInsert = "{{ parsed_result[\"" + rule.name + "\"] }}"
+    let cursorPosition = pdfPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlEditor = document.getElementById("xml-editor")
+      cursorPosition = xmlEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
+    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentNameClickHandler = (e) => {
+    let textToInsert = "{{ document.filename_without_extension }}"
+    let xmlEditor = document.getElementById("xml-editor")
+    let cursorPosition = pdfPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlEditor = document.getElementById("xml-editor")
+      cursorPosition = xmlEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
+    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentExtensionClickHandler = (e) => {
+    let textToInsert = "{{ document.extension }}"
+    let xmlEditor = document.getElementById("xml-editor")
+    let cursorPosition = pdfPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlEditor = document.getElementById("xml-editor")
+      cursorPosition = xmlEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
+    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addCreatedDateClickHandler =(e) => {
+    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let xmlEditor = document.getElementById("xml-editor")
+    let cursorPosition = pdfPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlEditor = document.getElementById("xml-editor")
+      cursorPosition = xmlEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
+    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
   useEffect(() => {
     if (props.type == "edit") {
       getIntegration()
       getPreProcessings()
       getPostProcessings()
+      getRules()
     }
   }, [parserId, integrationId])
 
@@ -265,16 +360,38 @@ export default function Parsers(props) {
                 )}
                 <Form.Group className="col-12" controlId="addForm.sourcePath">
                   <Form.Label>PDF Output Path</Form.Label>
-                  <Form.Control
-                    type="name"
-                    placeholder="PDF Output Path"
+                  <div style={{ border: "1px solid #000", display: "flex" }}>
+                    <Dropdown style={{ display: "flex", flexDirection: "row"}}>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0, borderRight: "1px solid #fff" }}>
+                        Add Parsed Results
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        {rules.map(rule => (
+                          <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandler(e, rule)}>{rule.name}</Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                    <Dropdown>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0 }}>
+                        Add Document Properties
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentNameClickHandler(e)}>Document Name without Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentExtensionClickHandler(e)}>Document Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addCreatedDateClickHandler(e)}>Created Date</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
+                  <CodeEditor
+                    id="xml-editor"
                     value={form.pdfPath}
-                    onChange={(e) => {
-                      setForm(
-                        produce((draft) => {
-                          draft.pdfPath = e.target.value;
-                        })
-                      );
+                    language="js"
+                    placeholder="Please enter PDF path"
+                    onChange={(e) => pdfPathChangeHandler(e)}
+                    onFocus={() => setPdfPathSelectionStart(0)}
+                    padding={15}
+                    style={{
+                      border: "1px solid #333",
                     }}
                   />
                 </Form.Group>

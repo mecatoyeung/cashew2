@@ -81,10 +81,6 @@ const noFirstPageRulesMatchedOperations = [
     value: "REMOVE_THE_PAGE",
   },
   {
-    label: "Proceed to parsing queue of the current layout",
-    value: "CONTINUE_PARSING",
-  },
-  {
     label: "Route to parser",
     value: "ROUTE_TO_PARSER",
   },
@@ -485,15 +481,26 @@ const Splitting = () => {
       <div className={styles.splittingWrapper}>
         <h1>Splitting</h1>
         <Card style={{ width: "100%", marginBottom: 10 }}>
-          <Card.Body>
+          <Card.Body style={{ border: "3px solid #000", paddingLeft: 30 }}>
             {splitting &&
               splitting.splittingRules.map(
                 (firstPageSplittingRule, firstPageSplittingRuleIndex) => (
-                  <Card
+                  <>
+                    {firstPageSplittingRuleIndex > 0 && (
+                    <p
+                      style={{
+                        textAlign: "center",
+                        margin: 10,
+                      }}
+                    >
+                      or
+                    </p>
+                    )}
+                    <Card
                     style={{ width: "100%", marginBottom: 10 }}
                     key={firstPageSplittingRuleIndex}
                   >
-                    <Card.Body>
+                    <Card.Body style={{ border: "3px solid #0d6efd", paddingLeft: 30 }}>
                       <Card.Title>First Page Splitting&nbsp;</Card.Title>
                       <fieldset>
                         <div className={styles.firstPageSplitting}>
@@ -525,7 +532,7 @@ const Splitting = () => {
                                                 styles.firstPageSplittingRuleName
                                               }
                                             >
-                                              {
+                                              {rules && 
                                                 rules.find(
                                                   (r) =>
                                                     r.id ==
@@ -704,7 +711,7 @@ const Splitting = () => {
                                         marginBottom: 10,
                                       }}
                                     >
-                                      <Card.Body>
+                                      <Card.Body style={{ border: "3px solid #dc3545", paddingLeft: 30 }}>
                                         <fieldset>
                                           <div
                                             className={
@@ -971,6 +978,19 @@ const Splitting = () => {
                                 );
                               }
                             )}
+                          <div
+                            className={styles.consecutivePageSplittingActions}
+                          >
+                            <Button
+                              onClick={() =>
+                                addConsecutivePageSplittingClickHandler(
+                                  firstPageSplittingRuleIndex
+                                )
+                              }
+                            >
+                              Add Consecutive Page Splitting
+                            </Button>
+                          </div>
                           <Card.Title style={{ marginTop: "20px" }}>
                             Last Page Splitting
                           </Card.Title>
@@ -998,7 +1018,7 @@ const Splitting = () => {
                                         marginBottom: 10,
                                       }}
                                     >
-                                      <Card.Body>
+                                      <Card.Body style={{ border: "3px solid #dc3545", paddingLeft: 30 }}>
                                         <fieldset>
                                           <div
                                             className={styles.lastPageSplitting}
@@ -1179,7 +1199,7 @@ const Splitting = () => {
                                                   styles.lastPageSplittingParser
                                                 }
                                               >
-                                                {
+                                                {allParsers && 
                                                   allParsers.find(
                                                     (p) =>
                                                       p.id ==
@@ -1235,19 +1255,6 @@ const Splitting = () => {
                                 );
                               }
                             )}
-                          <div
-                            className={styles.consecutivePageSplittingActions}
-                          >
-                            <Button
-                              onClick={() =>
-                                addConsecutivePageSplittingClickHandler(
-                                  firstPageSplittingRuleIndex
-                                )
-                              }
-                            >
-                              Add Consecutive Page Splitting
-                            </Button>
-                          </div>
                           <div className={styles.lastPageSplittingActions}>
                             <Button
                               onClick={() =>
@@ -1266,7 +1273,7 @@ const Splitting = () => {
                               marginTop: 10,
                             }}
                           >
-                            <Card.Body>
+                            <Card.Body style={{ border: "3px solid #dc3545", paddingLeft: 30 }}>
                               <fieldset>
                                 <div
                                   className={styles.consecutivePageSplitting}
@@ -1342,6 +1349,7 @@ const Splitting = () => {
                       </Button>
                     </Card.Body>
                   </Card>
+                  </>
                 )
               )}
             <Button
@@ -1352,7 +1360,7 @@ const Splitting = () => {
             </Button>
             {splitting && splitting.splittingRules.length > 0 && (
               <Card style={{ width: "100%", marginBottom: 10 }}>
-                <Card.Body>
+                <Card.Body style={{ border: "3px solid #0d6efd", paddingLeft: 30 }}>
                   <fieldset>
                     <div className={styles.firstPageSplitting}>
                       <div className={styles.firstPageSplittingConditions}>
@@ -1362,6 +1370,12 @@ const Splitting = () => {
                       </div>
                       <div className={styles.firstPageSplittingRouter}>
                         <Select
+                        styles={{
+                            control: (baseStyles, state) => ({
+                              ...baseStyles,
+                              border: "3px solid #0d6efd"
+                            }),
+                          }}
                           options={noFirstPageRulesMatchedOperations}
                           value={noFirstPageRulesMatchedOperations.find(
                             (m) =>
@@ -1381,6 +1395,12 @@ const Splitting = () => {
                           <Form.Group>
                             <Form.Label>Route to parser: </Form.Label>
                             <Select
+                              styles={{
+                                  control: (baseStyles, state) => ({
+                                    ...baseStyles,
+                                    border: "3px solid #0d6efd"
+                                  }),
+                                }}
                               options={allParsers.map((p) => {
                                 return {
                                   label: p.name,

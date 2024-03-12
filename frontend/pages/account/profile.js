@@ -114,8 +114,10 @@ export default function Profile() {
 
   return (
     <AccountLayout>
-        <h1 className={accountStyles.h1}>Profile</h1>
-        <div className={accountStyles.profileDiv}>
+      {profileForm?.user?.id && (
+        <>
+          <h1 className={accountStyles.h1}>Profile</h1>
+          <div className={accountStyles.profileDiv}>
             <Form>
               <Row>
                 <Form.Group as={Col} className={accountStyles.col + " xs-12" + " md-3"} controlId="formFullName">
@@ -220,7 +222,9 @@ export default function Profile() {
                 </Form.Group>
               </Row>
             </Form>
-        </div>
+          </div>
+        </>
+      )}
     </AccountLayout>
   )
 }

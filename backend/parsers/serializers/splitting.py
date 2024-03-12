@@ -3,6 +3,7 @@ from io import BytesIO
 from rest_framework import serializers
 from django.db import transaction
 
+from parsers.models.parser import Parser
 from parsers.models.splitting import Splitting
 from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_condition import SplittingCondition
@@ -127,6 +128,7 @@ class SplittingSerializer(serializers.ModelSerializer):
             # splitting_rule_obj, splitting_rule_created = SplittingRule.objects.create(
             #    **splitting_rule,
             # )
+            splitting_rule["route_to_parser"] = Parser.objects.get(pk=splitting_rule["route_to_parser"])
             splitting_rule_obj = SplittingRule(**splitting_rule)
             splitting_rule_obj.save()
 

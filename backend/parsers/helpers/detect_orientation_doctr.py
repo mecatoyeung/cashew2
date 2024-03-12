@@ -167,6 +167,9 @@ def detect_orientation_doctr(document, page_num, pre_processing, last_preprocess
     im_corrected = imutils.rotate_bound(im, angle)
     cv2.imwrite(abs_new_pre_processed_image_path, im_corrected)
 
-    os.remove(abs_pre_processed_rotated_image_path)
+    try:
+        os.remove(abs_pre_processed_rotated_image_path)
+    except:
+        pass
 
     document_page.save()

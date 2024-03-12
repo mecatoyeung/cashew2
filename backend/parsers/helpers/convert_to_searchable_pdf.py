@@ -877,11 +877,8 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                                 document, accumulated_page_num)
                         else:
                             last_preprocessing = preprocessings[0]
-                            pre_processed_image_path(
+                            document_page_file_path = pre_processed_image_path(
                                 document, last_preprocessing, accumulated_page_num)
-                            if not os.path.exists(document_page_file_path):
-                                document_page_file_path = original_image_path(
-                                    document, accumulated_page_num)
 
                         new_document_page_image_file = original_image_path(
                             new_document, new_document_page_num_counter)

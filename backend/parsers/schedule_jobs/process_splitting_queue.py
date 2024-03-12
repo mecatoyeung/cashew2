@@ -23,6 +23,7 @@ from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.parser import Parser
+from parsers.models.parser_type import ParserType
 from parsers.models.document import Document
 from parsers.models.document_type import DocumentType
 from parsers.models.document_extension import DocumentExtension
@@ -330,14 +331,16 @@ def process_single_splitting_queue(queue_job):
                         new_document.extension = "pdf"
                         new_document.total_page_num = len(
                             accumulated_page_nums)
-                        route_to_parser_id = first_page_splitting_rule.route_to_parser_id
-                        # Fix for NO OCR
-                        route_to_parser_id = parser.id
-                        new_document.parser_id = route_to_parser_id
+                        if parser.type == ParserType.LAYOUT.value:
+                            new_document.parser_id = parser.id
+                        elif parser.type == ParserType.ROUTING.value:
+                            route_to_parser_id = first_page_splitting_rule.route_to_parser_id
+                            new_document.parser_id = route_to_parser_id
                         new_document.splitted = True
                         new_document.last_modified_at = datetime.now()
+
                         new_parser_ocr = OCR.objects.get(
-                            parser_id=route_to_parser_id)
+                            parser_id=new_document.parser_id)
 
                         new_documents_path = os.path.join(
                             media_folder_path, "documents", str(new_document.guid))

@@ -832,6 +832,13 @@ const AIChat = (props) => {
                   />
                 </div>
                 <h2>Cashew</h2>
+                <a
+                    href="#"
+                    onClick={() => router.back()}
+                    style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
+                >
+                  <i className={ styles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                </a>
                 &nbsp;&nbsp;&nbsp;
                 {props.type == "workbench" && (
                   <Nav.Link

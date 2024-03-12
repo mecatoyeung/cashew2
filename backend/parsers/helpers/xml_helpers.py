@@ -183,7 +183,16 @@ class XMLPage:
 
         self.sort_textlines()
 
-        
+        filtered_textlines = []
+        for textline in self.textlines:
+
+            # Fix for Google Invoices
+            if re.match(r'[.]{2,}', textline.text):
+                continue
+
+            filtered_textlines.append(textline)
+
+        self.textlines = filtered_textlines
 
         # Calculate median of text width and height
         """text_widths = []

@@ -69,14 +69,18 @@ export default function WorkspaceHeader({ children }) {
                 </div>
                 <h2>Cashew</h2>
                 &nbsp;&nbsp;&nbsp;
+                <a
+                    href="#"
+                    onClick={() => router.back()}
+                    style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
+                >
+                  <i className={ headerStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                </a>
                 <Nav.Link
                     href="/workspace/parsers"
                     style={{ display: "inline-block", verticalAlign: "top" }}
                 >
-                    <i
-                    className={
-                        headerStyles.parsersIcon + " bi bi-grid"
-                    }
+                    <i className={ headerStyles.parsersIcon + " bi bi-grid" }
                     ></i>
                 </Nav.Link>
                 </div>
@@ -91,6 +95,17 @@ export default function WorkspaceHeader({ children }) {
                         {userProfile && (
                             <Dropdown.Item href="#">Welcome, {userProfile.fullName}</Dropdown.Item>
                         )}
+                        <Dropdown.Item
+                          href={
+                            router.pathname.split("/")[1] == "workspace"
+                              ? "/workbench/parsers"
+                              : "/workspace/parsers"
+                          }
+                        >
+                          {router.pathname.split("/")[1] == "workspace"
+                            ? "Switch to Workbench"
+                            : "Switch to Workspace"}
+                        </Dropdown.Item>
                         <Dropdown.Item href="/account/profile">Profile</Dropdown.Item>
                         <Dropdown.Item href="/account/change-password">Change Password</Dropdown.Item>
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>Logout</Dropdown.Item>

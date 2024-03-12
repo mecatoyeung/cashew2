@@ -112,6 +112,13 @@ export default function AIChatLayout({ children }) {
                 </div>
                 <h2>Cashew</h2>
                 &nbsp;&nbsp;&nbsp;
+                <a
+                    href="#"
+                    onClick={() => router.back()}
+                    style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
+                >
+                  <i className={ styles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                </a>
                 <Nav.Link
                   href="/workspace/parsers"
                   style={{ display: "inline-block", verticalAlign: "top" }}

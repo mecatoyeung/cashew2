@@ -32,19 +32,19 @@
 .firstPageSplittingRuleName {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .firstPageSplittingOperator {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .firstPageSplittingValue {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .firstPageSplittingThen {
@@ -91,19 +91,19 @@
 .consecutivePageSplittingRuleName {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .consecutivePageSplittingOperator {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .consecutivePageSplittingValue {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .consecutivePageSplittingThen {
@@ -146,19 +146,19 @@
 .lastPageSplittingRuleName {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .lastPageSplittingOperator {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .lastPageSplittingValue {
     margin: 0 5px;
     padding: 5px;
-    border: 1px solid #333;
+    border: 3px solid #333;
 }
 
 .lastPageSplittingThen {

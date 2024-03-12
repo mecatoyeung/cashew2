@@ -35,7 +35,7 @@ export default function PreProcessingForm(props) {
 
   const [form, setForm] = useState({
     name: "",
-    preProcessingType: "ORIENTATION_DETECTION_TESSERACT",
+    preProcessingType: "ORIENTATION_DETECTION_DOCTR",
     orientationDetectionTesseractConfidenceAbove: 0.5,
     step: 10,
     debug: false,

@@ -6,6 +6,8 @@ from django.contrib.auth import (
 )
 from django.utils.translation import gettext as _
 
+from django.conf import settings
+
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework import serializers
@@ -17,6 +19,7 @@ from django.contrib.auth import get_user_model
 from core.models.profile import Profile
 
 from rest_auth.registration.serializers import RegisterSerializer
+from rest_auth.serializers import PasswordChangeSerializer
 
 try:
     from allauth.account import app_settings as allauth_settings
@@ -60,3 +63,16 @@ class MyRegisterSerializer(rest_auth.registration.serializers.RegisterSerializer
         self.custom_signup(request, user)
         setup_user_email(request, user, [])
         return user
+    
+class MyPasswordChangeSerializer(PasswordChangeSerializer):
+    
+    def save(self):
+        request = self.context.get('request')
+        logged_in_user = request.user
+        if not logged_in_user.check_password(request.POST["old_password"]):
+            raise Exception("Old password is not correct.")
+        
+        self.set_password_form.save()
+        if not self.logout_on_password_change:
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(self.request, self.user)

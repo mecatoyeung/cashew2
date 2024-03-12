@@ -2,6 +2,7 @@ from typing import List
 
 from rest_framework import serializers
 
+from parsers.models.parser import Parser
 from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_condition import SplittingCondition
 
@@ -9,12 +10,11 @@ from parsers.serializers.splitting_condition import SplittingConditionSerializer
 from parsers.serializers.consecutive_page_splitting_rule import ConsecutivePageSplittingRuleSerializer
 from parsers.serializers.last_page_splitting_rule import LastPageSplittingRuleSerializer
 
-
 class SplittingRuleSerializer(serializers.ModelSerializer):
     """ Serializer for splitting rules. """
     sort_order = serializers.IntegerField(required=False)
-    route_to_parser = serializers.IntegerField(
-        required=False, allow_null=True)
+    #route_to_parser = serializers.SerializerMethodField(
+    #    required=False, allow_null=True)
     splitting_conditions = SplittingConditionSerializer(
         many=True, required=False)
     consecutive_page_splitting_rules = ConsecutivePageSplittingRuleSerializer(
@@ -29,6 +29,10 @@ class SplittingRuleSerializer(serializers.ModelSerializer):
                   "consecutive_page_splitting_rules",
                   "last_page_splitting_rules"]
         read_only_fields = ['id']
+
+    #def get_route_to_parser(self, obj):
+    #    from parsers.serializers.nested.parser import ParserSerializer
+    #    return ParserSerializer(obj.route_to_parser).data
 
     def _get_or_create_splitting_conditions(self, splitting_conditions, splitting_rule):
         """ Handle getting or creating ocr as needed. """

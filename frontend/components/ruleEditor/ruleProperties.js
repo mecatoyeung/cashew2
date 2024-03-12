@@ -59,6 +59,7 @@ const RuleProperties = () => {
 
   const saveBtnClickHandler = () => {
     service.put("rules/" + ruleId + "/", rule, response => {
+      router.push("/workspace/parsers/" + parserId + "/rules/")
       setToast({
         show: true,
         type: "success",

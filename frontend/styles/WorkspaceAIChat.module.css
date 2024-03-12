@@ -36,9 +36,10 @@
 }
 
 .parserName span {
-    line-height: 24px;
-    display: inline-block;
-    vertical-align: middle;
+  line-height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
 }
 
 .parserActions {

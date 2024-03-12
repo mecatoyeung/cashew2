@@ -172,6 +172,7 @@ export default function Parsers() {
 
   return (
     <WorkspaceLayout>
+      {parserId && (
         <div className={rulesStyles.wrapper}>
             <h1 className={rulesStyles.h1}>Fields</h1>
             <div className={rulesStyles.actionsDiv}>
@@ -227,6 +228,7 @@ export default function Parsers() {
                   />
             </div>
         </div>
+      )}
     </WorkspaceLayout>
   )
 }

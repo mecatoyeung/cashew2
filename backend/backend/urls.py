@@ -28,6 +28,7 @@ from drf_spectacular.views import (
 from rest_auth.registration.views import RegisterView, VerifyEmailView
 from rest_auth.views import PasswordResetView, PasswordResetConfirmView
 
+
 from .settings import STATIC_URL, STATIC_ROOT
 
 urlpatterns = [

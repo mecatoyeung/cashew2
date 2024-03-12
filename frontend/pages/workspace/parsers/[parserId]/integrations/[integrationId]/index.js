@@ -45,13 +45,14 @@ export default function Parsers() {
         draft.pdfPath = response.data.pdfPath
         draft.intervalSeconds = response.data.intervalSeconds
         draft.nextRunTime = response.data.nextRunTime
+        draft.activated = response.data.activated
       }))
     })
   }
 
   useEffect(() => {
     getIntegration()
-  }, [parserId, integrationId])
+  }, [parserId])
 
   return (
     <>

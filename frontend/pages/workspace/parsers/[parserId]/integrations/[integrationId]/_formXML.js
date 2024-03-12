@@ -32,6 +32,9 @@ export default function XMLForm(props) {
 
   const { parserId, integrationId } = router.query
 
+  const [xmlPathSelectionStart, setXmlPathSelectionStart] = useState(0)
+  const [templateSelectionStart, setTemplateSelectionStart] = useState(0)
+
   const [form, setForm] = useState({
     name: "",
     integrationType: "XML_INTEGRATION",
@@ -41,6 +44,15 @@ export default function XMLForm(props) {
     activated: true,
     errorMessage: "",
   });
+
+  const [rules, setRules] = useState([])
+
+  const getRules = () => {
+    if (!parserId) return
+    service.get(`rules/?parserId=${parserId}`, response => {
+      setRules(response.data)
+    })
+  }
 
   const addBtnClickHandler = () => {
     let errorMessage = "";
@@ -97,12 +109,151 @@ export default function XMLForm(props) {
     );
   }
 
+  const xmlPathChangeHandler = (e) => {
+    setXmlPathSelectionStart(0)
+    e.target.value = e.target.value.replace(/[\r\n]+/g, " ");
+    setForm(
+      produce((draft) => {
+        draft.xmlPath = e.target.value
+      })
+    )
+  }
+
   const templateChangeHandler = (e) => {
+    setTemplateSelectionStart(0)
     setForm(
       produce((draft) => {
         draft.template = e.target.value;
       })
     )
+  }
+
+  const addParsedResultClickHandlerInTemplate = (e, rule) => {
+    let textToInsert = "{{ parsed_result[\"" + rule.name + "\"] }}"
+    let cursorPosition = templateSelectionStart
+    if (cursorPosition == 0) {
+      let templateEditor = document.getElementById("template-editor")
+      cursorPosition = templateEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.template.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.template.substring(cursorPosition, form.template.length)
+    setTemplateSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.template = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentNameClickHandlerInTemplate = (e) => {
+    let textToInsert = "{{ document.filename_without_extension }}"
+    let cursorPosition = templateSelectionStart
+    if (cursorPosition == 0) {
+      let templateEditor = document.getElementById("template-editor")
+      cursorPosition = templateEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.template.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.template.substring(cursorPosition, form.template.length)
+    setTemplateSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.template = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentExtensionClickHandlerInTemplate = (e) => {
+    let textToInsert = "{{ document.extension }}"
+    let cursorPosition = templateSelectionStart
+    if (cursorPosition == 0) {
+      let templateEditor = document.getElementById("template-editor")
+      cursorPosition = templateEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.template.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.template.substring(cursorPosition, form.template.length)
+    setTemplateSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.template = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addCreatedDateClickHandlerInXmlPath =(e) => {
+    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let cursorPosition = xmlPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlPathEditor = document.getElementById("xmlPath-editor")
+      cursorPosition = xmlPathEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.xmlPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.xmlPath.substring(cursorPosition, form.xmlPath.length)
+    setXmlPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.xmlPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addParsedResultClickHandlerInXmlPath = (e, rule) => {
+    let textToInsert = "{{ parsed_result[\"" + rule.name + "\"] }}"
+    let cursorPosition = xmlPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlPathEditor = document.getElementById("xmlPath-editor")
+      cursorPosition = xmlPathEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.xmlPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.xmlPath.substring(cursorPosition, form.xmlPath.length)
+    setXmlPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.xmlPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentNameClickHandlerInXmlPath = (e) => {
+    let textToInsert = "{{ document.filename_without_extension }}"
+    let cursorPosition = xmlPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlPathEditor = document.getElementById("xmlPath-editor")
+      cursorPosition = xmlPathEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.xmlPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.xmlPath.substring(cursorPosition, form.xmlPath.length)
+    setXmlPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.xmlPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addDocumentExtensionClickHandlerInXmlPath = (e) => {
+    let textToInsert = "{{ document.extension }}"
+    let cursorPosition = xmlPathSelectionStart
+    if (cursorPosition == 0) {
+      let xmlPathEditor = document.getElementById("xmlPath-editor")
+      cursorPosition = xmlPathEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.xmlPath.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.xmlPath.substring(cursorPosition, form.xmlPath.length)
+    setXmlPathSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.xmlPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
+  }
+
+  const addCreatedDateClickHandlerInTemplate =(e) => {
+    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let cursorPosition = templateSelectionStart
+    if (cursorPosition == 0) {
+      let templateEditor = document.getElementById("template-editor")
+      cursorPosition = xmlEditor.selectionStart
+    }
+    let textBeforeCursorPosition = form.template.substring(0, cursorPosition)
+    let textAfterCursorPosition = form.template.substring(cursorPosition, form.template.length)
+    setTemplateSelectionStart(cursorPosition + textToInsert.length)
+    setForm(
+      produce((draft) => {
+        draft.template = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
+      }))
   }
 
   useEffect(() => {
@@ -123,6 +274,9 @@ export default function XMLForm(props) {
           draft.activated = props.integration.activated
         })
       );
+    }
+    if (parserId != null) {
+      getRules()
     }
   }, [parserId]);
 
@@ -157,27 +311,72 @@ export default function XMLForm(props) {
                 </Form.Group>
                 <Form.Group className="col-12" controlId="addForm.xmlPath">
                   <Form.Label>XML Path</Form.Label>
-                  <Form.Control
-                    type="name"
-                    placeholder="XML Path"
+                  <div style={{ border: "1px solid #000", display: "flex" }}>
+                    <Dropdown style={{ display: "flex", flexDirection: "row"}}>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0, borderRight: "1px solid #fff" }}>
+                        Add Parsed Results
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        {rules.map(rule => (
+                          <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInXmlPath(e, rule)}>{rule.name}</Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                    <Dropdown>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0 }}>
+                        Add Document Properties
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentNameClickHandlerInXmlPath(e)}>Document Name without Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentExtensionClickHandlerInXmlPath(e)}>Document Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addCreatedDateClickHandlerInXmlPath(e)}>Created Date</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
+                  <CodeEditor
+                    id="xmlPath-editor"
                     value={form.xmlPath}
-                    onChange={(e) => {
-                      setForm(
-                        produce((draft) => {
-                          draft.xmlPath = e.target.value;
-                        })
-                      );
+                    language="js"
+                    placeholder="Please enter XML path"
+                    onChange={(e) => xmlPathChangeHandler(e)}
+                    onFocus={() => setXmlPathSelectionStart(0)}
+                    padding={15}
+                    style={{
+                      border: "1px solid #333",
                     }}
                   />
                 </Form.Group>
-                {console.log(form)}
                 <Form.Group className="col-12" controlId="addForm.sourceName">
                   <Form.Label>XML Editor</Form.Label>
+                  <div style={{ border: "1px solid #000", display: "flex" }}>
+                    <Dropdown style={{ display: "flex", flexDirection: "row"}}>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0, borderRight: "1px solid #fff" }}>
+                        Add Parsed Results
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        {rules.map(rule => (
+                          <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInTemplate(e, rule)}>{rule.name}</Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                    <Dropdown>
+                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0 }}>
+                        Add Document Properties
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentNameClickHandlerInTemplate(e)}>Document Name without Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentExtensionClickHandlerInTemplate(e)}>Document Extension</Dropdown.Item>
+                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addCreatedDateClickHandlerInTemplate(e)}>Created Date</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
                   <CodeEditor
+                    id="template-editor"
                     value={form.template}
                     language="js"
                     placeholder="Please enter template"
                     onChange={(e) => templateChangeHandler(e)}
+                    onFocus={() => setTemplateSelectionStart(0)}
                     padding={15}
                     style={{
                       border: "1px solid #333",
@@ -206,7 +405,7 @@ export default function XMLForm(props) {
                   <Form.Check
                     type="checkbox"
                     placeholder="Activated"
-                    label="activated"
+                    label="Activated"
                     checked={form.activated}
                     onChange={(e) => {
                       setForm(

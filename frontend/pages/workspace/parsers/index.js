@@ -48,7 +48,6 @@ export default function Parsers() {
 
   const getParsers = () => {
     service.get("parsers/", (response) => {
-      console.log(response.data);
       setParsers(response.data);
     });
   };
@@ -108,6 +107,7 @@ export default function Parsers() {
         getParsers();
         setAddLayoutForm(
           produce((draft) => {
+            draft.name = ""
             draft.show = false;
           })
         );
@@ -138,6 +138,7 @@ export default function Parsers() {
         getParsers();
         setAddDocumentClassificationForm(
           produce((draft) => {
+            draft.name = ""
             draft.show = false;
           })
         );
@@ -221,15 +222,13 @@ export default function Parsers() {
   };
 
   const confirmTrashHandler = (parserId) => {
-    console.log(trashConfirmForm);
-    console.log(parsers);
-    console.log(parserId);
     if (
       trashConfirmForm.name !=
       parsers.find((p) => p.id == trashConfirmForm.parserId).name
     ) {
       setTrashConfirmForm(
         produce((draft) => {
+          draft.name = ""
           draft.isValid = false;
           draft.errorMessage = "Parser name does not match.";
         })
@@ -238,6 +237,7 @@ export default function Parsers() {
     } else {
       setTrashConfirmForm(
         produce((draft) => {
+          draft.name = ""
           draft.isValid = true;
           draft.errorMessage = "";
         })
@@ -420,14 +420,14 @@ export default function Parsers() {
                   )}
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onClick={closeTrashHandler}>
-                    Close
-                  </Button>
                   <Button
                     variant="danger"
                     onClick={() => confirmTrashHandler()}
                   >
                     Delete
+                  </Button>
+                  <Button variant="secondary" onClick={closeTrashHandler}>
+                    Close
                   </Button>
                 </Modal.Footer>
               </Modal>
