@@ -359,7 +359,7 @@ class XMLRegion:
             return True
 
     def is_in_same_line(self, another_region):
-        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(0.25)
+        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(0.35)
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:

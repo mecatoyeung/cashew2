@@ -318,7 +318,7 @@ export default function XMLForm(props) {
                       </Dropdown.Toggle>
                       <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
                         {rules.map(rule => (
-                          <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInXmlPath(e, rule)}>{rule.name}</Dropdown.Item>
+                          <Dropdown.Item key={rule.id} style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInXmlPath(e, rule)}>{rule.name}</Dropdown.Item>
                         ))}
                       </Dropdown.Menu>
                     </Dropdown>
@@ -355,7 +355,7 @@ export default function XMLForm(props) {
                       </Dropdown.Toggle>
                       <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
                         {rules.map(rule => (
-                          <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInTemplate(e, rule)}>{rule.name}</Dropdown.Item>
+                          <Dropdown.Item key={rule.id} style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandlerInTemplate(e, rule)}>{rule.name}</Dropdown.Item>
                         ))}
                       </Dropdown.Menu>
                     </Dropdown>
