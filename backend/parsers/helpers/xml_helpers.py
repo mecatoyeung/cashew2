@@ -8,15 +8,9 @@ import statistics
 from decimal import Decimal
 from pathlib import Path
 
-from parsers.helpers.is_chinese import is_chinese
-
 SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
 ASSUMED_TEXT_WIDTH = Decimal(0.3)
 ASSUMED_TEXT_HEIGHT = Decimal(0.6)
-
-
-def is_english(s):
-    return s.isascii() and s.isalpha()
 
 
 class XMLPage:
@@ -87,8 +81,6 @@ class XMLPage:
 
             self.textlines.append(textline)
 
-        # split textline into textlines if there is empty text betwwen them
-
         # filter out all text that
         for textline in self.textlines:
             result_text = ""
@@ -100,6 +92,7 @@ class XMLPage:
             actual_textline_y2 = None
             prev_text = None
             text_els = textline.textline_element.findall('.//text')
+
             for i in range(len(text_els)):
                 text_el = text_els[i]
 
@@ -180,6 +173,76 @@ class XMLPage:
             textline.region.y1 = actual_textline_y1
             textline.region.x2 = actual_textline_x2
             textline.region.y2 = actual_textline_y2
+
+        
+
+        # split textline into textlines if there is empty text betwwen them
+        new_textlines = []
+        for textline in self.textlines:
+            splitted = False
+            text_elements = textline.text_elements
+            prev_text_els = []
+            if "21" in textline.text:
+                luck = 1
+            for i in range(len(text_elements)):
+                text_el = text_elements[i]
+
+                if text_el.text == '(':
+                    luck = 1
+
+                if len(prev_text_els) > 0:
+                    if text_el.region.x1 >= prev_text_el.region.x2 + Decimal(0.5):
+
+                        splitted = True
+                        new_textline = XMLTextLine(self)
+                        if len(prev_text_els) > 0:
+                            new_textline.region.x1 = prev_text_els[0].region.x1
+                        else:
+                            new_textline.region.x1 = text_el.region.x1
+                        new_textline.region.y1 = textline.region.y1
+                        if len(prev_text_els) > 0:
+                            new_textline.region.x2 = prev_text_els[-1].region.x2
+                        else:
+                            new_textline.region.x2 = text_el.region.x2
+                        new_textline.region.y2 = textline.region.y2
+                        new_textline.text_elements = prev_text_els
+                        for text_element in prev_text_els:
+                            new_textline.text = new_textline.text + text_element.text
+                        new_textlines.append(new_textline)
+                        prev_text_els = []
+                        prev_text_els.append(text_el)
+
+                    else:
+                        prev_text_els.append(text_el)
+                else:
+                    prev_text_els.append(text_el)
+
+                if i == (len(text_elements) - 1) and len(prev_text_els) > 0:
+                    splitted = True
+                    new_textline = XMLTextLine(self)
+                    if len(prev_text_els) > 0:
+                        new_textline.region.x1 = prev_text_els[0].region.x1
+                    else:
+                        new_textline.region.x1 = text_el.region.x1
+                    new_textline.region.y1 = textline.region.y1
+                    if len(prev_text_els) > 0:
+                        new_textline.region.x2 = prev_text_els[-1].region.x2
+                    else:
+                        new_textline.region.x2 = text_el.region.x2
+                    new_textline.region.y2 = textline.region.y2
+                    new_textline.text_elements = prev_text_els
+                    for text_element in prev_text_els:
+                        new_textline.text = new_textline.text + text_element.text
+                    new_textlines.append(new_textline)
+                    prev_text_els = []
+
+                prev_text_el = text_el
+                
+
+            if not splitted:
+                new_textlines.append(textline)
+
+        self.textlines = new_textlines
 
         self.sort_textlines()
 

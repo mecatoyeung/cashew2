@@ -43,6 +43,9 @@ export default function Parsers() {
     { field: 'name', resizable: true, filter: true },
     { field: 'actions', resizable: true, width: 170, cellRenderer: params => {
       let rule = params.data
+      if (rule.id == undefined) {
+        return
+      }
       return (
       <div style={{ display: "flex", flexDirection: "row" }}>
         <Dropdown style={{display: "inline-block", verticalAlign: "top", lineHeight: "initial", overflow: "visible"}}>

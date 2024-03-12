@@ -62,7 +62,7 @@ export default function EditorLayout({ children }) {
         <title>Cashew Docparser</title>
         <meta name="description" content="Written by Cato Yeung" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"></meta>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/static/favicon.ico" />
       </Head>
       <div className={styles.container}>
         <div className={styles.editorWrapper}>

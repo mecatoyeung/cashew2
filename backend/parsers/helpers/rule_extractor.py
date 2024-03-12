@@ -23,6 +23,7 @@ from parsers.models.rule_type import RuleType
 from parsers.models.pre_processing import PreProcessing
 
 from parsers.helpers.xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
+from parsers.helpers.is_english import is_english
 from parsers.helpers.is_chinese import is_chinese
 from parsers.helpers.get_document_nos_from_range import get_document_nos_from_range
 from parsers.helpers.check_chinese_characters import check_chinese_characters
@@ -95,11 +96,15 @@ class RuleExtractor:
             xml_rule = XMLRule(xml_page, self.rule)
 
             # Get All Textlines within Area
+            #has_chinese = False
             textlines_within_area = []
             for textline in xml_page.textlines:
                 # Tailored for Google Invoices
                 # if re.match(r'[.]+', textline.text):
                 # continue
+                #if not has_chinese and is_chinese(textline.text):
+                    #has_chinese = True
+                    #MEDIAN_OF_TEXT_WIDTHS = MEDIAN_OF_TEXT_WIDTHS * Decimal(1.50)
 
                 if xml_rule.region.overlaps(textline.region) and textline.text != "":
                     textlines_within_area.append(textline)

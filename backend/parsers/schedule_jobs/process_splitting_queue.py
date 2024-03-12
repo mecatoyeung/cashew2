@@ -47,6 +47,7 @@ from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
 from parsers.helpers.document_parser import DocumentParser
 from parsers.helpers.stream_processor import StreamProcessor
 
+import parsers.schedule_jobs.process_ocr_queue as process_ocr_queue
 from parsers.schedule_jobs.process_parsing_queue import process_single_parsing_queue
 
 from backend.settings import MEDIA_ROOT
@@ -408,7 +409,19 @@ def process_single_splitting_queue(queue_job):
 
                             new_document_page.save()
 
-                        create_queue_when_upload_document(new_document)
+                        #create_queue_when_upload_document(new_document)
+                        # Create queue object in database
+                        q = Queue()
+                        q.queue_status = QueueStatus.READY.value
+                        q.parser = parser
+                        q.document = new_document
+                        # if pre_processings.count() > 0:
+                        q.queue_class = QueueClass.OCR.value
+                        # else:
+                        #    q.queue_class = QueueClass.OCR.value
+                        q.save()
+
+                        #process_ocr_queue.process_no_ocr_queue_job(q)
 
                         accumulated_page_nums = []
 

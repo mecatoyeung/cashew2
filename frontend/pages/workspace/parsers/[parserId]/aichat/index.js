@@ -278,7 +278,7 @@ const AIChat = (props) => {
 
   const [textlines, setTextlines] = useState([]);
 
-  const [textFontSize, setTextFontSize] = useState(90);
+  const [textFontSize, setTextFontSize] = useState(70);
 
   const [currentChatUuid, setCurrentChatUuid] = useState("");
 
@@ -813,7 +813,7 @@ const AIChat = (props) => {
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
         ></meta>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/static/favicon.ico" />
       </Head>
       <div className={styles.wrapper}>
         <header className={styles.header}>
@@ -831,7 +831,7 @@ const AIChat = (props) => {
                     alt="Cashew Docparser"
                   />
                 </div>
-                <h2>Cashew</h2>
+                <h2 style={{ marginRight: 10 }}>Cashew</h2>
                 <a
                     href="#"
                     onClick={() => router.back()}
@@ -848,7 +848,6 @@ const AIChat = (props) => {
                     <i className={styles.parsersIcon + " bi bi-grid"}></i>
                   </Nav.Link>
                 )}
-                {console.log(router.pathname)}
                 {router.pathname.split("/")[1] == "workspace" && (
                   <Nav.Link
                     href="/workspace/parsers"
@@ -884,8 +883,6 @@ const AIChat = (props) => {
                   lineHeight: "52px",
                 }}
               >
-                {console.log(parserDocuments)}
-                {console.log(documentId)}
                 {parserDocuments &&
                   parserDocuments.length > 0 &&
                   documentId && (
@@ -992,9 +989,12 @@ const AIChat = (props) => {
                     <TransformWrapper
                       className="my-react-transform-component"
                       initialScale={0.3}
-                      minScale={0.2}
+                      minScale={0.3}
                       maxScale={1}
-                      centerZoomedOut={false}
+                      centerZoomedOut={true}
+                      onPanningStop={(e) => {
+                        console.log(e)
+                      }}
                       customTransform={(x, y, scale) => {
                         const a = scale;
                         const b = 0;
@@ -1058,7 +1058,10 @@ const AIChat = (props) => {
                             </Button>
                           </div>
                           <TransformComponent>
-                            <div style={{ marginTop: 150 }}>
+                            <div style={{ marginTop: 150 }}
+                                onMouseDown={(e)=> {
+                                  console.log(e)
+                                }}>
                               <img
                                 className={styles.documentPageImg}
                                 src={imageUri}
@@ -1084,7 +1087,7 @@ const AIChat = (props) => {
                     >
                       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
                         <>
-                          <div
+                          {/*<div
                             className={styles.tools}
                             style={{
                               display: showDocumentPagePreview
@@ -1132,9 +1135,9 @@ const AIChat = (props) => {
                             >
                               <i className="bi bi-file-earmark-pdf"></i>{" "}
                               Download
-                            </Button>
+                          </Button>
                           </div>
-                          <TransformComponent></TransformComponent>
+                          <TransformComponent></TransformComponent>*/}
                           <div
                             style={{ width: 100, height: 100, margin: "auto" }}
                           >
@@ -1180,7 +1183,9 @@ const AIChat = (props) => {
                         <i className="bi bi-card-text"></i> Download
                       </Button>
                     </div>
-                    <div className={styles.streamTableDiv}>
+                    <div className={styles.streamTableDiv} onMouseUp={() => {
+                      console.log(window.getSelection())
+                    }}>
                       <table
                         className={styles.streamTable}
                         style={{ fontSize: textFontSize + "%" }}
@@ -1271,170 +1276,7 @@ const AIChat = (props) => {
                             />
                           </div>
                           <div className={styles.talktext}>
-                            {/*Array.isArray(chatHistory.chat) && chatHistory.chat.length > 0 && (
-                            <div className="talk-table-div" key={key}>
-                              <table className="talk-table">
-                                <thead>
-                                  <tr>
-                                    {Object.keys(chatHistory.chat[0]).map((tableKey, tableKeyIndex) => {
-                                      console.log(tableKey)
-                                      return (
-                                        <th key={tableKeyIndex}>{tableKey}</th>
-                                      )
-                                    })}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {chatHistory.chat.map((tableRow, tableRowIndex) => {
-                                    let tableRowObjectKeys = Object.keys(tableRow)
-                                    if (tableRowObjectKeys.length > 0) {
-                                      return (
-                                        <tr key={tableRowIndex}>
-                                          {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
-                                            <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
-                                          ))}
-                                        </tr>
-                                      )
-                                    } else {
-                                      return (
-                                        <tr key={tableRowIndex}></tr>
-                                      )
-                                    }
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                                )*/}
                             {<RecursiveChat chat={chatHistory.chat} />}
-                            {/*!Array.isArray(chatHistory.chat) && Object.keys(chatHistory.chat).length > 0 && Object.keys(chatHistory.chat).map((key, keyIndex) => {
-                            if (typeof chatHistory.chat === 'string') {
-                              <div className={styles.talkKeyToValue}>{chatHistory.chat[key]}</div>
-                            } else if (typeof chatHistory.chat[key] === 'string') {
-                              return (
-                                <div className={styles.talkKeyToValue} key={keyIndex}>{key}: {chatHistory.chat[key]}</div>
-                              )
-                            } else if (Array.isArray(chatHistory.chat[key])) {
-                              if (Array.isArray(chatHistory.chat[key]) && chatHistory.chat[key].length > 0) {
-                                let tableJSON = chatHistory.chat[key]
-                                if (typeof tableJSON[0] === 'string') {
-                                  return (
-                                    <div key={keyIndex}>
-                                      {tableJSON.map((data, dataIndex) => (
-                                        <div className={styles.talkKeyToValue} key={dataIndex}>{key}: {data}</div>
-                                      ))}
-                                    </div>
-                                  )
-                                } else {
-                                  return (
-                                    <div className="talk-table-div" key={keyIndex}>
-                                      <p>{key}: </p>
-                                      <table className="talk-table">
-                                        <thead>
-                                          <tr>
-                                            {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
-                                              return (
-                                                <th key={tableKeyIndex}>{tableKey}</th>
-                                              )
-                                            })}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {tableJSON.map((tableRow, tableRowIndex) => {
-                                            let tableRowObjectKeys = Object.keys(tableRow)
-                                            if (tableRowObjectKeys.length > 0) {
-                                              return (
-                                                <tr key={tableRowIndex}>
-                                                  {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
-                                                    <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
-                                                  ))}
-                                                </tr>
-                                              )
-                                            } else {
-                                              return (
-                                                <tr key={tableRowIndex}></tr>
-                                              )
-                                            }
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )
-                                }
-                              }
-                            } else if (!Array.isArray(chatHistory.chat[key]) && typeof chatHistory.chat[key] === 'object') {
-                              let objectJSON = chatHistory.chat[key]
-                              let objectsHtml = (<></>)
-                              if (Object.keys(objectJSON).length > 0) {
-                                objectsHtml = Object.keys(objectJSON).map((objectKey, objectKeyIndex) => {
-                                  //console.log(objectKey, ": ", objectJSON[objectKey])
-                                  if (typeof objectJSON[objectKey] === 'string') {
-                                    return (
-                                      <div key={objectKeyIndex} className={styles.talkKeyToValue}>{objectKey}: {objectJSON[objectKey]}</div>
-                                    )
-                                  } else if (Array.isArray(objectJSON[objectKey])){
-                                    let tableJSON = objectJSON[objectKey]
-                                    console.log("Anchor: ", tableJSON)
-                                    if (tableJSON.length > 0) {
-                                      if (typeof tableJSON[0] === 'string') {
-                                        return (
-                                          <div className="talk-table-div">
-                                            <table className="talk-table">
-                                              <tbody>
-                                                {tableJSON.map(row => {
-                                                  return (
-                                                    <tr>{row}</tr>
-                                                  )
-                                                })}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                        )
-                                      } else {
-
-                                        return (
-                                          <div className="talk-table-div" key={key}>
-                                            <p>{key}: </p>
-                                            <table className="talk-table">
-                                              <thead>
-                                                <tr>
-                                                  {Object.keys(tableJSON[0]).map((tableKey, tableKeyIndex) => {
-                                                    return (
-                                                      <th key={tableKeyIndex}>{tableKey}</th>
-                                                    )
-                                                  })}
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {tableJSON.map((tableRow, tableRowIndex) => {
-                                                  let tableRowObjectKeys = Object.keys(tableRow)
-                                                  if (tableRowObjectKeys.length > 0) {
-                                                    return (
-                                                      <tr key={tableRowIndex}>
-                                                        {tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => (
-                                                          <td key={tableRowObjectKeyIndex}>{tableRow[tableRowObjectKey]}</td>
-                                                        ))}
-                                                      </tr>
-                                                    )
-                                                  } else {
-                                                    return (
-                                                      <tr key={tableRowIndex}></tr>
-                                                    )
-                                                  }
-                                                })}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                        )
-                                        
-                                      }
-                                    }
-                                  }
-                                  
-                                })
-                              }
-                              return objectsHtml
-                            } 
-                          })*/}
                           </div>
                         </div>
                       )}

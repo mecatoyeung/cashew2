@@ -45,6 +45,8 @@ from parsers.helpers.path_helpers import ocr_folder_path, ocred_pdf_path, origin
     pre_processed_image_path, ocred_image_path, gcv_path, hocr_path, xml_path, document_path, \
     pre_processed_image_path
 
+import parsers.schedule_jobs.process_ocr_queue as process_ocr_queue
+
 import zlib
 
 from xml.etree import ElementTree as ET
@@ -127,7 +129,7 @@ def convert_page(parser, document, ocr, document_page):
 
     preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
 
-    xml_is_empty = False
+    """xml_is_empty = False
     try:
         parsed = ET.fromstring(document_page.xml)
     except ET.ParseError:
@@ -135,7 +137,7 @@ def convert_page(parser, document, ocr, document_page):
     if not xml_is_empty:
         document_page.ocred = True
         document_page.save()
-        return
+        return"""
 
     abs_ocr_folder_path = ocr_folder_path(document)
     if not os.path.exists(abs_ocr_folder_path):
@@ -411,7 +413,10 @@ def convert_page(parser, document, ocr, document_page):
 
 def convert_to_searchable_pdf(parser, document: Document, ocr):
 
-    splitting = Splitting.objects.get(parser_id=parser.id)
+    if Splitting.objects.filter(parser_id=parser.id).count() > 0:
+        splitting = Splitting.objects.get(parser_id=parser.id)
+    else:
+        splitting = None
     ocr_engine = ocr.ocr_type
 
     document_pages = document.document_pages.all()
@@ -429,7 +434,7 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
 
         page_num = document_page_index + 1
 
-        if splitting.activated and not document.splitted:
+        if splitting != None and splitting.activated and not document.splitted:
 
             document_parser = DocumentParser(parser, document)
             rules = Rule.objects.filter(parser_id=parser.id).all()
@@ -913,7 +918,19 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
 
                         new_document_page.save()
 
-                    create_queue_when_upload_document(new_document)
+                    #create_queue_when_upload_document(new_document)
+                    # Create queue object in database
+                    q = Queue()
+                    q.queue_status = QueueStatus.READY.value
+                    q.parser = parser
+                    q.document = new_document
+                    # if pre_processings.count() > 0:
+                    q.queue_class = QueueClass.OCR.value
+                    # else:
+                    #    q.queue_class = QueueClass.OCR.value
+                    q.save()
+
+                    #process_ocr_queue.process_single_ocr_queue(q)
 
                     accumulated_page_nums = []
 
@@ -1230,64 +1247,73 @@ def convert_hocr_to_xml(hocr_path, xml_path):
             # print("page_height: " + str(page_height))
             page = SubElement(xml, "page", attrib={
                 "bbox": "0.000,0.000," + str(page_width) + "," + str(page_height)})
-
-        for ocrx_word in hocr.cssselect('span.ocrx_word'):
-            ocrx_word_bbox_str = ocrx_word.attrib['title']
-            ocrx_word_bbox_search = re.search('bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)(?:;\s+x_wconf\s+([0-9.]+))?',
-                                              ocrx_word_bbox_str,
-                                              re.IGNORECASE
-                                              )
-            ocrx_word_x1 = int(ocrx_word_bbox_search.group(1))
-            ocrx_word_y1 = page_height - int(ocrx_word_bbox_search.group(4))
-            ocrx_word_x2 = int(ocrx_word_bbox_search.group(3))
-            ocrx_word_y2 = page_height - int(ocrx_word_bbox_search.group(2))
-            ocrx_word_conf = ocrx_word_bbox_search.group(5)
-            if ocrx_word_conf == None:
-                ocrx_word_conf = 1
-            ocrx_word_text = ocrx_word.text
-            # print("ocrx_word_x1: " + str(ocrx_word_x1))
-            # print("ocrx_word_y1: " + str(ocrx_word_y1))
-            # print("ocrx_word_x2: " + str(ocrx_word_x2))
-            # print("ocrx_word_y2: " + str(ocrx_word_y2))
-            # print("ocrx_word_conf: " + str(ocrx_word_conf))
-
+            
+        for ocr_line in hocr.cssselect('span.ocr_line'):
+            ocr_line_bbox_str = ocr_line.attrib['title']
+            ocr_line_bbox_search = re.search('bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)(?:;\s+baseline\s+(?:[0-9.]+)\s+(?:[0-9.]+))?',
+                                            ocr_line_bbox_str,
+                                            re.IGNORECASE
+                                            )
+            ocr_line_x1 = int(ocr_line_bbox_search.group(1))
+            ocr_line_y1 = page_height - int(ocr_line_bbox_search.group(4))
+            ocr_line_x2 = int(ocr_line_bbox_search.group(3))
+            ocr_line_y2 = page_height - int(ocr_line_bbox_search.group(2))
+            
             textline = SubElement(
                 page,
                 "textline",
                 attrib={
-                    "bbox": str(ocrx_word_x1) + "," + str(ocrx_word_y1) + "," + str(ocrx_word_x2) + "," + str(ocrx_word_y2),
+                    "bbox": str(ocr_line_x1) + "," + str(ocr_line_y1) + "," + str(ocr_line_x2) + "," + str(ocr_line_y2),
                 },
             )
 
-            word_in_line_count = 0
-            if ocrx_word_text != None:
-                for char in ocrx_word_text:
-                    char_x1 = (ocrx_word_x2 - ocrx_word_x1) / \
-                        len(ocrx_word_text) * word_in_line_count + ocrx_word_x1
-                    char_x2 = (ocrx_word_x2 - ocrx_word_x1) / \
-                        len(ocrx_word_text) * \
-                        (word_in_line_count + 1) + ocrx_word_x1
-                    char_y1 = ocrx_word_y1
-                    char_y2 = ocrx_word_y2
+            for ocrx_word in ocr_line.cssselect('span.ocrx_word'):
+                ocrx_word_bbox_str = ocrx_word.attrib['title']
+                ocrx_word_bbox_search = re.search('bbox ([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)(?:;\s+x_wconf\s+([0-9.]+))?',
+                                                ocrx_word_bbox_str,
+                                                re.IGNORECASE
+                                                )
+                ocrx_word_x1 = int(ocrx_word_bbox_search.group(1))
+                ocrx_word_y1 = page_height - int(ocrx_word_bbox_search.group(4))
+                ocrx_word_x2 = int(ocrx_word_bbox_search.group(3))
+                ocrx_word_y2 = page_height - int(ocrx_word_bbox_search.group(2))
+                ocrx_word_conf = ocrx_word_bbox_search.group(5)
 
-                    char_x1 = int(char_x1)
-                    char_y1 = int(char_y1)
-                    char_x2 = int(char_x2)
-                    char_y2 = int(char_y2)
+                width_of_word = ocrx_word_x2 - ocrx_word_x1
 
-                    text = SubElement(
-                        textline,
-                        "text",
-                        attrib={
-                            "font": "AAAAAA+invisible",
-                            "bbox": str(char_x1) + "," + str(char_y1) + "," + str(char_x2) + "," + str(char_y2),
-                            "conf": str(ocrx_word_conf)
-                        },
-                    )
+                if ocrx_word_conf == None:
+                    ocrx_word_conf = 1
+                ocrx_word_text = ocrx_word.text
 
-                    text.text = char
+                word_in_line_count = 0
+                if ocrx_word_text != None:
+                    for char in ocrx_word_text:
+                        char_x1 = (ocrx_word_x2 - ocrx_word_x1) / \
+                            len(ocrx_word_text) * word_in_line_count + ocrx_word_x1
+                        char_x2 = (ocrx_word_x2 - ocrx_word_x1) / \
+                            len(ocrx_word_text) * \
+                            (word_in_line_count + 1) + ocrx_word_x1
+                        char_y1 = ocrx_word_y1
+                        char_y2 = ocrx_word_y2
 
-                    word_in_line_count += 1
+                        char_x1 = int(char_x1)
+                        char_y1 = int(char_y1)
+                        char_x2 = int(char_x2)
+                        char_y2 = int(char_y2)
+
+                        text = SubElement(
+                            textline,
+                            "text",
+                            attrib={
+                                "font": "AAAAAA+invisible",
+                                "bbox": str(char_x1) + "," + str(char_y1) + "," + str(char_x2) + "," + str(char_y2),
+                                "conf": str(ocrx_word_conf)
+                            },
+                        )
+
+                        text.text = char
+
+                        word_in_line_count += 1
 
     ET.ElementTree(xml).write(xml_path, xml_declaration=True, encoding="utf-8")
 
