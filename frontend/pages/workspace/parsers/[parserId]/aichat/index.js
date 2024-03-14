@@ -46,10 +46,16 @@ const isMultipleArrays = (chat) => {
   for (const [key, value] of Object.entries(chat)) {
     console.log("value: ", value);
     if (!Array.isArray(value)) {
-      return false;
+      return false
+    }
+    for (let item of value) {
+      console.log("Item: ", item)
+      if (typeof item !== "string" && typeof item !== "number") {
+        return false
+      }
     }
   }
-
+  console.log("isMultipleArrays")
   return true;
 };
 
@@ -119,8 +125,19 @@ const recursiveChatInExcel = (
       let tableRowObjectKeys = Object.keys(tableRow);
       if (tableRowObjectKeys.length > 0) {
         {
-          tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) =>
-            rowValues.push(tableRow[tableRowObjectKey])
+          tableRowObjectKeys.map((tableRowObjectKey, tableRowObjectKeyIndex) => {
+              if (typeof tableRow[tableRowObjectKey] == 'object') {
+                let result = ""
+                let innerObjectKeys = Object.keys(tableRow[tableRowObjectKey])
+                for (let innerObjectKey of innerObjectKeys) {
+                  let innerObjectValue = tableRow[tableRowObjectKey][innerObjectKey]
+                  result = result + innerObjectKey + ": " + innerObjectValue + "\n"
+                }
+                rowValues.push(result)
+              } else {
+                rowValues.push(tableRow[tableRowObjectKey])
+              }
+            }
           );
         }
         debugger;
@@ -237,9 +254,14 @@ const RecursiveChat = ({ chat }) => {
                     {tableRowObjectKeys.map(
                       (tableRowObjectKey, tableRowObjectKeyIndex) => {
                         if (typeof tableRow[tableRowObjectKey] == "object") {
+                          return (
+                            <td key={tableRowObjectKeyIndex} style={{verticalAlign: "top"}}>
+                              <RecursiveChat chat={tableRow[tableRowObjectKey]}/>
+                            </td>
+                          )
                         } else {
                           return (
-                            <td key={tableRowObjectKeyIndex}>
+                            <td key={tableRowObjectKeyIndex} style={{verticalAlign: "top"}}>
                               {tableRow[tableRowObjectKey]}
                             </td>
                           );

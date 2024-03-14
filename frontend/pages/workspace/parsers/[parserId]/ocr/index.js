@@ -92,11 +92,24 @@ const omnipageOCRLangOptions = [
   }
 ]
 
+let ocrImageLayerTypeOptions = [
+    {
+      label: "Source",
+      value: "SOURCE"
+    },
+    {
+      label: "Pre Processing",
+      value: "PRE_PROCESSING"
+    }
+  ]
+
 const OCR = () => {
 
   const router = useRouter()
 
   const [parser, setParser] = useState(null)
+
+  const [preProcessings, setPreProcessings] = useState([])
 
   const getParser = () => {
     service.get("parsers/" + parserId + "/", response => {
@@ -155,6 +168,15 @@ const OCR = () => {
     updateParser()
   }
 
+  const selectOcrImageLayerTypeChangeHandler = (e) => {
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.ocrImageLayerType = e.value
+    setParser({
+      ...parser,
+      ocr: updatedOCR
+    })
+  }
+
   const updateParser = () => {
     service.put("parsers/" + parserId + "/",
       parser,
@@ -163,9 +185,17 @@ const OCR = () => {
     )
   }
 
+  const getPreProcessings = () => {
+    if (!parserId) return
+    service.get("/preprocessings?parserId=" + parserId , (response) => {
+      setPreProcessings(response.data)
+    })
+  }
+
   useEffect(() => {
     if (!router.isReady) return
     getParser()
+    getPreProcessings()
   }, [router.isReady])
 
   const { parserId } = router.query
@@ -186,6 +216,40 @@ const OCR = () => {
                   menuPlacement="auto"
                   menuPosition="fixed" />
               </Form.Group>
+              {/*
+              <Form.Group className="col-12" controlId="formOcrImageLayerType">
+                <Form.Label>Image Layer Type</Form.Label>
+                <Select
+                  classNamePrefix="react-select"
+                  options={ocrImageLayerTypeOptions}
+                  value={ocrImageLayerTypeOptions.find(o => o.value == parser.ocr.ocrImageLayerType)}
+                  onChange={(e) => selectOcrImageLayerTypeChangeHandler(e)}
+                  menuPlacement="auto"
+                  menuPosition="fixed" />
+              </Form.Group>
+              {parser.ocr.ocrImageLayerType == "PRE_PROCESSING" && preProcessings && (
+                  <Form.Group className="col-12" controlId="formImageLayerPreProcessingId">
+                    <Form.Label>Pre-processing</Form.Label>
+                    <Select
+                      classNamePrefix="react-select"
+                      options={preProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      })}
+                      value={preProcessings.map(pp => {
+                        return {
+                          label: pp.name,
+                          value: pp.id
+                        }
+                      }).find(o => o.value == parser.ocr.ocrImageLayerType)}
+                      onChange={(e) => selectPreProcessingChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" />
+                  </Form.Group>
+                )}
+              */}
               {parser.ocr.ocrType == "GOOGLE_VISION" && (
                 <>
                   <Form.Group className="mb-3" controlId="formGoogleVisionOcrApiKey">

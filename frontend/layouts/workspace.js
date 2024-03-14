@@ -140,7 +140,7 @@ export default function WorkspaceLayout({ children }) {
                             "/postprocessings"
                           }
                         >
-                          <li>Post-Processing</li>
+                          <li>Post-Processings</li>
                         </Link>
                       )}
                       {parser.type == "LAYOUT" && (

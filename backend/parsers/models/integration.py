@@ -1,3 +1,5 @@
+import uuid
+
 from django.utils import timezone
 from django.db import models
 
@@ -8,6 +10,7 @@ from parsers.models.pdf_integration_type import PDFIntegrationType
 
 class Integration(models.Model):
     id = models.AutoField(primary_key=True)
+    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     integration_type = models.CharField(
         max_length=255, choices=IntegrationType.choices())
     name = models.CharField(max_length=255, null=False)

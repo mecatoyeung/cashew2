@@ -31,6 +31,7 @@ import json
 
 from parsers.models.parser import Parser
 from parsers.models.rule import Rule
+from parsers.models.stream import Stream
 from parsers.models.table_column_separator import TableColumnSeparator
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
@@ -233,9 +234,10 @@ class ParserViewSet(viewsets.ModelViewSet):
                     .select_related("ocr") \
                     .select_related("chatbot") \
                     .select_related("open_ai") \
-                    .prefetch_related('rules') \
+                    .prefetch_related(Prefetch('rules', queryset=Rule.objects.prefetch_related(
+                        Prefetch('streams', queryset=Stream.objects.all())
+                    ))) \
                     .prefetch_related('rules__table_column_separators') \
-                    .prefetch_related('rules__streams') \
                     .prefetch_related("preprocessings") \
                     .prefetch_related("integrations") \
                     .prefetch_related("postprocessings") \
@@ -280,10 +282,10 @@ class ParserViewSet(viewsets.ModelViewSet):
                 splitting_parser_counter += 1
 
                 parser = Parser()
-                parser.guid = parser_json_obj["guid"]
                 parser.type = parser_json_obj["type"]
                 parser.name = parser_json_obj["name"]
                 parser.last_modified_at = datetime.now()
+                parser.total_num_of_pages_processed = parser_json_obj["totalNumOfPagesProcessed"]
                 parser.user = request.user
 
                 parser.save()
@@ -294,34 +296,41 @@ class ParserViewSet(viewsets.ModelViewSet):
                 for source_json_obj in parser_json_obj["sources"]:
                     s = Source(
                         name=source_json_obj["name"],
-                        guid=source_json_obj["guid"],
                         parser_id=parser.id,
                         source_path=source_json_obj["sourcePath"],
                         interval_seconds=source_json_obj["intervalSeconds"],
                         next_run_time=source_json_obj["nextRunTime"],
-                        activated=source_json_obj["activated"]
+                        activated=source_json_obj["activated"],
+                        is_running = False
                     )
                     s.save()
 
                 for preprocessing_json_obj in parser_json_obj["preprocessings"]:
                     pp = PreProcessing(
-                        guid=preprocessing_json_obj["guid"],
                         name=preprocessing_json_obj["name"],
                         pre_processing_type=preprocessing_json_obj["preProcessingType"],
                         parser=parser,
-                        step=preprocessing_json_obj["step"]
+                        step=preprocessing_json_obj["step"],
+                        threshold_binarization=preprocessing_json_obj["thresholdBinarization"],
+                        debug=preprocessing_json_obj["debug"],
+                        orientation_detection_tesseract_confidence_above=preprocessing_json_obj["orientationDetectionTesseractConfidenceAbove"]
                     )
                     pp.save()
 
                 ocr = OCR()
-                ocr.guid = parser_json_obj["ocr"]["guid"]
                 ocr.parser = parser
                 ocr.ocr_type = parser_json_obj["ocr"]["ocrType"]
                 ocr.google_vision_ocr_api_key = parser_json_obj["ocr"]["googleVisionOcrApiKey"]
                 ocr.paddle_ocr_language = parser_json_obj["ocr"]["paddleOcrLanguage"]
+                ocr.omnipage_ocr_language = parser_json_obj["ocr"]["omnipageOcrLanguage"]
+                ocr.debug = parser_json_obj["ocr"]["debug"]
                 ocr.save()
 
                 for rule_json_obj in parser_json_obj["rules"]:
+                    try:
+                        anchor_document = Document.objects.get(pk=rule_json_obj["anchorDocumentId"])
+                    except:
+                        anchor_document = None
                     r = Rule(
                         guid=rule_json_obj["guid"],
                         parser_id=parser.id,
@@ -341,8 +350,9 @@ class ParserViewSet(viewsets.ModelViewSet):
                         anchor_relative_y1=rule_json_obj["anchorRelativeY1"],
                         anchor_relative_x2=rule_json_obj["anchorRelativeX2"],
                         anchor_relative_y2=rule_json_obj["anchorRelativeY2"],
-                        anchor_document=None,
+                        anchor_document=anchor_document,
                         anchor_page_num=rule_json_obj["anchorPageNum"],
+                        acrobat_form_field=rule_json_obj["acrobatFormField"],
                         last_modified_at=datetime.now()
                     )
                     r.save()
@@ -353,12 +363,36 @@ class ParserViewSet(viewsets.ModelViewSet):
                         )
                         table_column_separator.save()
 
+                    for stream_json_obj in rule_json_obj["streams"]:
+                        stream = Stream(
+                            rule=r,
+                            step=stream_json_obj["step"],
+                            type=stream_json_obj["type"],
+                            stream_class=stream_json_obj["streamClass"],
+                            text=stream_json_obj["text"],
+                            regex=stream_json_obj["regex"],
+                            join_string=stream_json_obj["joinString"],
+                            extract_first_n_lines=stream_json_obj["extractFirstNLines"],
+                            extract_nth_lines=stream_json_obj["extractNthLines"],
+                            combine_first_n_lines=stream_json_obj["combineFirstNLines"],
+                            convert_to_table_by_specify_headers=stream_json_obj["convertToTableBySpecifyHeaders"],
+                            col_index=stream_json_obj["col_index"],
+                            col_indexes=stream_json_obj["col_indexes"],
+                            remove_matched_row_also=stream_json_obj["remove_matched_row_also"],
+                            unpivot_column_index=stream_json_obj["unpivot_column_index"],
+                            unpivot_newline_char=stream_json_obj["unpivot_newline_char"],
+                            unpivot_property_assign_char=stream_json_obj["unpivot_property_assign_char"],
+                            open_ai_question=stream_json_obj["open_ai_question"],
+                        )
+                        stream.save()
+
                 if not parser_json_obj["splitting"] == None:
 
                     splitting = Splitting()
-                    splitting.guid = parser_json_obj["splitting"]["guid"]
                     splitting.parser = parser
                     splitting.split_type = parser_json_obj["splitting"]["splitType"]
+                    splitting.no_first_page_rules_matched_operation_type = parser_json_obj["splitting"]["noFirstPageRulesMatchedOperationType"]
+                    splitting.no_first_page_rules_matched_route_to_parser_id = parser_json_obj["splitting"]["noFirstPageRulesMatchedRouteToParser"]
                     splitting.activated = parser_json_obj["splitting"]["activated"]
                     splitting.save()
 
@@ -422,25 +456,25 @@ class ParserViewSet(viewsets.ModelViewSet):
                                 last_page_splitting_condition.save()
 
                 chatbot = ChatBot()
-                chatbot.guid = parser_json_obj["chatbot"]["guid"]
                 chatbot.parser = parser
                 chatbot.chatbot_type = parser_json_obj["chatbot"]["chatbotType"]
                 chatbot.open_ai_resource_name = parser_json_obj["chatbot"]["openAiResourceName"]
                 chatbot.open_ai_api_key = parser_json_obj["chatbot"]["openAiApiKey"]
                 chatbot.open_ai_default_question = parser_json_obj["chatbot"]["openAiDefaultQuestion"]
+                chatbot.base_url = parser_json_obj["chatbot"]["baseUrl"]
+                chatbot.open_ai_deployment = parser_json_obj["chatbot"]["openAiDeployment"]
                 chatbot.save()
 
                 open_ai = OpenAI()
-                open_ai.guid = parser_json_obj["openAi"]["guid"]
                 open_ai.parser = parser
                 open_ai.enabled = parser_json_obj["openAi"]["enabled"]
                 open_ai.open_ai_resource_name = parser_json_obj["openAi"]["openAiResourceName"]
                 open_ai.open_ai_api_key = parser_json_obj["openAi"]["openAiApiKey"]
+                open_ai.open_ai_deployment = parser_json_obj["openAi"]["openAiDeployment"]
                 open_ai.save()
 
                 for postprocessing_json_obj in parser_json_obj["postprocessings"]:
                     pp = PostProcessing(
-                        guid=postprocessing_json_obj["guid"],
                         name=postprocessing_json_obj["name"],
                         post_processing_type=postprocessing_json_obj["postProcessingType"],
                         parser=parser,
@@ -535,7 +569,7 @@ class ParserViewSet(viewsets.ModelViewSet):
                     "Content-Type": "application/json",
                     "api-key": chatbot.open_ai_api_key
                 }
-                open_ai_content = question + " Please return in JSON format.\nInput: " + \
+                open_ai_content = question + " Please control the output in depth of 3 only. Please return in JSON format.\nInput: " + \
                     content_to_be_sent_to_openai
                 json_data = {
                     "messages": [{"role": "user", "content": open_ai_content}],

@@ -194,74 +194,7 @@ export default function Parsers(props) {
       })
     )
   }
-
-  const addParsedResultClickHandler = (e, rule) => {
-    let textToInsert = "{{ parsed_result[\"" + rule.name + "\"] }}"
-    let cursorPosition = pdfPathSelectionStart
-    if (cursorPosition == 0) {
-      let xmlEditor = document.getElementById("xml-editor")
-      cursorPosition = xmlEditor.selectionStart
-    }
-    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
-    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
-    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
-    setForm(
-      produce((draft) => {
-        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
-      }))
-  }
-
-  const addDocumentNameClickHandler = (e) => {
-    let textToInsert = "{{ document.filename_without_extension }}"
-    let xmlEditor = document.getElementById("xml-editor")
-    let cursorPosition = pdfPathSelectionStart
-    if (cursorPosition == 0) {
-      let xmlEditor = document.getElementById("xml-editor")
-      cursorPosition = xmlEditor.selectionStart
-    }
-    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
-    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
-    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
-    setForm(
-      produce((draft) => {
-        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
-      }))
-  }
-
-  const addDocumentExtensionClickHandler = (e) => {
-    let textToInsert = "{{ document.extension }}"
-    let xmlEditor = document.getElementById("xml-editor")
-    let cursorPosition = pdfPathSelectionStart
-    if (cursorPosition == 0) {
-      let xmlEditor = document.getElementById("xml-editor")
-      cursorPosition = xmlEditor.selectionStart
-    }
-    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
-    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
-    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
-    setForm(
-      produce((draft) => {
-        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
-      }))
-  }
-
-  const addCreatedDateClickHandler =(e) => {
-    let textToInsert = "{{ builtin_vars[\"created_at\"].strftime(\"%Y-%m-%d\") }}"
-    let xmlEditor = document.getElementById("xml-editor")
-    let cursorPosition = pdfPathSelectionStart
-    if (cursorPosition == 0) {
-      let xmlEditor = document.getElementById("xml-editor")
-      cursorPosition = xmlEditor.selectionStart
-    }
-    let textBeforeCursorPosition = form.pdfPath.substring(0, cursorPosition)
-    let textAfterCursorPosition = form.pdfPath.substring(cursorPosition, form.pdfPath.length)
-    setPdfPathSelectionStart(cursorPosition + textToInsert.length)
-    setForm(
-      produce((draft) => {
-        draft.pdfPath = textBeforeCursorPosition + textToInsert + textAfterCursorPosition
-      }))
-  }
-
+  
   useEffect(() => {
     if (props.type == "edit") {
       getIntegration()

@@ -55,6 +55,7 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_document',
                   'anchor_page_num',
                   'acrobat_form_field',
+                  'streams',
                   'last_modified_at']
         read_only_fields = ['id']
 

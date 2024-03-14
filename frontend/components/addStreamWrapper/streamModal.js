@@ -323,6 +323,7 @@ const AddStreamModal = (props) => {
     <Modal show={props.show}
       onHide={() => props.hideHandler(false)}
       size="lg">
+    {console.log(props)}
       <Modal.Header closeButton>
         <Modal.Title>Add Stream</Modal.Title>
       </Modal.Header>
@@ -332,7 +333,8 @@ const AddStreamModal = (props) => {
           <Form.Control value={stream.step} readOnly />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formStreamClass">
-          {(stream.type == "TEXTFIELD" || stream.type == "ANCHORED_TEXTFIELD" || stream.type == "ACROBAT_FORM") && (
+          {(stream.type == "TEXTFIELD" || stream.type == "ANCHORED_TEXTFIELD" || stream.type == "ACROBAT_FORM" || 
+          stream.type == "BARCODE") && (
             <Select
               options={textfieldStreamOptions}
               value={stream.streamClass}

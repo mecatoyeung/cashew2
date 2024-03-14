@@ -14,7 +14,8 @@ class OCRSerializer(serializers.ModelSerializer):
         model = OCR
         fields = ['id', 'guid', 'ocr_type',
                   'google_vision_ocr_api_key', 'paddle_ocr_language', 
-                  'omnipage_ocr_language', 'debug']
+                  'omnipage_ocr_language', 
+                  'ocr_image_layer_type', 'image_layer_preprocessing', 'debug']
         read_only_fields = ['id']
 
     def create(self, validated_data):
