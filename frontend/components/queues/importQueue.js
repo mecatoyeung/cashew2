@@ -260,9 +260,9 @@ const ImportQueue = (props) => {
               })}
             </ul>
             <p>{droppedFiles.length} file(s) are found</p>
-            {uploadErrorMessages && uploadErrorMessages.length > 0 && uploadErrorMessages.map(uploadErrorMessage => {
+            {uploadErrorMessages && uploadErrorMessages.length > 0 && uploadErrorMessages.map((uploadErrorMessage, uploadErrorMessageIndex) => {
               return (
-                <p style={{ color: "red" }}>{uploadErrorMessage}</p>
+                <p key={uploadErrorMessageIndex} style={{ color: "red" }}>{uploadErrorMessage}</p>
               )
             })}
             <div className={styles.dragZone} {...getRootProps()}>

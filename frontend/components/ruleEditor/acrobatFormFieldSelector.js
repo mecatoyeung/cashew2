@@ -221,7 +221,7 @@ const AcrobatFormFieldSelector = () => {
               <Form.Select aria-label="Field" onChange={fieldChangeHandler} value={rule.acrobatFormField}>
                 <option value=""></option>
                 {acrobatFormFields.map(field => (
-                  <option value={field}>{field}</option>
+                  <option key={field} value={field}>{field}</option>
                 ))}
               </Form.Select>
             </Form.Group>
