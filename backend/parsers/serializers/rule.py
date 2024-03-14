@@ -6,7 +6,7 @@ from parsers.models.table_column_separator import TableColumnSeparator
 from parsers.models.document import Document
 
 from parsers.serializers.table_column_separator import TableColumnSeparatorSerializer
-from parsers.serializers.document import DocumentSerializer
+from parsers.serializers.stream import StreamSerializer
 
 from parsers.helpers.document_parser import DocumentParser
 
@@ -29,6 +29,8 @@ class RuleSerializer(serializers.ModelSerializer):
         many=True, required=False, allow_null=True)
     acrobat_form_field = serializers.CharField(
         required=False, allow_null=True, allow_blank=True)
+    streams = StreamSerializer(
+        many=True, required=False, allow_null=True)
 
     class Meta:
         model = Rule
