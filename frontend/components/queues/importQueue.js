@@ -97,9 +97,18 @@ const ImportQueue = (props) => {
   }
 
   const confirmUploadDocumentsBtnClickHandler = async () => {
-    
+    let errorMessages = []
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i];
+      console.log(droppedFile)
+      let fileExtension = droppedFile.path.split('.').pop();
+      if (fileExtension !== "pdf" && fileExtension !== "PDF" &&
+          fileExtension !== "jpg" && fileExtension !== "JPG" &&
+          fileExtension !== "png" && fileExtension !== "PNG" &&
+          fileExtension !== "tiff" && fileExtension !== "TIFF") {
+        errorMessages.push("File type of filename(" + droppedFile.name + ") is not supported.\n")
+        continue
+      }
       let formData = new FormData();
       formData.set("parser", props.parserId)
       formData.set("documentType", documentType)
@@ -131,8 +140,10 @@ const ImportQueue = (props) => {
         )
         .catch((error) => {});
     }
+    setUploadErrorMessages(errorMessages)
   };
 
+  const [uploadErrorMessages, setUploadErrorMessages] = useState("")
   const [droppedFiles, setDroppedFiles] = useState([]);
   const onDrop = useCallback((acceptedFiles) => {
     let result = [];
@@ -249,12 +260,17 @@ const ImportQueue = (props) => {
               })}
             </ul>
             <p>{droppedFiles.length} file(s) are found</p>
+            {uploadErrorMessages && uploadErrorMessages.length > 0 && uploadErrorMessages.map(uploadErrorMessage => {
+              return (
+                <p style={{ color: "red" }}>{uploadErrorMessage}</p>
+              )
+            })}
             <div className={styles.dragZone} {...getRootProps()}>
               <input {...getInputProps()} />
               {isDragActive ? (
-                <p>Drag and drop the PDFs here ...</p>
+                <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here ...</p>
               ) : (
-                <p>Drag and drop the PDFs here or click to upload...</p>
+                <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to upload...</p>
               )}
             </div>
             {parser && (

@@ -39,6 +39,7 @@ class Rule(models.Model):
     anchor_document = models.ForeignKey(
         "Document", null=True, related_name='rule', on_delete=models.CASCADE)
     anchor_page_num = models.IntegerField(null=True)
+    acrobat_form_field = models.CharField(max_length=255, null=True, default="")
     last_modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

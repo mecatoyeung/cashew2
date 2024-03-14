@@ -105,7 +105,7 @@ def process_single_integration_queue(queue_job):
                 template = integration.template
 
                 builtin_vars = {
-                    "created_date": datetime.now()
+                    "created_at": datetime.now()
                 }
 
                 path_t = Template(xml_path)
@@ -166,7 +166,7 @@ def process_single_integration_queue(queue_job):
                 pdf_path = integration.pdf_path
 
                 builtin_vars = {
-                    "created_date": datetime.now()
+                    "created_at": datetime.now()
                 }
 
                 pdf_to_path_t = Template(pdf_path)

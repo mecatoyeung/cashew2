@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useRouter } from "next/router"
-import dynamic from "next/dynamic";
-import Image from "next/image"
 
 import { produce } from "immer"
 
@@ -15,10 +13,7 @@ import Select from "react-select"
 
 import { AgGridReact } from "ag-grid-react"
 
-const CodeEditor = dynamic(
-  () => import("@uiw/react-textarea-code-editor").then((mod) => mod.default),
-  { ssr: false }
-)
+import IntegrationEdtior from "../../../../../../components/integrationEditor";
 
 import WorkspaceLayout from "../../../../../../layouts/workspace"
 
@@ -32,13 +27,14 @@ export default function Parsers(props) {
 
   const { parserId, integrationId } = router.query
 
-  const [rules, setRules] = useState([])
+  const [rules, setRules] = useState(null)
 
   const [pdfPathSelectionStart, setPdfPathSelectionStart] = useState(0)
 
   const getRules = () => {
     if (!parserId) return
     service.get(`rules/?parserId=${parserId}`, response => {
+      console.log(response.data)
       setRules(response.data)
     })
   }
@@ -250,7 +246,7 @@ export default function Parsers(props) {
   }
 
   const addCreatedDateClickHandler =(e) => {
-    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let textToInsert = "{{ builtin_vars[\"created_at\"].strftime(\"%Y-%m-%d\") }}"
     let xmlEditor = document.getElementById("xml-editor")
     let cursorPosition = pdfPathSelectionStart
     if (cursorPosition == 0) {
@@ -269,10 +265,10 @@ export default function Parsers(props) {
   useEffect(() => {
     if (props.type == "edit") {
       getIntegration()
-      getPreProcessings()
-      getPostProcessings()
-      getRules()
     }
+    getPreProcessings()
+    getPostProcessings()
+    getRules()
   }, [parserId, integrationId])
 
   return (
@@ -353,48 +349,20 @@ export default function Parsers(props) {
                           value: pp.id
                         }
                       }).find(o => o.value == form.postProcessing)}
-                      onChange={(e) => selectPostProcessingChangeHandler(e)}
+                      onChange={selectPostProcessingChangeHandler}
                       menuPlacement="auto"
                       menuPosition="fixed" />
                   </Form.Group>
                 )}
-                <Form.Group className="col-12" controlId="addForm.sourcePath">
-                  <Form.Label>PDF Output Path</Form.Label>
-                  <div style={{ border: "1px solid #000", display: "flex" }}>
-                    <Dropdown style={{ display: "flex", flexDirection: "row"}}>
-                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0, borderRight: "1px solid #fff" }}>
-                        Add Parsed Results
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
-                        {rules.map(rule => (
-                          <Dropdown.Item key={rule.id} style={{ fontSize: "80%" }} onClick={(e) => addParsedResultClickHandler(e, rule)}>{rule.name}</Dropdown.Item>
-                        ))}
-                      </Dropdown.Menu>
-                    </Dropdown>
-                    <Dropdown>
-                      <Dropdown.Toggle id="dropdown" style={{ fontSize: "80%", borderRadius: 0 }}>
-                        Add Document Properties
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu style={{ borderRadius: 0, padding: 0 }}>
-                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentNameClickHandler(e)}>Document Name without Extension</Dropdown.Item>
-                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addDocumentExtensionClickHandler(e)}>Document Extension</Dropdown.Item>
-                        <Dropdown.Item style={{ fontSize: "80%" }} onClick={(e) => addCreatedDateClickHandler(e)}>Created Date</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </div>
-                  <CodeEditor
-                    id="xml-editor"
+                {rules && (
+                  <IntegrationEdtior 
+                    editorId="pdfPath" 
+                    displayName="PDF Output Path" 
+                    rules={rules}
                     value={form.pdfPath}
-                    language="js"
                     placeholder="Please enter PDF path"
-                    onChange={(e) => pdfPathChangeHandler(e)}
-                    onFocus={() => setPdfPathSelectionStart(0)}
-                    padding={15}
-                    style={{
-                      border: "1px solid #333",
-                    }}
-                  />
-                </Form.Group>
+                    onChange={pdfPathChangeHandler}/>
+                )}
                 <Form.Group
                   className="col-12"
                   controlId="addForm.intervalSeconds"

@@ -66,7 +66,7 @@ const StreamEditor = () => {
 
   const getProcessedStreams = () => {
     if (documentId == 0) return
-    service.get("rules/" + ruleId + "/document/" + documentId + "/processed_streams/", response => {
+    service.get("rules/" + ruleId + "/documents/" + documentId + "/processed_streams/", response => {
       console.log(response.data)
       setProcessedStreams(response.data)
     })
@@ -187,7 +187,7 @@ const StreamEditor = () => {
                     <div className={styles.streamDeleteBtn}>
                       <Button variant="danger" onClick={() => deleteStreamBtnClickHandler(processedStream.id)}>Delete</Button>
                     </div>
-                    {processedStream.data && (
+                    {/*processedStream.data && (
                       <table className={styles.streamTable}>
                         <tbody>
                           {processedStream.data.map((row, rowIndex) => {
@@ -199,7 +199,8 @@ const StreamEditor = () => {
                           })}
                         </tbody>
                       </table>
-                    )}
+                        )*/}
+                    <StreamTable stream={processedStream} />
                   </>
                 )
               }
@@ -512,9 +513,17 @@ const StreamEditor = () => {
       </div>
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
-            &lt; Back to Region Selection
-          </Link>
+          {console.log(rule)}
+          {rule && rule.ruleType != "ACROBAT_FORM" && (
+            <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
+              &lt; Back to Region Selection
+            </Link>
+          )}
+          {rule && rule.ruleType == "ACROBAT_FORM" && (
+            <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
+              &lt; Back to Field Selection
+            </Link>
+          )}
         </div>
         <div className={styles.copyrightWrapper}>
           Copyright @ 2022

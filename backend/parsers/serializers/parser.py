@@ -80,9 +80,13 @@ class ParserSerializer(serializers.ModelSerializer):
     
     def _get_or_create_open_ai_metrics_key(self, open_ai_metrics_key, parser):
         """ Handle getting or creating open ai as needed. """
-        if open_ai_metrics_key == None:
-            return
+        open_ai_metrics_key = {}
         open_ai_metrics_key["parser"] = parser
+        open_ai_metrics_key["open_ai_metrics_tenant_id"] = ""
+        open_ai_metrics_key["open_ai_metrics_client_id"] = ""
+        open_ai_metrics_key["open_ai_metrics_client_secret"] = ""
+        open_ai_metrics_key["open_ai_metrics_subscription_id"] = ""
+        open_ai_metrics_key["open_ai_metrics_service_name"] = ""
         open_ai_metrics_key_obj, created = OpenAIMetricsKey.objects.get_or_create(
             **open_ai_metrics_key,
         )
@@ -159,6 +163,14 @@ class ParserSerializer(serializers.ModelSerializer):
 
 
 class ParserUpdateSerializer(ParserSerializer):
+
+    class Meta:
+        model = Parser
+        fields = ['id', 'guid', 'type', 'name', 'ocr',
+                  'chatbot', 'open_ai', 'open_ai_metrics_key', 'last_modified_at']
+        read_only_fields = ['id']
+
+class ParserDeleteSerializer(ParserSerializer):
 
     class Meta:
         model = Parser

@@ -231,9 +231,9 @@ export default function Parsers() {
               <div className={aichatStyles.dragZone} {...rootProps}>
                 <input {...getInputProps()} />
                 {isDragActive ? (
-                  <p>Drag and drop the PDFs here ...</p>
+                  <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here ...</p>
                 ) : (
-                  <p>Drag and drop the PDFs here or click to upload...</p>
+                  <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to upload...</p>
                 )}
               </div>
               <div className={aichatStyles.progressBarDiv}>

@@ -112,8 +112,8 @@ def process_single_ocr_queue(queue_job):
                 queue_job.queue_status = QueueStatus.COMPLETED.value
                 queue_job.save()
             elif parser.type == ParserType.LAYOUT.value:
-                queue_job.queue_class = QueueClass.PARSING.value
-                queue_job.queue_status = QueueStatus.READY.value
+                queue_job.queue_class = QueueClass.PROCESSED.value
+                queue_job.queue_status = QueueStatus.COMPLETED.value
                 queue_job.save()
 
             # process_single_splitting_queue(queue_job)

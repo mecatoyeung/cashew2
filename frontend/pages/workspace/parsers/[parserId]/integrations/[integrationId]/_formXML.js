@@ -20,12 +20,7 @@ import service from "../../../../../../service"
 import "@uiw/react-textarea-code-editor/dist.css";
 import integrationsStyles from "../../../../../../styles/Integrations.module.css"
 
-const CodeEditor = dynamic(
-  () => import("@uiw/react-textarea-code-editor").then((mod) => mod.default),
-  { ssr: false }
-)
-import rehypePrism from "rehype-prism-plus";
-import rehypeRewrite from "rehype-rewrite";
+import IntegrationEdtior from "../../../../../../components/integrationEditor";
 
 export default function XMLForm(props) {
   const router = useRouter();
@@ -177,7 +172,7 @@ export default function XMLForm(props) {
   }
 
   const addCreatedDateClickHandlerInXmlPath =(e) => {
-    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let textToInsert = "{{ builtin_vars[\"created_at\"].strftime(\"%Y-%m-%d\") }}"
     let cursorPosition = xmlPathSelectionStart
     if (cursorPosition == 0) {
       let xmlPathEditor = document.getElementById("xmlPath-editor")
@@ -241,11 +236,11 @@ export default function XMLForm(props) {
   }
 
   const addCreatedDateClickHandlerInTemplate =(e) => {
-    let textToInsert = "{{ builtin_vars[\"created_date\"].strftime(\"%Y-%m-%d\") }}"
+    let textToInsert = "{{ builtin_vars[\"created_at\"].strftime(\"%Y-%m-%d\") }}"
     let cursorPosition = templateSelectionStart
     if (cursorPosition == 0) {
-      let templateEditor = document.getElementById("template-editor")
-      cursorPosition = xmlEditor.selectionStart
+      let xmlPathEditor = document.getElementById("template-editor")
+      cursorPosition = xmlPathEditor.selectionStart
     }
     let textBeforeCursorPosition = form.template.substring(0, cursorPosition)
     let textAfterCursorPosition = form.template.substring(cursorPosition, form.template.length)
@@ -309,7 +304,7 @@ export default function XMLForm(props) {
                     }}
                   />
                 </Form.Group>
-                <Form.Group className="col-12" controlId="addForm.xmlPath">
+                {/*<Form.Group className="col-12" controlId="addForm.xmlPath">
                   <Form.Label>XML Path</Form.Label>
                   <div style={{ border: "1px solid #000", display: "flex" }}>
                     <Dropdown style={{ display: "flex", flexDirection: "row"}}>
@@ -382,7 +377,21 @@ export default function XMLForm(props) {
                       border: "1px solid #333",
                     }}
                   />
-                </Form.Group>
+                  </Form.Group>*/}
+                <IntegrationEdtior 
+                  editorId="xmlPath"
+                  displayName="XML Path Editor" 
+                  rules={rules}
+                  value={form.xmlPath}
+                  placeholder="Please enter XML path"
+                  onChange={xmlPathChangeHandler}/>
+                <IntegrationEdtior 
+                  editorId="xmlTemplate"
+                  displayName="XML Template Editor" 
+                  rules={rules}
+                  value={form.template}
+                  placeholder="Please enter PDF path"
+                  onChange={templateChangeHandler}/>
                 <Form.Group
                   className="col-12"
                   controlId="addForm.intervalSeconds"

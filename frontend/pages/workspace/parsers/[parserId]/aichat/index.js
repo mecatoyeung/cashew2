@@ -442,7 +442,7 @@ const AIChat = (props) => {
 
     let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
     if (typeof window !== 'undefined') {
-      baseUrl = "http://" + window.location.hostname + ":8000/api"
+      baseUrl = "http://" + window.location.hostname + ":8000/api/"
     }
 
     try {

@@ -32,6 +32,8 @@ import json
 from parsers.models.parser import Parser
 from parsers.models.rule import Rule
 from parsers.models.table_column_separator import TableColumnSeparator
+from parsers.models.queue import Queue
+from parsers.models.queue_status import QueueStatus
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.source import Source
@@ -52,13 +54,15 @@ from parsers.models.consecutive_page_splitting_condition import ConsecutivePageS
 from parsers.models.last_page_splitting_condition import LastPageSplittingCondition
 from parsers.models.post_processing import PostProcessing
 
-from parsers.serializers.parser import ParserSerializer, ParserListSerializer, ParserUpdateSerializer, ParserExportSerializer, ParserImportSerializer
+from parsers.serializers.parser import ParserSerializer, ParserListSerializer, ParserUpdateSerializer, ParserDeleteSerializer, \
+    ParserExportSerializer, ParserImportSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.integration import IntegrationSerializer
 from parsers.serializers.splitting import SplittingSerializer
 from parsers.helpers.document_parser import DocumentParser
 
+from parsers.schedule_jobs.get_open_ai_metrics import get_single_parser_open_ai_metrics
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
@@ -119,12 +123,25 @@ class ParserViewSet(viewsets.ModelViewSet):
             return ParserSerializer
         elif self.action == 'update':
             return ParserUpdateSerializer
+        elif self.action == 'delete':
+            return ParserDeleteSerializer
 
         return self.serializer_class
 
     def perform_create(self, serializer):
         """ Create a new parser. """
         serializer.save(user=self.request.user)
+
+    def destroy(self, request, pk, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            queues_count = Queue.objects.filter(parser_id=pk, queue_status=QueueStatus.IN_PROGRESS.value).count()
+            if queues_count > 0:
+                raise Exception("Delete cannot be completed. Please make sure there is no queue in progress in this parser.")
+            self.perform_destroy(instance)
+        except Exception as e:
+            return Response(e.args[0], status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False,
             methods=['GET'],
@@ -706,4 +723,16 @@ class ParserViewSet(viewsets.ModelViewSet):
                 })
 
             return Response(merged_metrics_data, status=status.HTTP_200_OK)
+        
+
+    @action(detail=False,
+            methods=['POST'],
+            name='Update Statistic',
+            url_path='(?P<pk>[^/.]+)/update_statistics')
+    def get_rules(self, request, pk, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=pk)
+        get_single_parser_open_ai_metrics(parser)
+
+        return Response("Statistics has been updated", status=200)
 

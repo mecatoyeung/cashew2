@@ -62,6 +62,11 @@ export default function Parsers() {
                 <Dropdown.Item onClick={() => regionSelectorClickHandler(parserId, rule)}>Region Selector</Dropdown.Item>
               </>
             )}
+            {(rule.ruleType == "ACROBAT_FORM") && (
+              <>
+                <Dropdown.Item onClick={() => acrobatFormFieldSelectorClickHandler(parserId, rule)}>Field Selector</Dropdown.Item>
+              </>
+            )}
             <Dropdown.Item onClick={() => streamEditorClickHandler(parserId, rule)}>Stream Editor</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
@@ -113,8 +118,8 @@ export default function Parsers() {
     router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=streamEditor")
   }
 
-  const acrobatFormEditorClickHandler = (parserId, rule) => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=acrobatFormEditor")
+  const acrobatFormFieldSelectorClickHandler = (parserId, rule) => {
+    router.push("/workspace/parsers/" + parserId + "/rules/" + rule.id + "?type=acrobatFormFieldSelector")
   }
 
   const deleteBtnClickHandler = async (rule) => {

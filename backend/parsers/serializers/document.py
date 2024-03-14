@@ -1,4 +1,5 @@
 import os
+import io
 import uuid
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -24,8 +25,7 @@ from parsers.serializers.queue import QueueSerializer
 from parsers.serializers.document_page import DocumentPageSerializer, DocumentPageDetailSerializer
 
 from parsers.helpers.generate_images_from_pdf import generate_images_from_pdf
-from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
-from parsers.helpers.upload_document import upload_document
+from parsers.helpers.path_helpers import source_file_pdf_path, document_path
 
 from backend import settings
 
@@ -96,17 +96,52 @@ class DocumentUploadSerializer(DocumentSerializer):
         extension = Path(file.name).suffix[1:]
         validated_data["guid"] = guid
         validated_data["filename_without_extension"] = filename_without_extension
+
+        im = None
         if extension == "pdf" or extension == "PDF":
             validated_data["document_extension"] = DocumentExtension.PDF.value
+        elif extension == "jpg" or extension == "JPG":
+            image = PIL.Image.open(file)
+            im = image.convert('RGB')
+            #im_bytes = io.BytesIO()
+            #im.save(im_bytes, format="JPG")
+            #im.close()
+            #im_bytes.seek(0)
+            #file = im_bytes.getvalue()
+        elif extension == "png" or extension == "PNG":
+            image = PIL.Image.open(file)
+            im = image.convert('RGB')
+            #im_bytes = io.BytesIO()
+            #im.save(im_bytes, format="PNG")
+            #im.close()
+            #im_bytes.seek(0)
+            #file = im_bytes.getvalue()
+        elif extension == "tiff" or extension == "TIFF":
+            image = PIL.Image.open(file)
+            im = image.convert('RGB')
+            #file = im_bytes.getvalue()
 
-        validated_data["extension"] = extension
+        validated_data["extension"] = "pdf"
+        validated_data["document_extension"] = "PDF"
         document = Document.objects.create(**validated_data)
 
         document.save()
 
+        abs_document_path = document_path(document)
+        is_folder_exist = os.path.exists(abs_document_path)
+        if not is_folder_exist:
+            os.makedirs(abs_document_path)
+        abs_source_file_pdf_path = source_file_pdf_path(document)
+        if im != None:
+            im.save(abs_source_file_pdf_path)
+        else:
+            with open(abs_source_file_pdf_path, "wb+") as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+
         parser = Parser.objects.get(id=document.parser_id)
 
-        upload_document(document, file)
+        #upload_document(document, im_bytes)
         generate_images_from_pdf(document)
 
         # Create queue object in database

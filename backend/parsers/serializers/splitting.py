@@ -128,7 +128,7 @@ class SplittingSerializer(serializers.ModelSerializer):
             # splitting_rule_obj, splitting_rule_created = SplittingRule.objects.create(
             #    **splitting_rule,
             # )
-            splitting_rule["route_to_parser"] = Parser.objects.get(pk=splitting_rule["route_to_parser"])
+            #splitting_rule["route_to_parser"] = Parser.objects.get(pk=splitting_rule["route_to_parser"])
             splitting_rule_obj = SplittingRule(**splitting_rule)
             splitting_rule_obj.save()
 

@@ -6,6 +6,7 @@ import EditorLayout from '../../../../../../layouts/editor'
 import RuleProperties from '../../../../../../components/ruleEditor/ruleProperties'
 import RegionSelector from '../../../../../../components/ruleEditor/regionSelector'
 import StreamEditor from '../../../../../../components/ruleEditor/streamEditor'
+import AcrobatFormFieldSelector from '../../../../../../components/ruleEditor/acrobatFormFieldSelector'
 
 const RuleEditor = () => {
 
@@ -26,6 +27,9 @@ const RuleEditor = () => {
             )}
             {type == "streamEditor" && (
                 <StreamEditor />
+            )}
+            {type == "acrobatFormFieldSelector" && (
+                <AcrobatFormFieldSelector />
             )}
         </>
     )

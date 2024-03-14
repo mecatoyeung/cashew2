@@ -40,8 +40,9 @@ from parsers.helpers.document_parser import DocumentParser
 from parsers.helpers.stream_processor import StreamProcessor
 from parsers.models.splitting_operator_type import SplittingOperatorType
 
-from parsers.helpers.create_queue_when_upload_document import create_queue_when_upload_document
-from parsers.helpers.path_helpers import ocr_folder_path, ocred_pdf_path, original_image_path, \
+from parsers.helpers.detect_pdf_is_searchable import detect_pdf_is_searchable
+from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
+from parsers.helpers.path_helpers import source_file_pdf_path, ocr_folder_path, ocred_pdf_path, original_image_path, \
     pre_processed_image_path, ocred_image_path, gcv_path, hocr_path, xml_path, document_path, \
     pre_processed_image_path
 
@@ -426,9 +427,16 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
     previous_pages_parsed_result = {}
     document_page_index = 0
 
+    is_searchable = detect_pdf_is_searchable(source_file_pdf_path(document))
+    if is_searchable:
+        parse_pdf_to_xml(document)
+
     while document_page_index < len(document_pages):
 
         document_page = document_pages[document_page_index]
+
+        if is_searchable:
+            break
 
         convert_page(parser, document, ocr, document_page)
 
@@ -939,184 +947,191 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
         document_page_index += 1
         page_num = document_page_index + 1
 
-    # if splitting is not activated, generate OCR document
+    if is_searchable:
 
-    abs_ocred_pdf_path = ocred_pdf_path(document)
+        abs_source_pdf_path = source_file_pdf_path(document)
+        abs_ocred_pdf_path = ocred_pdf_path(document)
+        shutil.copy(abs_source_pdf_path,
+                    abs_ocred_pdf_path)
 
-    fontname = "invisible"
-    pdf = None
+    else:
+        # if splitting is not activated, generate OCR document
 
-    for document_page in document_pages:
-        page_num = document_page.page_num
+        abs_ocred_pdf_path = ocred_pdf_path(document)
 
-        abs_ocred_image_path = ocred_image_path(
-            document, page_num)
-        abs_hocr_path = hocr_path(document, page_num)
+        fontname = "invisible"
+        pdf = None
 
-        # put the image on the page, scaled to fill the page
-        im = Image.open(abs_ocred_image_path)
-        if 'dpi' in im.info:
-            width = float(im.size[0])/im.info['dpi'][0]
-            height = float(im.size[1])/im.info['dpi'][1]
-        else:
-            width = height = None
+        for document_page in document_pages:
+            page_num = document_page.page_num
 
-        # a default, in case we can't find it
-        ocr_dpi = (300, 300)
-        # get dimensions of the OCR, which may not match the image
-        hocr_tree = ET.parse(abs_hocr_path)
-        hocr = hocr_tree.getroot()
-        if hocr is not None:
-            for div in hocr.findall(".//{http://www.w3.org/1999/xhtml}div"):
-                if div.attrib['class'] == 'ocr_page':
-                    coords = element_coordinates(div)
-                    ocrwidth = coords[2]-coords[0]
-                    ocrheight = coords[3]-coords[1]
-                if width is None:
-                    # no dpi info with the image
-                    # assume OCR was done at 300 dpi
-                    width = ocrwidth/300
-                    height = ocrheight/300
-                ocr_dpi = (ocrwidth/width, ocrheight/height)
-                break  # there shouldn't be more than one, and if there is, we don't want it
+            abs_ocred_image_path = ocred_image_path(
+                document, page_num)
+            abs_hocr_path = hocr_path(document, page_num)
 
-        if width is None:
-            # no dpi info with the image, and no help from the hOCR file either
-            # this will probably end up looking awful, so issue a warning
-            width = float(im.size[0])/96
-            height = float(im.size[1])/96
+            # put the image on the page, scaled to fill the page
+            im = Image.open(abs_ocred_image_path)
+            if 'dpi' in im.info:
+                width = float(im.size[0])/im.info['dpi'][0]
+                height = float(im.size[1])/im.info['dpi'][1]
+            else:
+                width = height = None
 
-        if page_num == 1:
-            pdf = Canvas(abs_ocred_pdf_path, pagesize=(
-                width*inch, height*inch), pageCompression=1)
-        else:
-            pdf.setPageSize((width*inch, height*inch))
-        pdf.drawInlineImage(
-            im, 0, 0, width=width*inch, height=height*inch)
+            # a default, in case we can't find it
+            ocr_dpi = (300, 300)
+            # get dimensions of the OCR, which may not match the image
+            hocr_tree = ET.parse(abs_hocr_path)
+            hocr = hocr_tree.getroot()
+            if hocr is not None:
+                for div in hocr.findall(".//{http://www.w3.org/1999/xhtml}div"):
+                    if div.attrib['class'] == 'ocr_page':
+                        coords = element_coordinates(div)
+                        ocrwidth = coords[2]-coords[0]
+                        ocrheight = coords[3]-coords[1]
+                    if width is None:
+                        # no dpi info with the image
+                        # assume OCR was done at 300 dpi
+                        width = ocrwidth/300
+                        height = ocrheight/300
+                    ocr_dpi = (ocrwidth/width, ocrheight/height)
+                    break  # there shouldn't be more than one, and if there is, we don't want it
 
-        im.close()
+            if width is None:
+                # no dpi info with the image, and no help from the hOCR file either
+                # this will probably end up looking awful, so issue a warning
+                width = float(im.size[0])/96
+                height = float(im.size[1])/96
 
-        if hocr is not None:
-            for word in hocr.findall(".//{http://www.w3.org/1999/xhtml}span"):
-                if word.attrib['class'] == 'ocrx_word':
-                    coords = element_coordinates(word)
+            if page_num == 1:
+                pdf = Canvas(abs_ocred_pdf_path, pagesize=(
+                    width*inch, height*inch), pageCompression=1)
+            else:
+                pdf.setPageSize((width*inch, height*inch))
+            pdf.drawInlineImage(
+                im, 0, 0, width=width*inch, height=height*inch)
 
-                    text = pdf.beginText()
-                    text.setTextRenderMode(3)  # invisible
+            im.close()
 
-                    pdf.setLineWidth(0.2)
-                    pdf.setStrokeColor(HexColor(0xff0000))
+            if hocr is not None:
+                for word in hocr.findall(".//{http://www.w3.org/1999/xhtml}span"):
+                    if word.attrib['class'] == 'ocrx_word':
+                        coords = element_coordinates(word)
 
-                    # set cursor to bottom left corner of line bbox (adjust for dpi)
-                    if ocr_engine == "DOCTR":
-                        x = (float(coords[0])/ocr_dpi[0])*inch
-                        y = (height*inch) - \
-                            (float(coords[3])/ocr_dpi[1])*inch
-                        text_width = (
-                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                        text_height = (
-                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                        fontsize = text_height * 0.40
-                        text.setFont(fontname, fontsize)
-                        text.setTextOrigin(x, y + 4)
+                        text = pdf.beginText()
+                        text.setTextRenderMode(3)  # invisible
 
-                    elif ocr_engine == "PADDLE":
-                        x = (
-                            float(coords[0])/ocr_dpi[0]) * inch
-                        y = (height*inch) - \
-                            (float(coords[3])/ocr_dpi[1])*inch
-                        text_width = (
-                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                        text_height = (
-                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                        fontsize = text_height * 0.30
-                        text.setFont(fontname, fontsize)
-                        text.setTextOrigin(x, y + 4)
+                        pdf.setLineWidth(0.2)
+                        pdf.setStrokeColor(HexColor(0xff0000))
 
-                    elif ocr_engine == "GOOGLE_VISION":
-                        x = (
-                            float(coords[0])/ocr_dpi[0]) * inch
-                        y = (height*inch) - \
-                            (float(coords[3])/ocr_dpi[1])*inch
-                        text_width = (
-                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                        text_height = (
-                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                        fontsize = text_height * 0.75
-                        text.setFont(fontname, fontsize)
-                        text.setTextOrigin(x, y + 2)
+                        # set cursor to bottom left corner of line bbox (adjust for dpi)
+                        if ocr_engine == "DOCTR":
+                            x = (float(coords[0])/ocr_dpi[0])*inch
+                            y = (height*inch) - \
+                                (float(coords[3])/ocr_dpi[1])*inch
+                            text_width = (
+                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                            text_height = (
+                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                            fontsize = text_height * 0.40
+                            text.setFont(fontname, fontsize)
+                            text.setTextOrigin(x, y + 4)
 
-                    elif ocr_engine == "OMNIPAGE":
-                        x = (
-                            float(coords[0])/ocr_dpi[0]) * inch
-                        y = (height*inch) - \
-                            (float(coords[3])/ocr_dpi[1])*inch
-                        text_width = (
-                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                        text_height = (
-                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                        fontsize = text_height * 0.70
-                        text.setFont(fontname, fontsize)
-                        text.setTextOrigin(x, y + 4)
+                        elif ocr_engine == "PADDLE":
+                            x = (
+                                float(coords[0])/ocr_dpi[0]) * inch
+                            y = (height*inch) - \
+                                (float(coords[3])/ocr_dpi[1])*inch
+                            text_width = (
+                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                            text_height = (
+                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                            fontsize = text_height * 0.30
+                            text.setFont(fontname, fontsize)
+                            text.setTextOrigin(x, y + 4)
 
-                    # redline the word
-                    if ocr.debug:
-                        pdf.rect(x, y, text_width,
-                                 text_height, stroke=1, fill=0)
+                        elif ocr_engine == "GOOGLE_VISION":
+                            x = (
+                                float(coords[0])/ocr_dpi[0]) * inch
+                            y = (height*inch) - \
+                                (float(coords[3])/ocr_dpi[1])*inch
+                            text_width = (
+                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                            text_height = (
+                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                            fontsize = text_height * 0.75
+                            text.setFont(fontname, fontsize)
+                            text.setTextOrigin(x, y + 2)
 
-                        # redline the char
-                        word_in_line_count = 0
-                        word_len = len(word.text)
-                        for char in word.text:
+                        elif ocr_engine == "OMNIPAGE":
+                            x = (
+                                float(coords[0])/ocr_dpi[0]) * inch
+                            y = (height*inch) - \
+                                (float(coords[3])/ocr_dpi[1])*inch
+                            text_width = (
+                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                            text_height = (
+                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                            fontsize = text_height * 0.70
+                            text.setFont(fontname, fontsize)
+                            text.setTextOrigin(x, y + 4)
 
-                            pdf.setLineWidth(0.1)
-                            pdf.setStrokeColor(
-                                HexColor(0x0000ff))
+                        # redline the word
+                        if ocr.debug:
+                            pdf.rect(x, y, text_width,
+                                    text_height, stroke=1, fill=0)
 
-                            char_xmin = text_width / \
-                                word_len * word_in_line_count + x
-                            char_xmax = text_width / \
-                                word_len * \
-                                (word_in_line_count+1) + x
-                            char_width = char_xmax - char_xmin
-                            pdf.rect(char_xmin, y, char_width,
-                                     text_height, stroke=1, fill=0)
+                            # redline the char
+                            word_in_line_count = 0
+                            word_len = len(word.text)
+                            for char in word.text:
 
-                            word_in_line_count += 1
+                                pdf.setLineWidth(0.1)
+                                pdf.setStrokeColor(
+                                    HexColor(0x0000ff))
 
-                    # scale the width of the text to fill the width of the line's bbox
-                    if fontsize == 0.0:
-                        fontsize = 10.0
-                    if word.text == None:
-                        word.text = ""
-                        stringWidth = pdf.stringWidth(
-                            " ", fontname, fontsize)
-                    elif word.text == ' ':
-                        stringWidth = pdf.stringWidth(
-                            " ", fontname, fontsize)
-                    elif word.text.rstrip() == '':
-                        stringWidth = pdf.stringWidth(
-                            " ", fontname, fontsize)
-                    else:
-                        stringWidth = pdf.stringWidth(
-                            word.text.rstrip(), fontname, fontsize)
-                    try:
-                        text.setHorizScale(
-                            (((float(coords[2])/ocr_dpi[0]*inch)-(float(coords[0])/ocr_dpi[0]*inch))/stringWidth)*100)
-                    except Exception as e:
-                        traceback.print_exc()
-                        raise e
+                                char_xmin = text_width / \
+                                    word_len * word_in_line_count + x
+                                char_xmax = text_width / \
+                                    word_len * \
+                                    (word_in_line_count+1) + x
+                                char_width = char_xmax - char_xmin
+                                pdf.rect(char_xmin, y, char_width,
+                                        text_height, stroke=1, fill=0)
 
-                    # write the text to the page
-                    text.textLine(word.text.rstrip())
-                    pdf.drawText(text)
+                                word_in_line_count += 1
 
-        # finish up the page and save it
-        pdf.showPage()
-    pdf.save()
+                        # scale the width of the text to fill the width of the line's bbox
+                        if fontsize == 0.0:
+                            fontsize = 10.0
+                        if word.text == None:
+                            word.text = ""
+                            stringWidth = pdf.stringWidth(
+                                " ", fontname, fontsize)
+                        elif word.text == ' ':
+                            stringWidth = pdf.stringWidth(
+                                " ", fontname, fontsize)
+                        elif word.text.rstrip() == '':
+                            stringWidth = pdf.stringWidth(
+                                " ", fontname, fontsize)
+                        else:
+                            stringWidth = pdf.stringWidth(
+                                word.text.rstrip(), fontname, fontsize)
+                        try:
+                            text.setHorizScale(
+                                (((float(coords[2])/ocr_dpi[0]*inch)-(float(coords[0])/ocr_dpi[0]*inch))/stringWidth)*100)
+                        except Exception as e:
+                            traceback.print_exc()
+                            raise e
 
-    # End of generating OCR document
+                        # write the text to the page
+                        text.textLine(word.text.rstrip())
+                        pdf.drawText(text)
 
+            # finish up the page and save it
+            pdf.showPage()
+        pdf.save()
+
+        # End of generating OCR document
 
 def export_as_hocr(im, result):
     """Export the page as hOCR-format"""

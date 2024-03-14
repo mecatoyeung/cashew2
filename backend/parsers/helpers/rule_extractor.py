@@ -190,6 +190,14 @@ class RuleExtractor:
                     spaces = " " * num_of_spaces_to_be_prepend
                     text_in_rows.append(spaces)
 
+            for textlines_in_row in textlines_in_rows:
+                for textline_in_row in textlines_in_row:
+                    result_text = ""
+                    for text_element in textline_in_row.text_elements:
+                        if xml_rule.region.contains(text_element.region):
+                            result_text = result_text + text_element.text
+                    textline_in_row.text = result_text
+
             previous_textline = None
             for textlines_in_row in textlines_in_rows:
 
@@ -426,6 +434,7 @@ class RuleExtractor:
             res = resolve1(doc.catalog)
 
             if 'AcroForm' not in res:
+                return [""]
                 raise ValueError("No AcroForm Found")
 
             fields = resolve1(doc.catalog['AcroForm'])[
@@ -450,7 +459,10 @@ class RuleExtractor:
                 if values == None:
                     values = ""
 
-                data.append(name + ": " + values)
+                if name == self.rule.acrobat_form_field:
+                    data.append(values)
+                    break
+                # data.append(name + ": " + values)
 
         return data
 

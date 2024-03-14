@@ -81,6 +81,10 @@ const RuleProperties = () => {
     router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
+  const proceedToAcrobatFormFieldSelectorBtnClickHandler = () => {
+    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum)
+  }
+
   return (
     <EditorLayout>
       <div className={styles.workbenchHeader}>
@@ -124,9 +128,14 @@ const RuleProperties = () => {
         <div className={styles.copyrightWrapper}>
           Copyright @ 2022
         </div>
-        {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && (
+        {rule && rule.ruleType != "INPUT_TEXTFIELD" && rule.ruleType != "INPUT_DROPDOWN" && rule.ruleType != "ACROBAT_FORM" && (
           <div className={styles.confirmBtnWrapper}>
             <Button variant="success" className={styles.confirmBtn} onClick={proceedToRegionSelectorBtnClickHandler}>Proceed to Region Selector</Button>
+          </div>
+        )}
+        { rule && rule.ruleType == "ACROBAT_FORM" && (
+          <div className={styles.confirmBtnWrapper}>
+            <Button variant="success" className={styles.confirmBtn} onClick={proceedToAcrobatFormFieldSelectorBtnClickHandler}>Proceed to Field Selector</Button>
           </div>
         )}
       </div>

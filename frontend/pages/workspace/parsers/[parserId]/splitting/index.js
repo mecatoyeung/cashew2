@@ -97,6 +97,10 @@ const Splitting = () => {
   const [splittingModal, setSplittingModal] = useState({
     show: false,
     type: "FIRST_PAGE",
+    addOrEdit: "ADD",
+    firstPageSplittingRuleIndex: 0,
+    consecutivePageSplittingRuleIndex: 0,
+    lastPageSplittingRuleIndex: 0,
     conditions: [],
     parentSplittingRule: 0,
     routeToParser: null,
@@ -109,31 +113,47 @@ const Splitting = () => {
   const getParser = () => {
     if (!parserId) return;
     service.get("parsers/" + parserId, (response) => {
-      setParser(response.data);
+      setParser(response.data)
     });
   };
 
   const getSplitting = () => {
     if (!parserId) return;
     service.get("parsers/" + parserId + "/splitting", (response) => {
-      console.log(response.data);
-      setSplitting(response.data);
+      console.log(response.data)
+      setSplitting(response.data)
     });
   };
 
   const getRules = () => {
     if (!parserId) return;
     service.get("rules/?parserId=" + parserId, (response) => {
-      setRules(response.data);
+      setRules(response.data)
     });
   };
 
   const addFirstPageSplittingClickHandler = () => {
     setSplittingModal(
       produce((draft) => {
-        draft.show = true;
-        draft.type = "FIRST_PAGE";
-        draft.parentSplittingRule = null;
+        draft.show = true
+        draft.type = "FIRST_PAGE"
+        draft.addOrEdit = "ADD"
+        draft.parentSplittingRule = null
+        draft.routeToParser = parserId
+      })
+    );
+  };
+
+  const editFirstPageSplittingClickHandler = (index) => {
+    console.log(splitting)
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = true
+        draft.type = "FIRST_PAGE"
+        draft.addOrEdit = "EDIT"
+        draft.firstPageSplittingRuleIndex = index
+        draft.conditions = splitting.splittingRules[0].splittingConditions
+        draft.parentSplittingRule = null
       })
     );
   };
@@ -143,24 +163,53 @@ const Splitting = () => {
   ) => {
     setSplittingModal(
       produce((draft) => {
-        draft.show = true;
-        draft.type = "CONSECUTIVE_PAGE";
-        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex;
-        draft.routeToParser = null;
+        draft.show = true
+        draft.type = "CONSECUTIVE_PAGE"
+        draft.addOrEdit = "ADD"
+        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
+        draft.routeToParser = parserId
       })
     );
   };
 
+  const editConsecutivePageSplittingClickHandler = (firstPageIndex, consecutivePageIndex) => {
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = true
+        draft.type = "CONSECUTIVE_PAGE"
+        draft.addOrEdit = "EDIT"
+        draft.firstPageSplittingRuleIndex = firstPageIndex
+        draft.consecutivePageSplittingRuleIndex = consecutivePageIndex
+        draft.conditions = splitting.splittingRules[firstPageIndex].consecutivePageSplittingRules[consecutivePageIndex].consecutivePageSplittingConditions
+        draft.parentSplittingRule = null
+      })
+    );
+  }
+
   const addLastPageSplittingClickHandler = (firstPageSplittingRuleIndex) => {
     setSplittingModal(
       produce((draft) => {
-        draft.show = true;
-        draft.type = "LAST_PAGE";
-        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex;
-        draft.routeToParser = null;
+        draft.show = true
+        draft.type = "LAST_PAGE"
+        draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
+        draft.routeToParser = parserId
       })
     );
   };
+
+  const editLastPageSplittingClickHandler = (firstPageIndex, lastPageIndex) => {
+    setSplittingModal(
+      produce((draft) => {
+        draft.show = true
+        draft.type = "LAST_PAGE"
+        draft.addOrEdit = "EDIT"
+        draft.firstPageSplittingRuleIndex = firstPageIndex
+        draft.lastPageSplittingRuleIndex = lastPageIndex
+        draft.conditions = splitting.splittingRules[firstPageIndex].lastPageSplittingRules[lastPageIndex].lastPageSplittingConditions
+        draft.parentSplittingRule = null
+      })
+    );
+  }
 
   const addConditionBtnClickHandler = () => {
     setSplittingModal(
@@ -177,7 +226,7 @@ const Splitting = () => {
   const selectConditionRuleChangeHandler = (index, e) => {
     setSplittingModal(
       produce((draft) => {
-        draft.conditions[index]["rule"] = e.value;
+        draft.conditions[index]["rule"] = e.value
       })
     );
   };
@@ -316,17 +365,31 @@ const Splitting = () => {
   };
 
   const firstPageSplittingRuleAddBtnClickHandler = (index) => {
-    setSplitting(
-      produce((draft) => {
-        draft.splittingRules.push({
-          splittingRuleType: "FIRST_PAGE",
-          parentSplittingRule: splittingModal.parentSplittingRule,
-          splitting: splitting.id,
-          routeToParser: splittingModal.routeToParser,
-          splittingConditions: splittingModal.conditions,
-        });
-      })
-    );
+    if (splittingModal.addOrEdit == "ADD") {
+      setSplitting(
+        produce((draft) => {
+          draft.splittingRules.push({
+            splittingRuleType: "FIRST_PAGE",
+            parentSplittingRule: splittingModal.parentSplittingRule,
+            splitting: splitting.id,
+            routeToParser: splittingModal.routeToParser,
+            splittingConditions: splittingModal.conditions,
+          });
+        })
+      );
+    } else if (splittingModal.addOrEdit == "EDIT") {
+      let splitttingRuleIndex = splittingModal.firstPageSplittingRuleIndex
+      setSplitting(
+        produce((draft) => {
+          let updatedSplittingRule = draft.splittingRules[splitttingRuleIndex]
+          updatedSplittingRule.splittingRuleType = "FIRST_PAGE"
+          updatedSplittingRule.parentSplittingRule = splittingModal.parentSplittingRule
+          updatedSplittingRule.splitting = splitting.id
+          updatedSplittingRule.routeToParser = splittingModal.routeToParser
+          updatedSplittingRule.splittingConditions = splittingModal.conditions
+        })
+      )
+    }
     setSplittingModal(
       produce((draft) => {
         draft.show = false;
@@ -335,54 +398,80 @@ const Splitting = () => {
   };
 
   const consecutivePageSplittingRuleAddBtnClickHandler = (index) => {
+    let consecutivePageSplittingRuleIndex = splittingModal.consecutivePageSplittingRuleIndex
     setSplitting(
       produce((draft) => {
-        if (
-          draft.splittingRules[splittingModal.firstPageSplittingRuleIndex]
-            .consecutivePageSplittingRules == undefined
-        ) {
+        if (splittingModal.addOrEdit == "ADD") {
+          if (
+            draft.splittingRules[splittingModal.firstPageSplittingRuleIndex]
+              .consecutivePageSplittingRules == undefined
+          ) {
+            draft.splittingRules[
+              splittingModal.firstPageSplittingRuleIndex
+            ].consecutivePageSplittingRules = [];
+          }
           draft.splittingRules[
             splittingModal.firstPageSplittingRuleIndex
-          ].consecutivePageSplittingRules = [];
+          ].consecutivePageSplittingRules.push({
+            splittingRuleType: "CONSECUTIVE_PAGE",
+            parentSplittingRule: splittingModal.parentSplittingRule,
+            splitting: splitting.id,
+            routeToParser: splittingModal.routeToParser,
+            consecutivePageSplittingConditions: splittingModal.conditions,
+          });
+        } else if (splittingModal.addOrEdit == "EDIT") {
+          draft.splittingRules[
+            splittingModal.firstPageSplittingRuleIndex
+          ].consecutivePageSplittingRules[consecutivePageSplittingRuleIndex] = {
+            splittingRuleType: "CONSECUTIVE_PAGE",
+            parentSplittingRule: splittingModal.parentSplittingRule,
+            splitting: splitting.id,
+            routeToParser: splittingModal.routeToParser,
+            consecutivePageSplittingConditions: splittingModal.conditions,
+          }
         }
-        draft.splittingRules[
-          splittingModal.firstPageSplittingRuleIndex
-        ].consecutivePageSplittingRules.push({
-          splittingRuleType: "CONSECUTIVE_PAGE",
-          parentSplittingRule: splittingModal.parentSplittingRule,
-          splitting: splitting.id,
-          routeToParser: splittingModal.routeToParser,
-          consecutivePageSplittingConditions: splittingModal.conditions,
-        });
       })
     );
     setSplittingModal(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   const lastPageSplittingRuleAddBtnClickHandler = (index) => {
+    let lastPageSplittingRuleIndex = splittingModal.lastPageSplittingRuleIndex
     setSplitting(
       produce((draft) => {
-        if (
-          draft.splittingRules[splittingModal.firstPageSplittingRuleIndex]
-            .lastPageSplittingRules == undefined
-        ) {
+        if (splittingModal.addOrEdit == "ADD") {
+          if (
+            draft.splittingRules[splittingModal.firstPageSplittingRuleIndex]
+              .lastPageSplittingRules == undefined
+          ) {
+            draft.splittingRules[
+              splittingModal.firstPageSplittingRuleIndex
+            ].lastPageSplittingRules = [];
+          }
           draft.splittingRules[
             splittingModal.firstPageSplittingRuleIndex
-          ].lastPageSplittingRules = [];
+          ].lastPageSplittingRules.push({
+            splittingRuleType: "LAST_PAGE",
+            parentSplittingRule: splittingModal.parentSplittingRule,
+            splitting: splitting.id,
+            routeToParser: splittingModal.routeToParser,
+            lastPageSplittingConditions: splittingModal.conditions,
+          });
+        } else if (splittingModal.addOrEdit == "EDIT") {
+          draft.splittingRules[
+            splittingModal.firstPageSplittingRuleIndex
+          ].lastPageSplittingRules[lastPageSplittingRuleIndex] = {
+            splittingRuleType: "LAST_PAGE",
+            parentSplittingRule: splittingModal.parentSplittingRule,
+            splitting: splitting.id,
+            routeToParser: splittingModal.routeToParser,
+            lastPageSplittingConditions: splittingModal.conditions,
+          }
         }
-        draft.splittingRules[
-          splittingModal.firstPageSplittingRuleIndex
-        ].lastPageSplittingRules.push({
-          splittingRuleType: "LAST_PAGE",
-          parentSplittingRule: splittingModal.parentSplittingRule,
-          splitting: splitting.id,
-          routeToParser: splittingModal.routeToParser,
-          lastPageSplittingConditions: splittingModal.conditions,
-        });
       })
     );
     setSplittingModal(
@@ -958,6 +1047,9 @@ const Splitting = () => {
                                               >
                                                 &darr;
                                               </Button>
+                                              <Button 
+                                                style={{ marginRight: 10 }}
+                                                onClick={(e) => editConsecutivePageSplittingClickHandler(firstPageSplittingRuleIndex, consecutivePageSplittingRuleIndex)}>Edit</Button>
                                               <Button
                                                 variant="danger"
                                                 onClick={() =>
@@ -1199,13 +1291,22 @@ const Splitting = () => {
                                                   styles.lastPageSplittingParser
                                                 }
                                               >
-                                                {allParsers && 
-                                                  allParsers.find(
-                                                    (p) =>
-                                                      p.id ==
-                                                      firstPageSplittingRule.routeToParser
-                                                  ).name
-                                                }
+                                                {parser &&
+                                                parser.type == "ROUTING" && (
+                                                  <span
+                                                    className={
+                                                      styles.consecutivePageSplittingParser
+                                                    }
+                                                  >
+                                                    {
+                                                      allParsers.find(
+                                                        (p) =>
+                                                          p.id ==
+                                                          firstPageSplittingRule.routeToParser
+                                                      ).name
+                                                    }
+                                                  </span>
+                                                )}
                                               </span>
                                             </div>
                                             <div
@@ -1235,6 +1336,9 @@ const Splitting = () => {
                                               >
                                                 &darr;
                                               </Button>
+                                              <Button 
+                                                style={{ marginRight: 10 }}
+                                                onClick={(e) => editLastPageSplittingClickHandler(firstPageSplittingRuleIndex, lastPageSplittingRuleIndex)}>Edit</Button>
                                               <Button
                                                 variant="danger"
                                                 onClick={() =>
@@ -1336,6 +1440,8 @@ const Splitting = () => {
                       >
                         &darr;
                       </Button>
+                      <Button style={{ marginRight: 10, marginBottom: 10 }} 
+                        onClick={(e) => editFirstPageSplittingClickHandler(firstPageSplittingRuleIndex)}>Edit</Button>
                       <Button
                         style={{ marginRight: 10, marginBottom: 10 }}
                         variant="danger"
@@ -1479,7 +1585,7 @@ const Splitting = () => {
                                     value: r.id,
                                   };
                                 })
-                                .find((o) => o.value == condition.ruldId)}
+                                .find((o) => o.value == condition.rule)}
                               onChange={(e) =>
                                 selectConditionRuleChangeHandler(
                                   conditionIndex,
@@ -1577,7 +1683,8 @@ const Splitting = () => {
                       style={{ marginRight: 10 }}
                       onClick={firstPageSplittingRuleAddBtnClickHandler}
                     >
-                      Add
+                      {splittingModal.addOrEdit == "ADD" && "Add"}
+                      {splittingModal.addOrEdit == "EDIT" && "Update"}
                     </Button>
                   )}
                   {splittingModal.type == "CONSECUTIVE_PAGE" && (
@@ -1585,7 +1692,8 @@ const Splitting = () => {
                       style={{ marginRight: 10 }}
                       onClick={consecutivePageSplittingRuleAddBtnClickHandler}
                     >
-                      Add
+                      {splittingModal.addOrEdit == "ADD" && "Add"}
+                      {splittingModal.addOrEdit == "EDIT" && "Update"}
                     </Button>
                   )}
                   {splittingModal.type == "LAST_PAGE" && (
@@ -1593,7 +1701,8 @@ const Splitting = () => {
                       style={{ marginRight: 10 }}
                       onClick={lastPageSplittingRuleAddBtnClickHandler}
                     >
-                      Add
+                      {splittingModal.addOrEdit == "ADD" && "Add"}
+                      {splittingModal.addOrEdit == "EDIT" && "Update"}
                     </Button>
                   )}
                   <Button variant="danger" onClick={closeSplittingModalHandler}>
@@ -1622,4 +1731,4 @@ const Splitting = () => {
   );
 };
 
-export default Splitting;
+export default Splitting

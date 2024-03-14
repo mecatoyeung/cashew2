@@ -14,7 +14,7 @@ def generate_images_from_pdf(document):
         folder_path = os.path.join(
             MEDIA_ROOT, 'documents/%s/' % (document.guid))
         abs_pdf_path = os.path.join(
-            folder_path, 'source_file.' + document.extension)
+            folder_path, 'source_file.pdf')
 
         dpi = 300  # choose desired dpi here
         zoom = dpi / 72  # zoom factor, standard: 72 dpi

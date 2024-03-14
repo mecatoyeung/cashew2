@@ -212,11 +212,13 @@ export default function Parsers() {
   };
 
   const trashClickHandler = (parserId) => {
-    console.log("ok");
     setTrashConfirmForm(
       produce((draft) => {
         draft.show = true;
         draft.parserId = parserId;
+        draft.name = ""
+        draft.isValid = true;
+        draft.errorMessage = "";
       })
     );
   };
@@ -244,6 +246,7 @@ export default function Parsers() {
       );
     }
     service.delete("parsers/" + trashConfirmForm.parserId + "/", (response) => {
+      console.log(response)
       if (response.status == 204) {
         setTrashConfirmForm(
           produce((draft) => {
@@ -261,6 +264,16 @@ export default function Parsers() {
         );
         return;
       }
+    }, error => {
+      console.log(error)
+      setTrashConfirmForm(
+          produce((draft) => {
+            draft.isValid = false;
+            draft.errorMessage =
+              error.response.data
+          })
+        );
+        return;
     });
   };
 

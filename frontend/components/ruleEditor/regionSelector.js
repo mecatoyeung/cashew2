@@ -153,7 +153,6 @@ const RegionSelector = () => {
   const openChangeDocumentModalHandler = () => setShowChangeDocumentModal(true)
 
   const updateRule = (updatedRule) => {
-    console.log(updatedRule)
     service.put("rules/" + ruleId + "/?parserId=" + parserId,
       updatedRule,
       response => {

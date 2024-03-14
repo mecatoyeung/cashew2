@@ -78,6 +78,13 @@ const Statistics = () => {
     })
   }
 
+  const updateParserStatistics = () => {
+    if (!parserId) return;
+    service.post("parsers/" + parserId + "/update_statistics/", {}, (response) => {
+      getMetrics()
+    })
+  }
+
   useEffect(() => {
     if (!router.isReady) return
     getParser()
@@ -94,6 +101,9 @@ const Statistics = () => {
           </div>
         )}
         <h2>Azure Open AI Service Statistic</h2>
+        <br/>
+        <Button style={{ marginLeft: 10, marginBottom: 10 }}
+          onClick={updateParserStatistics}><i class="bi bi-arrow-clockwise"></i> Real-time update</Button>
         <div className="Form">
           <Container>
             <Form>

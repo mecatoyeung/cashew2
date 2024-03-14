@@ -32,7 +32,7 @@ def parse_pdf_to_xml(document):
                 )
                 if queue.queue_status == QueueStatus.STOPPED.value:
                     queue.queue_class = QueueClass.PROCESSED.value
-                    queue.queue_status = QueueStatus.READY.value
+                    queue.queue_status = QueueStatus.COMPLETED.value
                     queue.save()
                     break
 

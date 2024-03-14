@@ -27,6 +27,8 @@ class RuleSerializer(serializers.ModelSerializer):
         required=False, allow_null=True)
     table_column_separators = TableColumnSeparatorSerializer(
         many=True, required=False, allow_null=True)
+    acrobat_form_field = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = Rule
@@ -52,6 +54,7 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_relative_y2',
                   'anchor_document',
                   'anchor_page_num',
+                  'acrobat_form_field',
                   'last_modified_at']
         read_only_fields = ['id']
 
