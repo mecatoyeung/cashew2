@@ -46,6 +46,9 @@ export default function Parsers() {
       if (rule.id == undefined) {
         return
       }
+      if (parserId == undefined) {
+        return
+      }
       return (
       <div style={{ display: "flex", flexDirection: "row" }}>
         <Dropdown style={{display: "inline-block", verticalAlign: "top", lineHeight: "initial", overflow: "visible"}}>
