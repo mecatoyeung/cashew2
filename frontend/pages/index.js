@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -63,9 +64,13 @@ export default function Home() {
               <div className="row">
                 <div className="col-12 col-lg-4">
                   <div className={homeStyles.logoDiv}>
-                    <Image src="/static/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
+                    <Link href={"/"}>
+                      <Image src="/static/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
+                    </Link>
                   </div>
-                  <h1 className={homeStyles.h1}>Cashew</h1>
+                  <Link href={"/"}>
+                    <h1 className={homeStyles.h1}>Cashew</h1>
+                  </Link>
                 </div>
                 <div className="col-12 col-lg-8">
                   <div className='hamburger-menu'>

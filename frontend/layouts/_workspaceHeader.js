@@ -60,20 +60,32 @@ export default function WorkspaceHeader({ children }) {
                 style={{ paddingLeft: 20, paddingRight: 0 }}
                 >
                 <div className={headerStyles.logoDiv}>
-                    <Image
-                    src="/static/img/logo.png"
-                    width="40"
-                    height="36"
-                    alt="Cashew Docparser"
-                    />
-                </div>
-                <h2>Cashew</h2>
+                  <Link href={
+                    router.pathname.split("/")[1] == "workspace"
+                      ? "/workspace/parsers"
+                      : "/workbench/parsers"
+                  }>
+                  <Image
+                  src="/static/img/logo.png"
+                  width="40"
+                  height="36"
+                  alt="Cashew Docparser"
+                  />
+                </Link>
+              </div>
+                <Link href={
+                  router.pathname.split("/")[1] == "workspace"
+                    ? "/workspace/parsers"
+                      : "/workbench/parsers"
+                }>
+                  <h2>Cashew</h2>
+                </Link>
                 &nbsp;&nbsp;&nbsp;
                 <a
                     href="#"
                     onClick={() => router.back()}
                     style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
-                >
+                  >
                   <i className={ headerStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
                 </a>
                 <Nav.Link

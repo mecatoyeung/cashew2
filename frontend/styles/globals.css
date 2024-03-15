@@ -10,6 +10,7 @@ body {
 
 a {
   color: unset;
+  text-decoration: none;
 }
 
 #__next {
@@ -26,7 +27,6 @@ h1 {
 h2 {
   font-family: Oswald, sans;
   font-weight: bold;
-  margin-left: 10px;
   margin-bottom: 0;
   line-height: 52px;
   display: inline-block;

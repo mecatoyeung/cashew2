@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 
@@ -50,19 +51,31 @@ export default function ParserLayout({ children }) {
             <div className="row">
               <div className="col-4 col-md-4">
                 <div className={workspaceLayoutStyles.logoDiv}>
+                  <Link href={
+                    router.pathname.split("/")[1] == "workspace"
+                      ? "/workspace/parsers"
+                      : "/workbench/parsers"
+                  }>
                   <Image
-                    src="/static/img/logo.png"
-                    width="40"
-                    height="36"
-                    alt="Cashew Docparser"
+                  src="/static/img/logo.png"
+                  width="40"
+                  height="36"
+                  alt="Cashew Docparser"
                   />
-                </div>
-                <h2>Cashew</h2>
-                <a
+                </Link>
+              </div>
+                <Link href={
+                  router.pathname.split("/")[1] == "workspace"
+                    ? "/workspace/parsers"
+                      : "/workbench/parsers"
+                }>
+                  <h2>Cashew</h2>
+                </Link>
+                  <a
                     href="#"
                     onClick={() => router.back()}
                     style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
-                >
+                  >
                   <i className={ workspaceLayoutStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
                 </a>
               </div>

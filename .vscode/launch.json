@@ -32,6 +32,7 @@
         "program": "${workspaceRoot}/backend/manage.py",
         "args": [
             "runserver",
+            "0.0.0.0:8000",
             "--noreload"
         ],
         "debugOptions": [
