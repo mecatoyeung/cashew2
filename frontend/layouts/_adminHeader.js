@@ -65,7 +65,7 @@ export default function AdminHeader({ children }) {
                       ? "/admin/parsers"
                       : "/workbench/parsers"
                   }>
-                  <Image
+                  <img
                   src="/static/img/logo.png"
                   width="40"
                   height="36"

@@ -56,7 +56,7 @@ export default function ParserLayout({ children }) {
                       ? "/admin/parsers"
                       : "/workbench/parsers"
                   }>
-                  <Image
+                  <img
                   src="/static/img/logo.png"
                   width="40"
                   height="36"

@@ -853,7 +853,7 @@ const AIChat = (props) => {
                 style={{ paddingLeft: 20, paddingRight: 0 }}
               >
                 <div className={styles.logoDiv}>
-                  <Image
+                  <img
                     src="/static/img/logo.png"
                     width="40"
                     height="36"

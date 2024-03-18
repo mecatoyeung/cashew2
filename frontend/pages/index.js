@@ -65,7 +65,7 @@ export default function Home() {
                 <div className="col-12 col-lg-4">
                   <div className={homeStyles.logoDiv}>
                     <Link href={"/"}>
-                      <Image src="/static/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
+                      <img src="/static/img/logo.png" width="80" height="71" alt="Cashew Docparser" />
                     </Link>
                   </div>
                   <Link href={"/"}>
