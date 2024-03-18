@@ -93,7 +93,7 @@ export default function ThresholdBinarizationForm(props) {
   }, [parserId])
 
   return (
-    <WorkspaceLayout>
+    <AdminLayout>
       <div className={preProcessingsStyles.wrapper}>
         <h1 className={preProcessingsStyles.h1}>Add Threshold Binarization</h1>
         <Accordion defaultActiveKey="0" style={{padding: 10}}>
@@ -146,6 +146,6 @@ export default function ThresholdBinarizationForm(props) {
           </Accordion.Item>
         </Accordion>
       </div>
-    </WorkspaceLayout>
+    </AdminLayout>
   )
 }

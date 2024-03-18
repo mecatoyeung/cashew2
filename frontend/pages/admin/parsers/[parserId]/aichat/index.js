@@ -38,7 +38,7 @@ import AIChatLayout from "../../../../../layouts/aichat";
 
 import service from "../../../../../service";
 
-import styles from "../../../../../styles/WorkspaceAIChat.module.css";
+import styles from "../../../../../styles/AIChat.module.css";
 
 const shiftCharCode = (Δ) => (c) => String.fromCharCode(c.charCodeAt(0) + Δ);
 

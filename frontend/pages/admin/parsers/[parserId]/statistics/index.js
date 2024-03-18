@@ -92,7 +92,7 @@ const Statistics = () => {
   }, [router.isReady, parserId, form.startDate, form.endDate])
 
   return (
-    <WorkspaceLayout>
+    <AdminLayout>
       <div className={styles.statisticsWrapper}>
         <h1>Statistics</h1>
         {parser && (
@@ -199,7 +199,7 @@ const Statistics = () => {
           </Container>
         </div>
       </div>
-    </WorkspaceLayout>
+    </AdminLayout>
   )
 }
 
