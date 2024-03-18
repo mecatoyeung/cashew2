@@ -1,17 +1,14 @@
+import sys
+from datetime import datetime
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
-from django.utils import timezone
-from django_apscheduler.models import DjangoJobExecution
-from django_apscheduler.jobstores import register_job
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.schedule_jobs.process_preprocessing_queue import process_single_preprocessing_queue
-import sys
 
 
 def process_import_queue_job():
@@ -52,6 +49,9 @@ def process_import_queue_job():
             document_page.preprocessed = False
             document_page.ocred = False
             document_page.save()
+
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.PRE_PROCESSING.value

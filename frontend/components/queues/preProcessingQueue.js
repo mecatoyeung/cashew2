@@ -133,9 +133,6 @@ const PreProcessingQueue = (props) => {
           title="Perform Action"
           className={styles.performActionDropdown}>
           <Dropdown.Item onClick={() => stopPrePocessessingClickHandler()}>Stop Pre-Processing and Move to Processed Queue</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>

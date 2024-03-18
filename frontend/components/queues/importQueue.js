@@ -100,13 +100,13 @@ const ImportQueue = (props) => {
     let errorMessages = []
     for (let i = 0; i < droppedFiles.length; i++) {
       let droppedFile = droppedFiles[i];
-      console.log(droppedFile)
       let fileExtension = droppedFile.path.split('.').pop();
       if (fileExtension !== "pdf" && fileExtension !== "PDF" &&
           fileExtension !== "jpg" && fileExtension !== "JPG" &&
           fileExtension !== "png" && fileExtension !== "PNG" &&
           fileExtension !== "tiff" && fileExtension !== "TIFF") {
         errorMessages.push("File type of filename(" + droppedFile.name + ") is not supported.\n")
+        console.log("continue")
         continue
       }
       let formData = new FormData();
@@ -214,16 +214,6 @@ const ImportQueue = (props) => {
           <Dropdown.Item href="#" onClick={uploadDocumentsBtnClickHandler}>
             Upload PDF File(s)
           </Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>
-            Move to Split Queue (In Progress)
-          </Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>
-            Move to Parse Queue (In Progress)
-          </Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
         </DropdownButton>
         <Form.Control
           className={styles.searchTxt}

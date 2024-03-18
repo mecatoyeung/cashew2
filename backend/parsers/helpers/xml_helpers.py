@@ -81,6 +81,90 @@ class XMLPage:
 
             self.textlines.append(textline)
 
+        figures = root.findall('.//figure')
+        for figure in figures:
+            accumulated_xml_texts = []
+            accumulated_text_elements = []
+            prev_text_element = None
+            prev_xml_text = None
+
+            textline_element = ET.Element("textline")
+            text_elements = figure.findall('.//text')
+            textline_text = ""
+            for text_element in text_elements:
+
+                curr_text_element = text_element
+
+                curr_xml_text = XMLText()
+                curr_xml_text.text = curr_text_element.text
+
+                text_bbox_str = curr_text_element.attrib['bbox']
+                text_bbox_search = re.search('([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*),([-]*[0-9]{1,4}(?:.[0-9]{3})*)',
+                                             text_bbox_str,
+                                             re.IGNORECASE
+                                             )
+
+                curr_xml_text.region.x1 = Decimal(
+                    text_bbox_search.group(1)) / self.width * Decimal(100.00)
+                curr_xml_text.region.y1 = Decimal(
+                    text_bbox_search.group(2)) / self.height * Decimal(100.00)
+                curr_xml_text.region.x2 = Decimal(
+                    text_bbox_search.group(3)) / self.width * Decimal(100.00)
+                curr_xml_text.region.y2 = Decimal(
+                    text_bbox_search.group(4)) / self.height * Decimal(100.00)
+
+                if prev_text_element == None:
+                    textline = XMLTextLine(self)
+                    accumulated_xml_texts.append(curr_xml_text)
+                    accumulated_text_elements.append(curr_text_element)
+                    textline.region.x1 = Decimal(
+                        text_bbox_search.group(1)) / self.width * Decimal(100.00)
+                    textline.region.y1 = Decimal(
+                        text_bbox_search.group(2)) / self.height * Decimal(100.00)
+                    textline.region.y2 = Decimal(
+                        text_bbox_search.group(4)) / self.height * Decimal(100.00)
+                    textline_text = textline_text + curr_text_element.text
+                else:
+                    if curr_xml_text.region.x1 == prev_xml_text.region.x2:
+                        accumulated_xml_texts.append(curr_xml_text)
+                        accumulated_text_elements.append(curr_text_element)
+                        textline_text = textline_text + curr_text_element.text
+                    else:
+                        textline.region.x2 = Decimal(
+                        text_bbox_search.group(3)) / self.width * Decimal(100.00)
+                        textline_element.set('bbox', str(textline.region.x1) + ',' + str(textline.region.y1) + ',' + str(textline.region.x2) + ',' + str(textline.region.y2))
+                        
+                        textline.textline_element = textline_element
+                        #textline.text_elements = accumulated_xml_texts
+                        for accumulated_text_element in accumulated_text_elements:
+                            textline.textline_element.append(accumulated_text_element)
+                        textline.text = textline_text
+                        self.textlines.append(textline)
+
+                        textline = XMLTextLine(self)
+                        textline.region.x1 = Decimal(
+                            text_bbox_search.group(1)) / self.width * Decimal(100.00)
+                        textline.region.y1 = Decimal(
+                            text_bbox_search.group(2)) / self.height * Decimal(100.00)
+                        textline.region.y2 = Decimal(
+                            text_bbox_search.group(4)) / self.height * Decimal(100.00)
+                        textline_text = curr_xml_text.text
+                        accumulated_xml_texts = [curr_xml_text]
+                        accumulated_text_elements = [curr_text_element]
+                        textline_element = ET.Element("textline")
+
+
+                prev_text_element = curr_text_element
+                prev_xml_text = curr_xml_text
+                prev_xml_text.region.x1 = Decimal(
+                    text_bbox_search.group(1)) / self.width * Decimal(100.00)
+                prev_xml_text.region.y1 = Decimal(
+                    text_bbox_search.group(2)) / self.height * Decimal(100.00)
+                prev_xml_text.region.x2 = Decimal(
+                    text_bbox_search.group(3)) / self.width * Decimal(100.00)
+                prev_xml_text.region.y2 = Decimal(
+                    text_bbox_search.group(4)) / self.height * Decimal(100.00)
+
         # filter out all text that
         for textline in self.textlines:
             result_text = ""
@@ -182,8 +266,6 @@ class XMLPage:
             splitted = False
             text_elements = textline.text_elements
             prev_text_els = []
-            if "21" in textline.text:
-                luck = 1
             for i in range(len(text_elements)):
                 text_el = text_elements[i]
 

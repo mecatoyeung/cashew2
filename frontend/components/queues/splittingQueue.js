@@ -20,6 +20,7 @@ const SplittingQueue = (props) => {
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
+  const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
   const getParser = () => {
     if (!props.parserId) return
@@ -28,26 +29,35 @@ const SplittingQueue = (props) => {
     })
   }
 
-  const getQueues = () => {
-    if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueClass=SPLIT", response => {
-      let queues = response.data
-      for (let i = 0; i < queues.length; i++) {
-        queues[i].selected = false
-      }
-      setQueues(response.data)
-    })
+  const stopSplittingClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "SPLITTING"
+      queue.queueStatus = "STOPPED"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
   }
 
-  const moveToParseQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(d => d.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queue_class: "PARSING",
-      queue_status: "READY"
-    })
+  const chkQueueChangeHandler = (e, queue) => {
+    let updatedSelectedQueueIds = []
+    if (e.target.checked) {
+      if (!selectedQueueIds.includes(queue.id)) {
+        updatedSelectedQueueIds = [...selectedQueueIds, queue.id]
+      }
+    } else {
+      let updatedSelectedQueueIds = [...selectedQueueIds]
+      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      if (index !== -1) {
+        updatedSelectedQueueIds.splice(index, 1);
+      }
+    }
+    let filteredSelectedQueueIds = []
+    for (let i=0; i<updatedSelectedQueueIds.length; i++) {
+      if (queues.filter(q => q.id == updatedSelectedQueueIds[i]).length > 0) {
+        filteredSelectedQueueIds.push(updatedSelectedQueueIds[i])
+      }
+    }
+    setSelectedQueueIds(filteredSelectedQueueIds)
   }
 
   useEffect(() => {
@@ -66,10 +76,11 @@ const SplittingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
-          <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item onClick={() => stopSplittingClickHandler()}>Stop Splitting and Move to Processed Queue</Dropdown.Item>
+          {/*<Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
+  <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>*/}
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -106,7 +117,7 @@ const SplittingQueue = (props) => {
                         type="checkbox"
                         label=""
                         checked={queue.selected}
-                        onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        onChange={(e) => chkQueueChangeHandler(e, queue)}
                         style={{padding: 0}}
                       />
                     </td>

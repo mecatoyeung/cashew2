@@ -99,14 +99,9 @@ const IntegrationQueue = (props) => {
   };
 
   useEffect(() => {
-    getParser();
-    setQueues(props.queues);
-    /*getQueues()
-    const interval = setInterval(() => {
-      getQueues()
-    }, 5000);
-    return () => clearInterval(interval);*/
-  }, [router.isReady, props.queues]);
+    getParser()
+    setQueues(props.queues)
+  }, [router.isReady, props.queues])
 
   return (
     <>
@@ -118,7 +113,8 @@ const IntegrationQueue = (props) => {
           <Dropdown.Item onClick={() => stopIntegrationClickHandler()}>
             Stop Integration and Move to Processed Queue
           </Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>
+          
+          {/*<Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>
             Move to Split Queue (In Progress)
           </Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>
@@ -130,7 +126,7 @@ const IntegrationQueue = (props) => {
           <Dropdown.Divider />
           <Dropdown.Item href="#">
             Delete Queues Documents (In Progress)
-          </Dropdown.Item>
+  </Dropdown.Item>*/}
         </DropdownButton>
         <Form.Control
           className={styles.searchTxt}

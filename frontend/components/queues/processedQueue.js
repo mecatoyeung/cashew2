@@ -1,10 +1,17 @@
+
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import dynamic from "next/dynamic"
+
+import { produce } from 'immer'
+
 import Table from 'react-bootstrap/Table'
 import Form from 'react-bootstrap/Form'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 import Dropdown from 'react-bootstrap/Dropdown'
 import Button from 'react-bootstrap/Button'
+import { Modal } from 'react-bootstrap'
 
 import moment from 'moment'
 
@@ -12,6 +19,13 @@ import sharedStyles from '../../styles/Queue.module.css'
 import styles from '../../styles/ProcessedQueue.module.css'
 
 import service from '../../service'
+
+const CodeEditor = dynamic(
+  () => import("@uiw/react-textarea-code-editor").then((mod) => mod.default),
+  { ssr: false }
+)
+
+import "@uiw/react-textarea-code-editor/dist.css";
 
 const ProcessedQueue = (props) => {
 
@@ -21,6 +35,10 @@ const ProcessedQueue = (props) => {
   const [documents, setDocuments] = useState([])
   const [queues, setQueues] = useState([])
   const [selectedQueueIds, setSelectedQueueIds] = useState([])
+  const [parsedResultForm, setParsedResultForm] = useState({
+    show: false,
+    parsedResult: ""
+  })
 
   const getParser = () => {
     if (!props.parserId) return
@@ -56,50 +74,6 @@ const ProcessedQueue = (props) => {
     setSelectedQueueIds([])
   }
 
-  const moveToOCRQueueClickHandler = async () => {
-    for (let i=0; i<selectedQueueIds.length; i++) {
-      let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "OCR"
-      queue.queueStatus = "READY"
-      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
-    }
-    getQueues()
-    setSelectedQueueIds([])
-  }
-
-  const moveToSplittingQueueClickHandler = async () => {
-    for (let i=0; i<selectedQueueIds.length; i++) {
-      let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "SPLIT"
-      queue.queueStatus = "READY"
-      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
-    }
-    getQueues()
-    setSelectedQueueIds([])
-  }
-
-  const moveToParsingQueueClickHandler = async () => {
-    for (let i=0; i<selectedQueueIds.length; i++) {
-      let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "PARSING"
-      queue.queueStatus = "READY"
-      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
-    }
-    getQueues()
-    setSelectedQueueIds([])
-  }
-
-  const moveToIntegrationQueueClickHandler = async () => {
-    for (let i=0; i<selectedQueueIds.length; i++) {
-      let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "INTEGRATION"
-      queue.queueStatus = "READY"
-      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
-    }
-    getQueues()
-    setSelectedQueueIds([])
-  }
-
   const chkQueueChangeHandler = (e, queue) => {
     if (e.target.checked) {
       if (!selectedQueueIds.includes(queue.id)) {
@@ -127,6 +101,23 @@ const ProcessedQueue = (props) => {
     }
   }
 
+  const parsedResultCloseHandler = (e) => {
+    setParsedResultForm(
+      produce((draft) => {
+        draft.show = false
+      })
+    )
+  }
+
+  const showParsedResultBtnClickHandler = (queue) => {
+    setParsedResultForm(
+      produce((draft) => {
+        draft.show = true
+        draft.parsedResult = JSON.stringify(JSON.parse(queue.parsedResult), null, "\t")
+      })
+    )
+  }
+
   useEffect(() => {
     if (!router.isReady) return
     getParser()
@@ -137,13 +128,7 @@ const ProcessedQueue = (props) => {
     <>
       <div className={sharedStyles.actionsDiv}>
         <DropdownButton title="Perform Action" className={styles.performActionDropdown}>
-          <Dropdown.Item href="#">Download Excel File (In Progress)</Dropdown.Item>
-          <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={moveToImportQueueClickHandler}>Move to Import Queue</Dropdown.Item>
-          {/*<Dropdown.Item href="#" onClick={moveToOCRQueueClickHandler}>Move to OCR Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToSplittingQueueClickHandler}>Move to Split Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToParsingQueueClickHandler}>Move to Parse Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToIntegrationQueueClickHandler}>Move to Integration Queue</Dropdown.Item>*/}
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={deleteQueueClickHandler}>Delete Queues and Documents</Dropdown.Item>
         </DropdownButton>
@@ -171,6 +156,7 @@ const ProcessedQueue = (props) => {
               <th>Document Name</th>
               <th>Document Type</th>
               <th>Queue Status</th>
+              <th>Show Parsed Result</th>
               <th>Last Modified At</th>
             </tr>
           </thead>
@@ -190,6 +176,32 @@ const ProcessedQueue = (props) => {
                   <td className={styles.tdGrow}>{queue.document.filenameWithoutExtension + "." + queue.document.extension + " (" + queue.document.totalPageNum + " Pages)"}</td>
                   <td>{queue.document.documentType}</td>
                   <td>{queue.queueStatus.replace("_", " ")}</td>
+                  <td>
+                    <Button onClick={() => showParsedResultBtnClickHandler(queue)}>Show</Button>
+                  </td>
+                  <Modal show={parsedResultForm.show}
+                    onHide={(e) => parsedResultCloseHandler(e)}
+                    size="lg">
+                    <Modal.Header closeButton>
+                      <Modal.Title>Parsed Result ({queue.document.filenameWithoutExtension + "." + queue.document.extension})</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <CodeEditor
+                        value={parsedResultForm.parsedResult}
+                        language="json"
+                        padding={15}
+                        style={{
+                            border: "1px solid #333",
+                        }}
+                        />
+                    </Modal.Body>
+                    <Modal.Footer>
+                      <Button variant="secondary" onClick={(e) => parsedResultCloseHandler(e)}>
+                        Close
+                      </Button>
+                    </Modal.Footer>
+                  </Modal>
+                  
                   <td className={styles.tdNoWrap}>{moment(queue.document.lastModifiedAt).format('YYYY-MM-DD hh:mm:ss a')}</td>
                 </tr>
               )

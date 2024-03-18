@@ -430,9 +430,8 @@ def process_single_splitting_queue(queue_job):
                 document_page_index += 1
                 page_num = document_page_index + 1
 
-        # Mark the job as completed
-        # queue_job.queue_status = QueueStatus.COMPLETED.value
-        # queue_job.save()
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         # Mark the job as complete
         queue_job.queue_class = QueueClass.PARSING.value
@@ -448,6 +447,15 @@ def process_single_splitting_queue(queue_job):
         queue_job.save()
         print(e)
 
+def process_stopped_splitting_queue_job():
+
+    all_stopped_preprocessing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.SPLITTING.value, queue_status=QueueStatus.STOPPED.value)
+
+    for queue_job in all_stopped_preprocessing_queue_jobs:
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
+        queue_job.save()
 
 def process_splitting_queue_job():
 
@@ -479,6 +487,8 @@ def splitting_queue_scheduler_start():
     # scheduler.add_jobstore(DjangoJobStore(), "splitting_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_splitting_queue_job, 'interval', seconds=5)
+    scheduler.add_job(process_stopped_splitting_queue_job,
+                      'interval', seconds=5)
     # register_events(scheduler)
     scheduler.start()
     print("Processing Splitting Queue", file=sys.stdout)

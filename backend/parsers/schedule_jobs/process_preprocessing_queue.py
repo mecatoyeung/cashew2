@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import traceback
 import glob
+from datetime import datetime
 
 from django.db.models import Prefetch
 
@@ -115,18 +116,8 @@ def process_single_preprocessing_queue(queue_job):
             document_page.preprocessed = True
             document_page.save()
 
-        """for pre_processing_index, pre_processing in enumerate(pre_processings):
-
-            image_paths = glob.glob('*.jpg')
-            image_paths.sort(key=lambda x: int(Path(x).stem))
-
-            output_pdf_path = os.path.join(
-                documents_folder_path, "pre_processed-" + str(pre_processing.id), "output.pdf")
-            convert_images_to_pdf(image_paths, output_pdf_path)"""
-
-        # Mark the job as completed
-        # queue_job.queue_status = QueueStatus.COMPLETED.value
-        # queue_job.save()
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         # Mark the job as preprocessing in progress
         updated_queue_job = Queue.objects.get(pk=queue_job.id)

@@ -1,4 +1,4 @@
-import AIChat from "../../../workspace/parsers/[parserId]/aichat";
+import AIChat from "../../../admin/parsers/[parserId]/aichat";
 
 const AIChatPublic = () => {
     return (

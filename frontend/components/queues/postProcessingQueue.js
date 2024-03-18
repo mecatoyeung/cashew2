@@ -35,14 +35,7 @@ const PostProcessingQueue = (props) => {
   const [queues, setQueues] = useState([])
   const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
-  const [showUploadDocumentsModal, setShowUploadDocumentsModal] = useState(false)
-  const closeUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(false);
   const openUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(true);
-
-  const uploadDocumentsBtnClickHandler = () => {
-    setDroppedFiles([])
-    openUploadDocumentsModalHandler()
-  }
 
   const moveToSplitQueueClickHandler = () => {
     let documentIds = queues
@@ -70,22 +63,6 @@ const PostProcessingQueue = (props) => {
     if (!props.parserId) return
     service.get("parsers/" + props.parserId + "/", response => {
       setParser(response.data)
-    })
-  }
-
-  const txtInputChangeHandler = (rule, value) => {
-    let updatedInputData = {...inputData}
-    updatedInputData[rule.name] = value
-    console.log(updatedInputData)
-    setInputData(updatedInputData)
-  }
-
-  const getQueues = () => {
-    if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueClass=POST_PROCESSING", response => {
-      let queues = response.data
-      setSelectedIds([])
-      setQueues(response.data)
     })
   }
 
@@ -147,11 +124,11 @@ const PostProcessingQueue = (props) => {
           title="Perform Action"
           className={styles.performActionDropdown}>
           <Dropdown.Item onClick={() => stopPostProcessingClickHandler()}>Stop Post-Processing and Move to Processed Queue</Dropdown.Item>
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
+          {/*<Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>
+  <Dropdown.Item href="#">Delete Queues Documents (In Progress)</Dropdown.Item>*/}
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>

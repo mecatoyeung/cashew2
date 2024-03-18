@@ -59,7 +59,7 @@ const RuleProperties = () => {
 
   const saveBtnClickHandler = () => {
     service.put("rules/" + ruleId + "/", rule, response => {
-      router.push("/workspace/parsers/" + parserId + "/rules/")
+      router.push("/admin/parsers/" + parserId + "/rules/")
       setToast({
         show: true,
         type: "success",
@@ -70,7 +70,7 @@ const RuleProperties = () => {
 
   const backBtnClickHandler = () => {
     router.push({
-      pathname: "/workspace/parsers/" + parserId + "/rules",
+      pathname: "/admin/parsers/" + parserId + "/rules",
       query: {
         documentId: documentId
       }
@@ -78,11 +78,11 @@ const RuleProperties = () => {
   }
 
   const proceedToRegionSelectorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum)
+    router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "/?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   const proceedToAcrobatFormFieldSelectorBtnClickHandler = () => {
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "/?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum)
+    router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "/?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   return (

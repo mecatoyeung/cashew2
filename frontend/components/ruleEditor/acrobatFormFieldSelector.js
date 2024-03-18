@@ -140,10 +140,8 @@ const AcrobatFormFieldSelector = () => {
   }
 
   const saveBtnClickHandler = () => {
-    console.log(rule)
-    return
     service.put("rules/" + ruleId + "/?parserId=" + parserId, rule, response => {
-      router.push("/workspace/parsers/" + parserId + "/rules/")
+      router.push("/admin/parsers/" + parserId + "/rules/")
       setToast({
         show: true,
         type: "success",
@@ -154,7 +152,7 @@ const AcrobatFormFieldSelector = () => {
 
   const backBtnClickHandler = () => {
     router.push({
-      pathname: "/workspace/parsers/" + parserId + "/rules",
+      pathname: "/admin/parsers/" + parserId + "/rules",
       query: {
         documentId: documentId
       }
@@ -163,7 +161,7 @@ const AcrobatFormFieldSelector = () => {
 
   const proceedToStreamEditorBtnClickHandler = () => {
     console.log("cleared!")
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
+    router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   return (
@@ -236,7 +234,7 @@ const AcrobatFormFieldSelector = () => {
       </div>
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
+          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
         </div>
         <div className={styles.copyrightWrapper}>
           Copyright @ 2022

@@ -10,7 +10,7 @@ import { Button } from "react-bootstrap"
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import WorkspaceHeader from "./_workspaceHeader"
+import AdminHeader from "./_adminHeader"
 
 import service from "../service"
 
@@ -36,7 +36,7 @@ export default function AccountLayout({ children }) {
         <link rel="icon" href="/static/favicon.ico" />
       </Head>
       <div className={accountStyles.wrapper}>
-        <WorkspaceHeader/>
+        <AdminHeader/>
         <hr className={accountStyles.headerHr} />
         <main className={accountStyles.main + " d-flex flex-column"}>
           <div

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import json
 import traceback
+from datetime import datetime
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -74,7 +75,8 @@ def process_single_parsing_queue(queue_job):
 
         queue_job.parsed_result = json.dumps(parsed_result)
 
-        # Mark the job as completed
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.POST_PROCESSING.value

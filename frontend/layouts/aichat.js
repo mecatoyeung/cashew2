@@ -120,7 +120,7 @@ export default function AIChatLayout({ children }) {
                   <i className={ styles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
                 </a>
                 <Nav.Link
-                  href="/workspace/parsers"
+                  href="/admin/parsers"
                   style={{ display: "inline-block", verticalAlign: "top" }}
                 >
                   <i
@@ -130,7 +130,7 @@ export default function AIChatLayout({ children }) {
                   ></i>
                 </Nav.Link>
                 <div style={{ display: "inline-block", verticalAlign: "text-bottom", marginLeft: 10 }}>
-                  <Button onClick={() => router.push("/workspace/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
+                  <Button onClick={() => router.push("/admin/parsers/" + parserId + "/rules")}>Back to Configurations</Button>
                 </div>
               </div>
               <div

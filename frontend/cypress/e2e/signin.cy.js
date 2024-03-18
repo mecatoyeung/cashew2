@@ -51,6 +51,6 @@ describe('signin mock response', () => {
     })
     cy.get('button[class*=signInBtn]').click()
     cy.url()
-      .should('be.equal', Cypress.config().baseUrl + '/workspace/parsers')
+      .should('be.equal', Cypress.config().baseUrl + '/admin/parsers')
   })
 })

@@ -86,7 +86,7 @@ const StreamEditor = () => {
 
   const saveParsingRuleClickHandler = () => {
     router.push({
-      pathname: "/workspace/parsers/" + parserId + "/rules",
+      pathname: "/admin/parsers/" + parserId + "/rules",
       query: {
         documentId: documentId
       }
@@ -515,12 +515,12 @@ const StreamEditor = () => {
         <div className={styles.backBtnWrapper}>
           {console.log(rule)}
           {rule && rule.ruleType != "ACROBAT_FORM" && (
-            <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
+            <Link href={"/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=regionSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
               &lt; Back to Region Selection
             </Link>
           )}
           {rule && rule.ruleType == "ACROBAT_FORM" && (
-            <Link href={"/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
+            <Link href={"/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=acrobatFormFieldSelector&documentId=" + documentId + "&pageNum=" + pageNum}>
               &lt; Back to Field Selection
             </Link>
           )}

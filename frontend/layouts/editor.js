@@ -42,13 +42,13 @@ export default function EditorLayout({ children }) {
 
   const liRuleClickHandler = (e, rule) => {
     if (rule.ruleType == "INPUT_TEXTFIELD" || rule.ruleType == "INPUT_DROPDOWN") {
-      router.push("/workspace/parsers/" + parserId +
+      router.push("/admin/parsers/" + parserId +
         "/rules/" + rule.id +
         "?editorType=ruleProperties" +
         "&documentId=" + documentId +
         "&pageNum=" + pageNum)
     } else {
-      router.push("/workspace/parsers/" + parserId +
+      router.push("/admin/parsers/" + parserId +
         "/rules/" + rule.id +
         "?editorType=" + editorType +
         "&documentId=" + documentId +
@@ -91,7 +91,7 @@ export default function EditorLayout({ children }) {
               </ul>
             </div>
             <div className={styles.parsingRulesFooter}>
-              <Link href={"/workspace/parsers/" + parserId + "/rules"}>&#60; Exit Parsing Rules Editor</Link>
+              <Link href={"/admin/parsers/" + parserId + "/rules"}>&#60; Exit Parsing Rules Editor</Link>
             </div>
           </div>
           <div className={styles.workbenchWrapper} style={{width: openSidebar ? "calc(100% - 280px)": "99%" }}>

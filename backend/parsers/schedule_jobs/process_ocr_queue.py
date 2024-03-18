@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import traceback
+from datetime import datetime
 
 from django.db.models import Prefetch
 
@@ -95,6 +96,9 @@ def process_single_ocr_queue(queue_job):
         updated_queue_job = Queue.objects.get(pk=queue_job.id)
         if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
             return
+        
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         if document.document_type == DocumentType.AICHAT.value:
 
@@ -190,6 +194,9 @@ def process_single_no_ocr_queue(queue_job):
         updated_queue_job = Queue.objects.get(pk=queue_job.id)
         if updated_queue_job.queue_class == QueueClass.PROCESSED.value and updated_queue_job.queue_status == QueueStatus.READY.value:
             return
+        
+        # Update last modified at
+        document.last_modified_at = datetime.now()
 
         if parser.type == ParserType.ROUTING.value:
             if splitting != None and splitting.activated:
@@ -215,8 +222,8 @@ def process_single_no_ocr_queue(queue_job):
                     queue_job.save()
                     process_single_splitting_queue(queue_job)
                 else:
-                    queue_job.queue_class = QueueClass.PROCESSED.value
-                    queue_job.queue_status = QueueStatus.COMPLETED.value
+                    queue_job.queue_class = QueueClass.PARSING.value
+                    queue_job.queue_status = QueueStatus.READY.value
                     queue_job.save()
 
     except Exception as e:

@@ -109,6 +109,9 @@ class RuleSerializer(serializers.ModelSerializer):
 
         TableColumnSeparator.objects.filter(rule__id=instance.id).delete()
 
+        streams = validated_data.pop(
+            "streams", None)
+
         """ Update rule. """
         for attr, value in validated_data.items():
             if attr == "anchor_document":

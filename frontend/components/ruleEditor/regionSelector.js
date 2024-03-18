@@ -329,7 +329,7 @@ const RegionSelector = () => {
   const proceedToStreamEditorBtnClickHandler = () => {
     //clearInterval(getParserDocumentsTimer)
     console.log("cleared!")
-    router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
+    router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
   }
 
   return (
@@ -488,7 +488,7 @@ const RegionSelector = () => {
       )}
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/workspace/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
+          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
         </div>
         <div className={styles.copyrightWrapper}>
           Copyright @ 2022

@@ -4,6 +4,7 @@ import traceback
 import re
 import fitz
 from pathlib import Path
+from datetime import datetime
 
 from django.db.models import Prefetch
 
@@ -115,6 +116,9 @@ def process_single_postprocessing_queue(queue_job):
                                     pdf_input_path,
                                     pdf_out_path)
                 redactor.redaction()
+
+            # Update last modified at
+            document.last_modified_at = datetime.now()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.INTEGRATION.value

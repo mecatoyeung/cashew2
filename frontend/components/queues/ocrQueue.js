@@ -99,9 +99,6 @@ const OCRQueue = (props) => {
           title="Perform Action"
           className={styles.performActionDropdown}>
           <Dropdown.Item onClick={() => stopOCRClickHandler()}>Stop OCR and Move to Processed Queue</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Parse Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
-          <Dropdown.Divider />
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>

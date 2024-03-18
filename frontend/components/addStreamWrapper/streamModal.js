@@ -170,7 +170,7 @@ const tableStreamOptions = [
   }
 ]
 
-const AddStreamModal = (props) => {
+const StreamModal = (props) => {
 
   const [stream, setStream] = useState({
     step: props.stream.step + 1,
@@ -510,4 +510,4 @@ const AddStreamModal = (props) => {
   )
 }
 
-export default AddStreamModal
+export default StreamModal

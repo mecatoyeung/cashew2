@@ -99,6 +99,10 @@ def process_single_integration_queue(queue_job):
         # Do the job
         integrations = Integration.objects.filter(parser_id=parser.id)
         for integration in integrations:
+
+            if not integration.activated:
+                continue
+
             if integration.integration_type == IntegrationType.XML_INTEGRATION.value:
 
                 xml_path = integration.xml_path
@@ -183,6 +187,9 @@ def process_single_integration_queue(queue_job):
                     pdf_to_path = failed_path
 
                 shutil.copyfile(pdf_from_path, pdf_to_path)
+
+            # Update last modified at
+            document.last_modified_at = datetime.now()
 
         # Mark the job as completed
         if document.document_type == DocumentType.IMPORT.value:

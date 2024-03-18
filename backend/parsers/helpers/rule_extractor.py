@@ -10,6 +10,7 @@ import statistics
 import os
 import cv2
 from pyzbar.pyzbar import decode
+import numpy as np
 
 from backend.settings import MEDIA_ROOT, MEDIA_URL
 
@@ -757,6 +758,20 @@ class RuleExtractor:
         crop_y2 = int((xml_page.region.y2 - xml_rule.region.y1) /
                       xml_page.region.y2 * h)
         cropped_im = bw_im[crop_y1:crop_y2, crop_x1:crop_x2]
+
+        # Test
+        """im = cv2.imread(full_png_path, cv2.IMREAD_GRAYSCALE)
+        cropped_im = im[crop_y1:crop_y2, crop_x1:crop_x2]
+        closed = cv2.morphologyEx(cropped_im, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 21)))
+        dens = np.sum(cropped_im, axis=0)
+        mean = np.mean(dens)
+        thresh = closed.copy()
+        for idx, val in enumerate(dens):
+            if val < 10800:
+                thresh[:,idx] = 0
+        (_, thresh2) = cv2.threshold(thresh, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        cropped_im = thresh2"""
+        #cv2.imwrite("C:\\Cashew\\Output\\crooped_im.png", cropped_im)
 
         detectedBarcodes = [decoded.data.decode('utf-8')
                             for decoded in decode(cropped_im)]

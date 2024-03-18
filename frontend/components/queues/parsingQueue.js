@@ -35,43 +35,28 @@ const ParsingQueue = (props) => {
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
-  const [selectedIds, setSelectedIds] = useState([])
+  const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
-  const [showUploadDocumentsModal, setShowUploadDocumentsModal] = useState(false)
-  const closeUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(false);
-  const openUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(true);
-
-  const uploadDocumentsBtnClickHandler = () => {
-    setDroppedFiles([])
-    openUploadDocumentsModalHandler()
-  }
-
-  const moveToSplitQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(d => d.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queue_class: "SPLIT",
-      queue_status: "READY"
-    })
-  }
-
-  const moveToParseQueueClickHandler = () => {
-    let documentIds = queues
-      .filter(d => d.selected == true)
-      .map(d => d.document.id)
-    service.put("documents/change-queue-class/", {
-      documents: documentIds,
-      queue_class: "PARSING",
-      queue_status: "READY"
-    })
-  }
-
-  const chkQueueChangeHandler = (index, e) => {
-    let updateQueues = [...queues]
-    updateQueues[index].selected = e.target.checked
-    setQueues(updateQueues)
+  const chkQueueChangeHandler = (e, queue) => {
+    let updatedSelectedQueueIds = []
+    if (e.target.checked) {
+      if (!selectedQueueIds.includes(queue.id)) {
+        updatedSelectedQueueIds = [...selectedQueueIds, queue.id]
+      }
+    } else {
+      let updatedSelectedQueueIds = [...selectedQueueIds]
+      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      if (index !== -1) {
+        updatedSelectedQueueIds.splice(index, 1);
+      }
+    }
+    let filteredSelectedQueueIds = []
+    for (let i=0; i<updatedSelectedQueueIds.length; i++) {
+      if (queues.filter(q => q.id == updatedSelectedQueueIds[i]).length > 0) {
+        filteredSelectedQueueIds.push(updatedSelectedQueueIds[i])
+      }
+    }
+    setSelectedQueueIds(filteredSelectedQueueIds)
   }
 
   const getParser = () => {
@@ -81,30 +66,18 @@ const ParsingQueue = (props) => {
     })
   }
 
-  const txtInputChangeHandler = (rule, value) => {
-    let updatedInputData = {...inputData}
-    updatedInputData[rule.name] = value
-    console.log(updatedInputData)
-    setInputData(updatedInputData)
+  const stopParsingClickHandler = async () => {
+    for (let i=0; i<selectedQueueIds.length; i++) {
+      let queue = queues.find(q => q.id == selectedQueueIds[i])
+      queue.queueClass = "PARSING"
+      queue.queueStatus = "STOPPED"
+      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    }
   }
-
-  /*const getQueues = () => {
-    if (!props.parserId) return
-    service.get("queues/?parserId=" + props.parserId + "&queueClass=PARSING", response => {
-      let queues = response.data
-      setSelectedIds([])
-      setQueues(response.data)
-    })
-  }*/
 
   useEffect(() => {
     getParser()
     setQueues(props.queues)
-    /*getQueues()
-    const interval = setInterval(() => {
-      getQueues()
-    }, 5000);
-    return () => clearInterval(interval);*/
   }, [router.isReady, props.queues])
 
   return (
@@ -113,11 +86,12 @@ const ParsingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
-          <Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
+          <Dropdown.Item onClick={() => stopParsingClickHandler()}>Stop Parsing and Move to Processed Queue</Dropdown.Item>
+          {/*<Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>
+  <Dropdown.Item href="#">Delete Queues and Documents (In Progress)</Dropdown.Item>*/}
         </DropdownButton>
         <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
         <Button variant="secondary">Search</Button>
@@ -154,7 +128,7 @@ const ParsingQueue = (props) => {
                         type="checkbox"
                         label=""
                         checked={queue.selected}
-                        onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
+                        onChange={(e) => chkQueueChangeHandler(e, queue)}
                         style={{padding: 0}}
                       />
                     </td>

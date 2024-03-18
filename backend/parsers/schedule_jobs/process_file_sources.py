@@ -37,6 +37,9 @@ def process_file_sources():
         if file_source.is_running == True:
             continue
 
+        if not file_source.activated:
+            continue
+
         file_source.is_running = True
         file_source.save()
 

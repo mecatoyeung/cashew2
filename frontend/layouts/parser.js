@@ -10,7 +10,7 @@ import DropdownButton from "react-bootstrap/DropdownButton";
 
 import service from "../service";
 
-import workspaceLayoutStyles from "../styles/WorkspaceLayout.module.css";
+import adminLayoutStyles from "../styles/AdminLayout.module.css";
 
 export default function ParserLayout({ children }) {
   const router = useRouter();
@@ -45,15 +45,15 @@ export default function ParserLayout({ children }) {
         ></meta>
         <link rel="icon" href="/static/favicon.ico" />
       </Head>
-      <div className={workspaceLayoutStyles.wrapper}>
-        <header className={workspaceLayoutStyles.header}>
+      <div className={adminLayoutStyles.wrapper}>
+        <header className={adminLayoutStyles.header}>
           <div className="container-md">
             <div className="row">
               <div className="col-4 col-md-4">
-                <div className={workspaceLayoutStyles.logoDiv}>
+                <div className={adminLayoutStyles.logoDiv}>
                   <Link href={
-                    router.pathname.split("/")[1] == "workspace"
-                      ? "/workspace/parsers"
+                    router.pathname.split("/")[1] == "admin"
+                      ? "/admin/parsers"
                       : "/workbench/parsers"
                   }>
                   <Image
@@ -65,8 +65,8 @@ export default function ParserLayout({ children }) {
                 </Link>
               </div>
                 <Link href={
-                  router.pathname.split("/")[1] == "workspace"
-                    ? "/workspace/parsers"
+                  router.pathname.split("/")[1] == "admin"
+                    ? "/admin/parsers"
                       : "/workbench/parsers"
                 }>
                   <h2>Cashew</h2>
@@ -76,11 +76,11 @@ export default function ParserLayout({ children }) {
                     onClick={() => router.back()}
                     style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
                   >
-                  <i className={ workspaceLayoutStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                  <i className={ adminLayoutStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
                 </a>
               </div>
               <div className="col-8 col-md-8">
-                <nav className={workspaceLayoutStyles.nav}>
+                <nav className={adminLayoutStyles.nav}>
                   <ul>
                     <li>
                       <DropdownButton
@@ -92,14 +92,14 @@ export default function ParserLayout({ children }) {
                         )}
                         <Dropdown.Item
                           href={
-                            router.pathname.split("/")[1] == "workspace"
+                            router.pathname.split("/")[1] == "admin"
                               ? "/workbench/parsers"
-                              : "/workspace/parsers"
+                              : "/admin/parsers"
                           }
                         >
-                          {router.pathname.split("/")[1] == "workspace"
+                          {router.pathname.split("/")[1] == "admin"
                             ? "Switch to Workbench"
-                            : "Switch to Workspace"}
+                            : "Switch to Admin Console"}
                         </Dropdown.Item>
                         <Dropdown.Item href="/account/profile">
                           Profile
@@ -118,11 +118,11 @@ export default function ParserLayout({ children }) {
             </div>
           </div>
         </header>
-        <hr className={workspaceLayoutStyles.headerHr} />
-        <main className={workspaceLayoutStyles.main + " d-flex flex-column"}>
+        <hr className={adminLayoutStyles.headerHr} />
+        <main className={adminLayoutStyles.main + " d-flex flex-column"}>
           <div
             className={
-              workspaceLayoutStyles.sideNavContainerDiv +
+              adminLayoutStyles.sideNavContainerDiv +
               " container-md d-flex flex-grow-1"
             }
           >
@@ -136,11 +136,11 @@ export default function ParserLayout({ children }) {
             </div>
           </div>
         </main>
-        <footer className={workspaceLayoutStyles.footer}>
+        <footer className={adminLayoutStyles.footer}>
           <div className="container">
             <div className="row">
               <div className="col-sm">
-                <div className={workspaceLayoutStyles.copyright}>
+                <div className={adminLayoutStyles.copyright}>
                   2023. All rights reserved.
                 </div>
               </div>
