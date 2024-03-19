@@ -154,8 +154,16 @@ const OCR = () => {
     })
   }
 
+  const detectSearchableChangeHandler = (e) => {
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.detectSearchable = e.target.checked
+    setParser({
+      ...parser,
+      ocr: updatedOCR
+    })
+  }
+
   const debugChangeHandler = (e) => {
-    console.log(e)
     let updatedOCR = { ...parser.ocr }
     updatedOCR.debug = e.target.checked
     setParser({
@@ -216,40 +224,6 @@ const OCR = () => {
                   menuPlacement="auto"
                   menuPosition="fixed" />
               </Form.Group>
-              {/*
-              <Form.Group className="col-12" controlId="formOcrImageLayerType">
-                <Form.Label>Image Layer Type</Form.Label>
-                <Select
-                  classNamePrefix="react-select"
-                  options={ocrImageLayerTypeOptions}
-                  value={ocrImageLayerTypeOptions.find(o => o.value == parser.ocr.ocrImageLayerType)}
-                  onChange={(e) => selectOcrImageLayerTypeChangeHandler(e)}
-                  menuPlacement="auto"
-                  menuPosition="fixed" />
-              </Form.Group>
-              {parser.ocr.ocrImageLayerType == "PRE_PROCESSING" && preProcessings && (
-                  <Form.Group className="col-12" controlId="formImageLayerPreProcessingId">
-                    <Form.Label>Pre-processing</Form.Label>
-                    <Select
-                      classNamePrefix="react-select"
-                      options={preProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      })}
-                      value={preProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      }).find(o => o.value == parser.ocr.ocrImageLayerType)}
-                      onChange={(e) => selectPreProcessingChangeHandler(e)}
-                      menuPlacement="auto"
-                      menuPosition="fixed" />
-                  </Form.Group>
-                )}
-              */}
               {parser.ocr.ocrType == "GOOGLE_VISION" && (
                 <>
                   <Form.Group className="mb-3" controlId="formGoogleVisionOcrApiKey">
@@ -281,6 +255,23 @@ const OCR = () => {
                       onChange={(e) => omnipageOCRLanguageChangeHandler(e)}
                       menuPlacement="auto"
                       menuPosition="fixed" />
+                  </Form.Group>
+                </>
+              )}
+              {(parser.ocr.ocrType == "DOCTR" || 
+               parser.ocr.ocrType == "GOOGLE_VISION" || 
+               parser.ocr.ocrType == "PADDLE" || 
+               parser.ocr.ocrType == "OMNIPAGE") && (
+                <>
+                  <Form.Group className="mb-3" controlId="formDetectSearchable">
+                    <Form.Label>Detect Searchable</Form.Label>
+                    <Form.Check
+                      type="checkbox"
+                      id={`default-detect-searchable`}
+                      label={`Detect Searchable`}
+                      onChange={(e) => detectSearchableChangeHandler(e)}
+                      checked={parser.ocr.detectSearchable}
+                    />
                   </Form.Group>
                 </>
               )}
