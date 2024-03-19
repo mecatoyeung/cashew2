@@ -120,6 +120,10 @@ class RuleExtractor:
                 if toppest_textline == None:
                     toppest_textline = textlines_within_area[0]
                     toppest_textline_index = 0
+                    
+
+                if '存入' in toppest_textline.text:
+                    luck = 1
 
                 for textline_index in range(0, len(textlines_within_area) - 1):
 
@@ -143,6 +147,9 @@ class RuleExtractor:
 
                 while textline_index < len(textlines_within_area):
 
+                    if 'Date' in toppest_textline.text and '日期' in textlines_within_area[textline_index].text:
+                        luck = 1
+
                     if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
                         break
 
@@ -152,12 +159,11 @@ class RuleExtractor:
                         for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:
                             if textline_that_are_the_same_line_with_toppest == toppest_textline:
                                 continue
-                            if textlines_within_area[textline_index].region.is_in_same_line(textlines_that_are_the_same_line_with_toppest[-1].region):
-                                if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
-                                    overlapping_column_with_existing_textlines = True
-                                    break
-                                else:
-                                    continue
+                            if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
+                                overlapping_column_with_existing_textlines = True
+                                break
+                            else:
+                                continue
                             if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
                                 overlapping_column_with_existing_textlines = True
                                 break

@@ -24,34 +24,32 @@ def parse_pdf_to_xml(document):
         source_file_path = os.path.join(
             documents_folder_path, "source_file.pdf")
 
-        with fitz.open(source_file_path) as doc:
-            for page_idx, page in enumerate(doc):
+        for page_idx in range(0, document.total_page_num):
 
-                queue = Queue.objects.get(
-                    document_id=document.id
-                )
-                if queue.queue_status == QueueStatus.STOPPED.value:
-                    queue.queue_class = QueueClass.PROCESSED.value
-                    queue.queue_status = QueueStatus.COMPLETED.value
-                    queue.save()
-                    break
+            queue = Queue.objects.get(
+                document_id=document.id
+            )
+            if queue.queue_status == QueueStatus.STOPPED.value:
+                queue.queue_class = QueueClass.PROCESSED.value
+                queue.queue_status = QueueStatus.COMPLETED.value
+                queue.save()
+                break
 
-                page_num = page_idx + 1
-                document_page = DocumentPage.objects.get(
-                    document_id=document.id, page_num=page_num)
-                if document_page.ocred == True:
-                    continue
+            page_num = page_idx + 1
+            document_page = DocumentPage.objects.get(
+                document_id=document.id, page_num=page_num)
+            if document_page.ocred == True:
+                continue
 
-                xml = convert_pdf_to_xml(
-                    path=source_file_path,
-                    pagenos=[page_idx]
-                )
-                document_page.xml = xml
+            xml = convert_pdf_to_xml(
+                path=source_file_path,
+                pagenos=[page_idx]
+            )
+            document_page.xml = xml
 
-                document_page.ocred = True
-                document_page.save()
+            document_page.ocred = True
+            document_page.save()
 
-            document.total_page_num = len(doc)
-            document.save()
+        document.save()
     except Exception as e:
         raise e

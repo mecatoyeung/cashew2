@@ -164,6 +164,18 @@ class XMLPage:
                     text_bbox_search.group(3)) / self.width * Decimal(100.00)
                 prev_xml_text.region.y2 = Decimal(
                     text_bbox_search.group(4)) / self.height * Decimal(100.00)
+                
+            if len(accumulated_xml_texts) > 0:
+                textline.region.x2 = Decimal(
+                text_bbox_search.group(3)) / self.width * Decimal(100.00)
+                textline_element.set('bbox', str(textline.region.x1) + ',' + str(textline.region.y1) + ',' + str(textline.region.x2) + ',' + str(textline.region.y2))
+                
+                textline.textline_element = textline_element
+                #textline.text_elements = accumulated_xml_texts
+                for accumulated_text_element in accumulated_text_elements:
+                    textline.textline_element.append(accumulated_text_element)
+                textline.text = textline_text
+                self.textlines.append(textline)
 
         # filter out all text that
         for textline in self.textlines:
@@ -379,23 +391,31 @@ class XMLPage:
             return arr
 
         def compare(a, b):
+
+            if 'Date' in a.text and '日期' in b.text:
+                luck = 1
+
             if a.region.x1 == None or a.region.x2 == None or a.region.y1 == None or a.region.y2 == None:
                 return 0
             if b.region.x1 == None or b.region.x2 == None or b.region.y1 == None or b.region.y2 == None:
                 return 0
 
-            if (a.region.y1 > b.region.y1):
+            if (a.region.y2 > b.region.y2):
                 return 1
-            elif (a.region.y2 > b.region.y2):
+            elif (a.region.y2 < b.region.y2):
+                return -1
+            elif (a.region.y1 > b.region.y1):
                 return 1
+            elif (a.region.y1 < b.region.y1):
+                return -1
             elif (a.region.is_in_same_line(b.region)):
                 """for item_before in arr_before:
                     if a.region.is_in_same_column(item_before.region):
                         return -1"""
                 if a.region.x1 < b.region.x1:
                     return 1
-                elif a.region.x2 < b.region.x2:
-                    return 1
+                #elif a.region.x2 < b.region.x2:
+                    #return 1
                 else:
                     return -1
             return -1
@@ -441,7 +461,7 @@ class XMLRegion:
             return True
 
     def is_in_same_line(self, another_region):
-        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(0.35)
+        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(1.0) # ZA Bank need 0.6 in Date and 日期, 1.0 in bottom address
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:

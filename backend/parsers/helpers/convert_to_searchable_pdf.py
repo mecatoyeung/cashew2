@@ -428,526 +428,526 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
     document_page_index = 0
 
     is_searchable = detect_pdf_is_searchable(source_file_pdf_path(document))
-    if is_searchable:
+    if is_searchable and ocr.detect_searchable:
+
         parse_pdf_to_xml(document)
 
-    while document_page_index < len(document_pages):
+    else:
 
-        document_page = document_pages[document_page_index]
+        while document_page_index < len(document_pages):
 
-        if is_searchable:
-            break
+            document_page = document_pages[document_page_index]
 
-        convert_page(parser, document, ocr, document_page)
+            convert_page(parser, document, ocr, document_page)
 
-        page_num = document_page_index + 1
+            page_num = document_page_index + 1
 
-        if splitting != None and splitting.activated and not document.splitted:
+            if splitting != None and splitting.activated and not document.splitted:
 
-            document_parser = DocumentParser(parser, document)
-            rules = Rule.objects.filter(parser_id=parser.id).all()
+                document_parser = DocumentParser(parser, document)
+                rules = Rule.objects.filter(parser_id=parser.id).all()
 
-            parsed_result = []
-            for rule in rules:
-                rule.pages = str(page_num)
-                extracted = document_parser.extract(rule)
-                stream_processor = StreamProcessor(rule)
-                processed_streams = stream_processor.process(extracted)
+                parsed_result = []
+                for rule in rules:
+                    rule.pages = str(page_num)
+                    extracted = document_parser.extract(rule)
+                    stream_processor = StreamProcessor(rule)
+                    processed_streams = stream_processor.process(extracted)
 
-                parsed_result.append({
-                    "rule": {
-                        "id": rule.id,
-                        "name": rule.name,
-                        "type": processed_streams[-1]["type"]
-                    },
-                    "extracted": extracted,
-                    "streamed": processed_streams[-1]["data"]
-                })
+                    parsed_result.append({
+                        "rule": {
+                            "id": rule.id,
+                            "name": rule.name,
+                            "type": processed_streams[-1]["type"]
+                        },
+                        "extracted": extracted,
+                        "streamed": processed_streams[-1]["data"]
+                    })
 
-            previous_pages_parsed_result[page_num] = parsed_result
+                previous_pages_parsed_result[page_num] = parsed_result
 
-            for first_page_splitting_rule in splitting.splitting_rules.all():
-                first_page_conditions_passed = True
-                for splitting_condition in first_page_splitting_rule.splitting_conditions.all():
-                    streamed_rule_value = ' '.join(get_streamed_by_rule(
-                        splitting_condition.rule.id, parsed_result))
-                    if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
-                        if not splitting_condition.value in streamed_rule_value:
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
-                        if splitting_condition.value in streamed_rule_value:
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
-                        if not splitting_condition.value == streamed_rule_value:
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                        if not re.match(splitting_condition.value, streamed_rule_value):
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                        if re.match(splitting_condition.value, streamed_rule_value):
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
-                        if not streamed_rule_value.strip() == "":
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
-                        if streamed_rule_value.strip() == "":
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
-                        if page_num == 1:
-                            continue
-                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                            splitting_condition.rule.id,
-                            previous_pages_parsed_result[page_num - 1]))
-                        if streamed_rule_value == previous_streamed_rule_value:
-                            first_page_conditions_passed = False
-                    elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
-                        if page_num == 1:
-                            continue
-                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                        if not streamed_rule_value == previous_streamed_rule_value:
-                            first_page_conditions_passed = False
+                for first_page_splitting_rule in splitting.splitting_rules.all():
+                    first_page_conditions_passed = True
+                    for splitting_condition in first_page_splitting_rule.splitting_conditions.all():
+                        streamed_rule_value = ' '.join(get_streamed_by_rule(
+                            splitting_condition.rule.id, parsed_result))
+                        if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                            if not splitting_condition.value in streamed_rule_value:
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                            if splitting_condition.value in streamed_rule_value:
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                            if not splitting_condition.value == streamed_rule_value:
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                            if not re.match(splitting_condition.value, streamed_rule_value):
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                            if re.match(splitting_condition.value, streamed_rule_value):
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                            if not streamed_rule_value.strip() == "":
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                            if streamed_rule_value.strip() == "":
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                            if page_num == 1:
+                                continue
+                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                splitting_condition.rule.id,
+                                previous_pages_parsed_result[page_num - 1]))
+                            if streamed_rule_value == previous_streamed_rule_value:
+                                first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                            if page_num == 1:
+                                continue
+                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                            if not streamed_rule_value == previous_streamed_rule_value:
+                                first_page_conditions_passed = False
 
-                if first_page_conditions_passed:
+                    if first_page_conditions_passed:
 
-                    accumulated_page_nums.append(page_num)
+                        accumulated_page_nums.append(page_num)
 
-                    # if it is not the last page, identify consecutive pages also
-                    while (document_page_index + 1) < len(document_pages):
+                        # if it is not the last page, identify consecutive pages also
+                        while (document_page_index + 1) < len(document_pages):
 
-                        document_page_index += 1
-                        page_num = document_page_index + 1
+                            document_page_index += 1
+                            page_num = document_page_index + 1
 
-                        document_page = document_pages[document_page_index]
+                            document_page = document_pages[document_page_index]
 
-                        convert_page(parser, document, ocr, document_page)
+                            convert_page(parser, document, ocr, document_page)
 
-                        parsed_result = []
-                        for rule in rules:
-                            rule.pages = str(page_num)
-                            document_parser = DocumentParser(parser, document)
-                            extracted = document_parser.extract(rule)
-                            stream_processor = StreamProcessor(rule)
-                            processed_streams = stream_processor.process(
-                                extracted)
+                            parsed_result = []
+                            for rule in rules:
+                                rule.pages = str(page_num)
+                                document_parser = DocumentParser(parser, document)
+                                extracted = document_parser.extract(rule)
+                                stream_processor = StreamProcessor(rule)
+                                processed_streams = stream_processor.process(
+                                    extracted)
 
-                            parsed_result.append({
-                                "rule": {
-                                    "id": rule.id,
-                                    "name": rule.name,
-                                    "type": processed_streams[-1]["type"]
-                                },
-                                "extracted": extracted,
-                                "streamed": processed_streams[-1]["data"]
-                            })
+                                parsed_result.append({
+                                    "rule": {
+                                        "id": rule.id,
+                                        "name": rule.name,
+                                        "type": processed_streams[-1]["type"]
+                                    },
+                                    "extracted": extracted,
+                                    "streamed": processed_streams[-1]["data"]
+                                })
 
-                        previous_pages_parsed_result[page_num] = parsed_result
+                            previous_pages_parsed_result[page_num] = parsed_result
 
-                        any_last_page_rules_passed = False
-                        for last_page_splitting_rule in first_page_splitting_rule.last_page_splitting_rules.all():
-                            last_page_conditions_passed = True
-                            for splitting_condition in last_page_splitting_rule.last_page_splitting_conditions.all():
-                                streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                    splitting_condition.rule.id, parsed_result))
-                                if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
-                                    if not splitting_condition.value in streamed_rule_value:
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
-                                    if splitting_condition.value in streamed_rule_value:
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
-                                    if not splitting_condition.value == streamed_rule_value:
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                                    if not re.match(splitting_condition.value, streamed_rule_value):
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                                    if re.match(splitting_condition.value, streamed_rule_value):
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
-                                    if not streamed_rule_value.strip() == "":
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
-                                    if streamed_rule_value.strip() == "":
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
-                                    if page_num == 1:
-                                        continue
-                                    previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                    if streamed_rule_value == previous_streamed_rule_value:
-                                        last_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
-                                    if page_num == 1:
-                                        continue
-                                    previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                    if not streamed_rule_value == previous_streamed_rule_value:
-                                        last_page_conditions_passed = False
+                            any_last_page_rules_passed = False
+                            for last_page_splitting_rule in first_page_splitting_rule.last_page_splitting_rules.all():
+                                last_page_conditions_passed = True
+                                for splitting_condition in last_page_splitting_rule.last_page_splitting_conditions.all():
+                                    streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                        splitting_condition.rule.id, parsed_result))
+                                    if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                        if not splitting_condition.value in streamed_rule_value:
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                        if splitting_condition.value in streamed_rule_value:
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                        if not splitting_condition.value == streamed_rule_value:
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                        if not re.match(splitting_condition.value, streamed_rule_value):
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                        if re.match(splitting_condition.value, streamed_rule_value):
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                        if not streamed_rule_value.strip() == "":
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                        if streamed_rule_value.strip() == "":
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                        if page_num == 1:
+                                            continue
+                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                        if streamed_rule_value == previous_streamed_rule_value:
+                                            last_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                        if page_num == 1:
+                                            continue
+                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                        if not streamed_rule_value == previous_streamed_rule_value:
+                                            last_page_conditions_passed = False
 
-                            if last_page_conditions_passed:
+                                if last_page_conditions_passed:
 
-                                any_last_page_rules_passed = True
+                                    any_last_page_rules_passed = True
+                                    break
+
+                            if any_last_page_rules_passed:
+
+                                document_page_index -= 1
+                                page_num = document_page_index + 1
                                 break
 
-                        if any_last_page_rules_passed:
+                            any_consecutive_page_rules_passed = False
+                            for consecutive_page_splitting_rule in first_page_splitting_rule.consecutive_page_splitting_rules.all():
+                                consecutive_page_conditions_passed = True
+                                for splitting_condition in consecutive_page_splitting_rule.consecutive_page_splitting_conditions.all():
+                                    streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                        splitting_condition.rule.id, parsed_result))
+                                    if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                        if not splitting_condition.value in streamed_rule_value:
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                        if splitting_condition.value in streamed_rule_value:
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                        if not splitting_condition.value == streamed_rule_value:
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                        if not re.match(splitting_condition.value, streamed_rule_value):
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                        if re.match(splitting_condition.value, streamed_rule_value):
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                        if not streamed_rule_value.strip() == "":
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                        if streamed_rule_value.strip() == "":
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                        if page_num == 1:
+                                            continue
+                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                        if streamed_rule_value == previous_streamed_rule_value:
+                                            consecutive_page_conditions_passed = False
+                                    elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                        if page_num == 1:
+                                            continue
+                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                        if not streamed_rule_value == previous_streamed_rule_value:
+                                            consecutive_page_conditions_passed = False
 
-                            document_page_index -= 1
-                            page_num = document_page_index + 1
-                            break
+                                if consecutive_page_conditions_passed:
 
-                        any_consecutive_page_rules_passed = False
-                        for consecutive_page_splitting_rule in first_page_splitting_rule.consecutive_page_splitting_rules.all():
-                            consecutive_page_conditions_passed = True
-                            for splitting_condition in consecutive_page_splitting_rule.consecutive_page_splitting_conditions.all():
-                                streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                    splitting_condition.rule.id, parsed_result))
-                                if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
-                                    if not splitting_condition.value in streamed_rule_value:
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
-                                    if splitting_condition.value in streamed_rule_value:
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
-                                    if not splitting_condition.value == streamed_rule_value:
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                                    if not re.match(splitting_condition.value, streamed_rule_value):
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                                    if re.match(splitting_condition.value, streamed_rule_value):
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
-                                    if not streamed_rule_value.strip() == "":
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
-                                    if streamed_rule_value.strip() == "":
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
-                                    if page_num == 1:
-                                        continue
-                                    previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                    if streamed_rule_value == previous_streamed_rule_value:
-                                        consecutive_page_conditions_passed = False
-                                elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
-                                    if page_num == 1:
-                                        continue
-                                    previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                    if not streamed_rule_value == previous_streamed_rule_value:
-                                        consecutive_page_conditions_passed = False
+                                    any_consecutive_page_rules_passed = True
+                                    break
 
-                            if consecutive_page_conditions_passed:
+                            if any_consecutive_page_rules_passed:
 
-                                any_consecutive_page_rules_passed = True
+                                accumulated_page_nums.append(page_num)
+
+                            # if no consecutive_page passed, decrement page_index, and restart finding accumulated pages
+                            else:
+
+                                document_page_index -= 1
+                                page_num = document_page_index + 1
                                 break
 
-                        if any_consecutive_page_rules_passed:
+                    if first_page_conditions_passed:
 
-                            accumulated_page_nums.append(page_num)
+                        """document_upload_serializer_data = {}"""
 
-                        # if no consecutive_page passed, decrement page_index, and restart finding accumulated pages
-                        else:
+                        searchable_pdf_path = ocred_pdf_path(document)
 
-                            document_page_index -= 1
-                            page_num = document_page_index + 1
-                            break
+                        new_document = Document()
+                        new_document.document_type = document.document_type
+                        new_document.guid = str(uuid.uuid4())
+                        new_document.filename_without_extension = document.filename_without_extension + \
+                            "_pages_" + \
+                            str(accumulated_page_nums[0]) + \
+                            "-" + str(accumulated_page_nums[-1])
+                        new_document.document_extension = DocumentExtension.PDF.value
+                        new_document.extension = "pdf"
+                        new_document.total_page_num = len(
+                            accumulated_page_nums)
+                        new_document.splitted = True
+                        if parser.type == ParserType.LAYOUT.value:
+                            new_document.parser_id = parser.id
+                        elif parser.type == ParserType.ROUTING.value:
+                            route_to_parser_id = first_page_splitting_rule.route_to_parser_id
+                            new_document.parser_id = route_to_parser_id
+                        new_document.last_modified_at = datetime.now()
+                        new_parser_ocr = OCR.objects.get(
+                            parser_id=new_document.parser_id)
 
-                if first_page_conditions_passed:
+                        new_documents_path = document_path(new_document)
+                        if not os.path.exists(new_documents_path):
+                            os.makedirs(new_documents_path)
 
-                    """document_upload_serializer_data = {}"""
+                        new_searchable_pdf_path = os.path.join(
+                            new_documents_path, 'source_file.pdf')
 
-                    searchable_pdf_path = ocred_pdf_path(document)
+                        fontname = "invisible"
+                        rendering_first_page = True
+                        for page_num in accumulated_page_nums:
 
-                    new_document = Document()
-                    new_document.document_type = document.document_type
-                    new_document.guid = str(uuid.uuid4())
-                    new_document.filename_without_extension = document.filename_without_extension + \
-                        "_pages_" + \
-                        str(accumulated_page_nums[0]) + \
-                        "-" + str(accumulated_page_nums[-1])
-                    new_document.document_extension = DocumentExtension.PDF.value
-                    new_document.extension = "pdf"
-                    new_document.total_page_num = len(
-                        accumulated_page_nums)
-                    new_document.splitted = True
-                    if parser.type == ParserType.LAYOUT.value:
-                        new_document.parser_id = parser.id
-                    elif parser.type == ParserType.ROUTING.value:
-                        route_to_parser_id = first_page_splitting_rule.route_to_parser_id
-                        new_document.parser_id = route_to_parser_id
-                    new_document.last_modified_at = datetime.now()
-                    new_parser_ocr = OCR.objects.get(
-                        parser_id=new_document.parser_id)
+                            abs_ocred_image_path = ocred_image_path(
+                                document, page_num)
+                            abs_hocr_path = hocr_path(document, page_num)
 
-                    new_documents_path = document_path(new_document)
-                    if not os.path.exists(new_documents_path):
-                        os.makedirs(new_documents_path)
+                            # put the image on the page, scaled to fill the page
+                            im = Image.open(abs_ocred_image_path)
+                            if 'dpi' in im.info:
+                                width = float(im.size[0])/im.info['dpi'][0]
+                                height = float(im.size[1])/im.info['dpi'][1]
+                            else:
+                                width = height = None
 
-                    new_searchable_pdf_path = os.path.join(
-                        new_documents_path, 'source_file.pdf')
+                            # a default, in case we can't find it
+                            ocr_dpi = (300, 300)
+                            # get dimensions of the OCR, which may not match the image
+                            hocr_tree = ET.parse(abs_hocr_path)
+                            hocr = hocr_tree.getroot()
+                            if hocr is not None:
+                                for div in hocr.findall(".//{http://www.w3.org/1999/xhtml}div"):
+                                    if div.attrib['class'] == 'ocr_page':
+                                        coords = element_coordinates(div)
+                                        ocrwidth = coords[2]-coords[0]
+                                        ocrheight = coords[3]-coords[1]
+                                    if width is None:
+                                        # no dpi info with the image
+                                        # assume OCR was done at 300 dpi
+                                        width = ocrwidth/300
+                                        height = ocrheight/300
+                                    ocr_dpi = (ocrwidth/width, ocrheight/height)
+                                    break  # there shouldn't be more than one, and if there is, we don't want it
 
-                    fontname = "invisible"
-                    rendering_first_page = True
-                    for page_num in accumulated_page_nums:
+                            if width is None:
+                                # no dpi info with the image, and no help from the hOCR file either
+                                # this will probably end up looking awful, so issue a warning
+                                width = float(im.size[0])/96
+                                height = float(im.size[1])/96
 
-                        abs_ocred_image_path = ocred_image_path(
-                            document, page_num)
-                        abs_hocr_path = hocr_path(document, page_num)
+                            if rendering_first_page:
+                                pdf = Canvas(new_searchable_pdf_path, pagesize=(
+                                    width*inch, height*inch), pageCompression=1)
+                                rendering_first_page = False
+                            else:
+                                pdf.setPageSize((width*inch, height*inch))
+                            pdf.drawInlineImage(
+                                im, 0, 0, width=width*inch, height=height*inch)
 
-                        # put the image on the page, scaled to fill the page
-                        im = Image.open(abs_ocred_image_path)
-                        if 'dpi' in im.info:
-                            width = float(im.size[0])/im.info['dpi'][0]
-                            height = float(im.size[1])/im.info['dpi'][1]
-                        else:
-                            width = height = None
+                            im.close()
 
-                        # a default, in case we can't find it
-                        ocr_dpi = (300, 300)
-                        # get dimensions of the OCR, which may not match the image
-                        hocr_tree = ET.parse(abs_hocr_path)
-                        hocr = hocr_tree.getroot()
-                        if hocr is not None:
-                            for div in hocr.findall(".//{http://www.w3.org/1999/xhtml}div"):
-                                if div.attrib['class'] == 'ocr_page':
-                                    coords = element_coordinates(div)
-                                    ocrwidth = coords[2]-coords[0]
-                                    ocrheight = coords[3]-coords[1]
-                                if width is None:
-                                    # no dpi info with the image
-                                    # assume OCR was done at 300 dpi
-                                    width = ocrwidth/300
-                                    height = ocrheight/300
-                                ocr_dpi = (ocrwidth/width, ocrheight/height)
-                                break  # there shouldn't be more than one, and if there is, we don't want it
+                            if hocr is not None:
+                                for word in hocr.findall(".//{http://www.w3.org/1999/xhtml}span"):
+                                    if word.attrib['class'] == 'ocrx_word':
+                                        coords = element_coordinates(word)
 
-                        if width is None:
-                            # no dpi info with the image, and no help from the hOCR file either
-                            # this will probably end up looking awful, so issue a warning
-                            width = float(im.size[0])/96
-                            height = float(im.size[1])/96
+                                        text = pdf.beginText()
+                                        text.setTextRenderMode(3)  # invisible
 
-                        if rendering_first_page:
-                            pdf = Canvas(new_searchable_pdf_path, pagesize=(
-                                width*inch, height*inch), pageCompression=1)
-                            rendering_first_page = False
-                        else:
-                            pdf.setPageSize((width*inch, height*inch))
-                        pdf.drawInlineImage(
-                            im, 0, 0, width=width*inch, height=height*inch)
+                                        pdf.setLineWidth(0.2)
+                                        pdf.setStrokeColor(HexColor(0xff0000))
 
-                        im.close()
+                                        # set cursor to bottom left corner of line bbox (adjust for dpi)
+                                        if ocr_engine == "DOCTR":
+                                            x = (float(coords[0])/ocr_dpi[0])*inch
+                                            y = (height*inch) - \
+                                                (float(coords[3])/ocr_dpi[1])*inch
+                                            text_width = (
+                                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                                            text_height = (
+                                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                                            fontsize = text_height * 0.40
+                                            text.setFont(fontname, fontsize)
+                                            text.setTextOrigin(x, y + 4)
 
-                        if hocr is not None:
-                            for word in hocr.findall(".//{http://www.w3.org/1999/xhtml}span"):
-                                if word.attrib['class'] == 'ocrx_word':
-                                    coords = element_coordinates(word)
+                                        elif ocr_engine == "PADDLE":
+                                            x = (
+                                                float(coords[0])/ocr_dpi[0]) * inch
+                                            y = (height*inch) - \
+                                                (float(coords[3])/ocr_dpi[1])*inch
+                                            text_width = (
+                                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                                            text_height = (
+                                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                                            fontsize = text_height * 0.30
+                                            text.setFont(fontname, fontsize)
+                                            text.setTextOrigin(x, y + 4)
 
-                                    text = pdf.beginText()
-                                    text.setTextRenderMode(3)  # invisible
+                                        elif ocr_engine == "GOOGLE_VISION":
+                                            x = (
+                                                float(coords[0])/ocr_dpi[0]) * inch
+                                            y = (height*inch) - \
+                                                (float(coords[3])/ocr_dpi[1])*inch
+                                            text_width = (
+                                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                                            text_height = (
+                                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                                            fontsize = text_height * 0.75
+                                            text.setFont(fontname, fontsize)
+                                            text.setTextOrigin(x, y + 2)
 
-                                    pdf.setLineWidth(0.2)
-                                    pdf.setStrokeColor(HexColor(0xff0000))
+                                        elif ocr_engine == "OMNIPAGE":
+                                            x = (
+                                                float(coords[0])/ocr_dpi[0]) * inch
+                                            y = (height*inch) - \
+                                                (float(coords[3])/ocr_dpi[1])*inch
+                                            text_width = (
+                                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                                            text_height = (
+                                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                                            fontsize = text_height * 0.70
+                                            text.setFont(fontname, fontsize)
+                                            text.setTextOrigin(x, y + 4)
 
-                                    # set cursor to bottom left corner of line bbox (adjust for dpi)
-                                    if ocr_engine == "DOCTR":
-                                        x = (float(coords[0])/ocr_dpi[0])*inch
-                                        y = (height*inch) - \
-                                            (float(coords[3])/ocr_dpi[1])*inch
-                                        text_width = (
-                                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                                        text_height = (
-                                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                                        fontsize = text_height * 0.40
-                                        text.setFont(fontname, fontsize)
-                                        text.setTextOrigin(x, y + 4)
+                                        # redline the word
+                                        if ocr.debug:
+                                            pdf.rect(x, y, text_width,
+                                                    text_height, stroke=1, fill=0)
 
-                                    elif ocr_engine == "PADDLE":
-                                        x = (
-                                            float(coords[0])/ocr_dpi[0]) * inch
-                                        y = (height*inch) - \
-                                            (float(coords[3])/ocr_dpi[1])*inch
-                                        text_width = (
-                                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                                        text_height = (
-                                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                                        fontsize = text_height * 0.30
-                                        text.setFont(fontname, fontsize)
-                                        text.setTextOrigin(x, y + 4)
+                                            # redline the char
+                                            word_in_line_count = 0
+                                            word_len = len(word.text)
+                                            for char in word.text:
 
-                                    elif ocr_engine == "GOOGLE_VISION":
-                                        x = (
-                                            float(coords[0])/ocr_dpi[0]) * inch
-                                        y = (height*inch) - \
-                                            (float(coords[3])/ocr_dpi[1])*inch
-                                        text_width = (
-                                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                                        text_height = (
-                                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                                        fontsize = text_height * 0.75
-                                        text.setFont(fontname, fontsize)
-                                        text.setTextOrigin(x, y + 2)
+                                                pdf.setLineWidth(0.1)
+                                                pdf.setStrokeColor(
+                                                    HexColor(0x0000ff))
 
-                                    elif ocr_engine == "OMNIPAGE":
-                                        x = (
-                                            float(coords[0])/ocr_dpi[0]) * inch
-                                        y = (height*inch) - \
-                                            (float(coords[3])/ocr_dpi[1])*inch
-                                        text_width = (
-                                            float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
-                                        text_height = (
-                                            float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
-                                        fontsize = text_height * 0.70
-                                        text.setFont(fontname, fontsize)
-                                        text.setTextOrigin(x, y + 4)
+                                                char_xmin = text_width / \
+                                                    word_len * word_in_line_count + x
+                                                char_xmax = text_width / \
+                                                    word_len * \
+                                                    (word_in_line_count+1) + x
+                                                char_width = char_xmax - char_xmin
+                                                pdf.rect(char_xmin, y, char_width,
+                                                        text_height, stroke=1, fill=0)
 
-                                    # redline the word
-                                    if ocr.debug:
-                                        pdf.rect(x, y, text_width,
-                                                 text_height, stroke=1, fill=0)
+                                                word_in_line_count += 1
 
-                                        # redline the char
-                                        word_in_line_count = 0
-                                        word_len = len(word.text)
-                                        for char in word.text:
+                                        # scale the width of the text to fill the width of the line's bbox
+                                        if fontsize == 0.0:
+                                            fontsize = 10.0
+                                        if word.text == None:
+                                            word.text = ""
+                                            stringWidth = pdf.stringWidth(
+                                                " ", fontname, fontsize)
+                                        elif word.text == ' ':
+                                            stringWidth = pdf.stringWidth(
+                                                " ", fontname, fontsize)
+                                        elif word.text.rstrip() == '':
+                                            stringWidth = pdf.stringWidth(
+                                                " ", fontname, fontsize)
+                                        else:
+                                            stringWidth = pdf.stringWidth(
+                                                word.text.rstrip(), fontname, fontsize)
+                                        try:
+                                            text.setHorizScale(
+                                                (((float(coords[2])/ocr_dpi[0]*inch)-(float(coords[0])/ocr_dpi[0]*inch))/stringWidth)*100)
+                                        except Exception as e:
+                                            traceback.print_exc()
+                                            raise e
 
-                                            pdf.setLineWidth(0.1)
-                                            pdf.setStrokeColor(
-                                                HexColor(0x0000ff))
+                                        # write the text to the page
+                                        text.textLine(word.text.rstrip())
+                                        pdf.drawText(text)
 
-                                            char_xmin = text_width / \
-                                                word_len * word_in_line_count + x
-                                            char_xmax = text_width / \
-                                                word_len * \
-                                                (word_in_line_count+1) + x
-                                            char_width = char_xmax - char_xmin
-                                            pdf.rect(char_xmin, y, char_width,
-                                                     text_height, stroke=1, fill=0)
+                            # finish up the page and save it
+                            pdf.showPage()
+                        pdf.save()
 
-                                            word_in_line_count += 1
+                        # End of generating OCR document
 
-                                    # scale the width of the text to fill the width of the line's bbox
-                                    if fontsize == 0.0:
-                                        fontsize = 10.0
-                                    if word.text == None:
-                                        word.text = ""
-                                        stringWidth = pdf.stringWidth(
-                                            " ", fontname, fontsize)
-                                    elif word.text == ' ':
-                                        stringWidth = pdf.stringWidth(
-                                            " ", fontname, fontsize)
-                                    elif word.text.rstrip() == '':
-                                        stringWidth = pdf.stringWidth(
-                                            " ", fontname, fontsize)
-                                    else:
-                                        stringWidth = pdf.stringWidth(
-                                            word.text.rstrip(), fontname, fontsize)
-                                    try:
-                                        text.setHorizScale(
-                                            (((float(coords[2])/ocr_dpi[0]*inch)-(float(coords[0])/ocr_dpi[0]*inch))/stringWidth)*100)
-                                    except Exception as e:
-                                        traceback.print_exc()
-                                        raise e
+                        new_document.save()
 
-                                    # write the text to the page
-                                    text.textLine(word.text.rstrip())
-                                    pdf.drawText(text)
+                        new_document_page_num_counter = 0
+                        for accumulated_page_num in accumulated_page_nums:
+                            new_document_page_num_counter += 1
+                            document_page = document_pages.get(
+                                page_num=accumulated_page_num)
+                            new_document_page = DocumentPage()
+                            new_document_page.page_num = new_document_page_num_counter
+                            new_document_page.width = document_page.width
+                            new_document_page.height = document_page.height
+                            new_document_page.xml = document_page.xml
+                            new_document_page.document_id = new_document.id
+                            new_document_page.preprocessed = False
+                            if new_parser_ocr.ocr_type == OCRType.NO_OCR.value:
+                                new_document_page.ocred = True
+                            else:
+                                new_document_page.ocred = False
+                            new_document_page.postprocessed = False
+                            new_document_page.chatbot_completed = False
 
-                        # finish up the page and save it
-                        pdf.showPage()
-                    pdf.save()
+                            preprocessings = PreProcessing.objects.order_by(
+                                "-step").filter(parser_id=document.parser.id)
 
-                    # End of generating OCR document
+                            if len(preprocessings) == 0:
+                                document_page_file_path = original_image_path(
+                                    document, accumulated_page_num)
+                            else:
+                                last_preprocessing = preprocessings[0]
+                                document_page_file_path = pre_processed_image_path(
+                                    document, last_preprocessing, accumulated_page_num)
 
-                    new_document.save()
+                            new_document_page_image_file = original_image_path(
+                                new_document, new_document_page_num_counter)
+                            shutil.copyfile(
+                                document_page_file_path, new_document_page_image_file)
 
-                    new_document_page_num_counter = 0
-                    for accumulated_page_num in accumulated_page_nums:
-                        new_document_page_num_counter += 1
-                        document_page = document_pages.get(
-                            page_num=accumulated_page_num)
-                        new_document_page = DocumentPage()
-                        new_document_page.page_num = new_document_page_num_counter
-                        new_document_page.width = document_page.width
-                        new_document_page.height = document_page.height
-                        new_document_page.xml = document_page.xml
-                        new_document_page.document_id = new_document.id
-                        new_document_page.preprocessed = False
-                        if new_parser_ocr.ocr_type == OCRType.NO_OCR.value:
-                            new_document_page.ocred = True
-                        else:
-                            new_document_page.ocred = False
-                        new_document_page.postprocessed = False
-                        new_document_page.chatbot_completed = False
+                            new_document_ocr_folder_path = ocr_folder_path(
+                                new_document)
+                            if not os.path.exists(new_document_ocr_folder_path):
+                                os.makedirs(new_document_ocr_folder_path)
 
-                        preprocessings = PreProcessing.objects.order_by(
-                            "-step").filter(parser_id=document.parser.id)
-
-                        if len(preprocessings) == 0:
-                            document_page_file_path = original_image_path(
+                            new_document_ocred_image_path = ocred_image_path(
+                                new_document, new_document_page_num_counter)
+                            document_ocred_image_path = ocred_image_path(
                                 document, accumulated_page_num)
-                        else:
-                            last_preprocessing = preprocessings[0]
-                            document_page_file_path = pre_processed_image_path(
-                                document, last_preprocessing, accumulated_page_num)
+                            shutil.copyfile(
+                                document_ocred_image_path, new_document_ocred_image_path)
 
-                        new_document_page_image_file = original_image_path(
-                            new_document, new_document_page_num_counter)
-                        shutil.copyfile(
-                            document_page_file_path, new_document_page_image_file)
+                            new_document_xml_path = xml_path(
+                                new_document, new_document_page_num_counter)
+                            document_xml_path = xml_path(
+                                document, accumulated_page_num)
+                            shutil.copyfile(
+                                document_xml_path, new_document_xml_path)
 
-                        new_document_ocr_folder_path = ocr_folder_path(
-                            new_document)
-                        if not os.path.exists(new_document_ocr_folder_path):
-                            os.makedirs(new_document_ocr_folder_path)
+                            new_document_hocr_path = hocr_path(
+                                new_document, new_document_page_num_counter)
+                            document_hocr_path = hocr_path(
+                                document, accumulated_page_num)
+                            shutil.copyfile(
+                                document_hocr_path, new_document_hocr_path)
 
-                        new_document_ocred_image_path = ocred_image_path(
-                            new_document, new_document_page_num_counter)
-                        document_ocred_image_path = ocred_image_path(
-                            document, accumulated_page_num)
-                        shutil.copyfile(
-                            document_ocred_image_path, new_document_ocred_image_path)
+                            new_document_page.save()
 
-                        new_document_xml_path = xml_path(
-                            new_document, new_document_page_num_counter)
-                        document_xml_path = xml_path(
-                            document, accumulated_page_num)
-                        shutil.copyfile(
-                            document_xml_path, new_document_xml_path)
+                        #create_queue_when_upload_document(new_document)
+                        # Create queue object in database
+                        q = Queue()
+                        q.queue_status = QueueStatus.READY.value
+                        q.parser = parser
+                        q.document = new_document
+                        # if pre_processings.count() > 0:
+                        q.queue_class = QueueClass.OCR.value
+                        # else:
+                        #    q.queue_class = QueueClass.OCR.value
+                        q.save()
 
-                        new_document_hocr_path = hocr_path(
-                            new_document, new_document_page_num_counter)
-                        document_hocr_path = hocr_path(
-                            document, accumulated_page_num)
-                        shutil.copyfile(
-                            document_hocr_path, new_document_hocr_path)
+                        #process_ocr_queue.process_single_ocr_queue(q)
 
-                        new_document_page.save()
+                        accumulated_page_nums = []
 
-                    #create_queue_when_upload_document(new_document)
-                    # Create queue object in database
-                    q = Queue()
-                    q.queue_status = QueueStatus.READY.value
-                    q.parser = parser
-                    q.document = new_document
-                    # if pre_processings.count() > 0:
-                    q.queue_class = QueueClass.OCR.value
-                    # else:
-                    #    q.queue_class = QueueClass.OCR.value
-                    q.save()
+                        break
 
-                    #process_ocr_queue.process_single_ocr_queue(q)
+            document_page_index += 1
+            page_num = document_page_index + 1
 
-                    accumulated_page_nums = []
-
-                    break
-
-        document_page_index += 1
-        page_num = document_page_index + 1
-
-    if is_searchable:
+    if is_searchable and ocr.detect_searchable:
 
         abs_source_pdf_path = source_file_pdf_path(document)
         abs_ocred_pdf_path = ocred_pdf_path(document)
