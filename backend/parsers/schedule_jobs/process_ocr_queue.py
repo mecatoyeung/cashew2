@@ -8,7 +8,7 @@ from datetime import datetime
 from django.db.models import Prefetch
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django.db.models import Q
+from django.db.models import QuerySet
 
 from parsers.models.parser_type import ParserType
 from parsers.models.queue import Queue
@@ -143,8 +143,6 @@ def process_single_ocr_queue(queue_job):
                         queue_job.queue_status = QueueStatus.READY.value
                         queue_job.save()
 
-            # process_single_splitting_queue(queue_job)
-
     except Exception as e:
         print(traceback.format_exc())
         queue_job.queue_class = QueueClass.OCR.value
@@ -245,6 +243,7 @@ def process_single_no_ocr_queue(queue_job):
                     queue_job.save()
                     process_single_splitting_queue(queue_job)
                 else:
+                    parse_pdf_to_xml(document)
                     queue_job.queue_class = QueueClass.PARSING.value
                     queue_job.queue_status = QueueStatus.READY.value
                     queue_job.save()
@@ -254,7 +253,6 @@ def process_single_no_ocr_queue(queue_job):
         queue_job.queue_class = QueueClass.OCR.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
-
 
 def process_no_ocr_queue_job():
 

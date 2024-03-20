@@ -102,6 +102,7 @@ urlpatterns = [
 
 
 if not running_migration(sys.argv):
+
     # Set all Queues from In Progress to Ready
     try:
         all_sources = Source.objects.filter(is_running=True)

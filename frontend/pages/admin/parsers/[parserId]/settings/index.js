@@ -11,11 +11,15 @@ import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 
+import RangeSlider from 'react-bootstrap-range-slider'
+
 import Select from 'react-select'
 
 import AdminLayout from '../../../../../layouts/admin'
 
 import service from '../../../../../service'
+
+import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
 
 import styles from '../../../../../styles/Settings.module.css'
 
@@ -64,6 +68,34 @@ const Settings = () => {
     let updatedParser = {...parser}
     updatedParser.name = e.target.value
     setParser(updatedParser)
+  }
+
+  const assumedTextWidthChangeHandler = (e) => {
+    let updatedParser = {...parser}
+    updatedParser.assumedTextWidth = e.target.value
+    setParser(updatedParser)
+  }
+
+  const assumedTextHeightChangeHandler = (e) => {
+    let updatedParser = {...parser}
+    updatedParser.assumedTextHeight = e.target.value
+    setParser(updatedParser)
+  }
+
+  const sameLineAcceptanceRangeChangeHandler = (e) => {
+    let updatedParser = {...parser}
+    updatedParser.sameLineAcceptanceRange = e.target.value
+    setParser(updatedParser)
+  }
+
+  const sameColumnAcceptanceRangeChangeHandler = (e) => {
+    let updatedParser = {...parser}
+    updatedParser.sameColumnAcceptanceRange = e.target.value
+    setParser(updatedParser)
+  }
+
+  const parserSettingsSaveBtnClickHandler = () => {
+    updateParser()
   }
 
   const parserSaveBtnClickHandler = () => {
@@ -260,6 +292,54 @@ const Settings = () => {
                 <Form.Control onChange={parserNameChangeHandler} value={parser.name}/>
               </Form.Group>
               <Button variant="primary" onClick={parserSaveBtnClickHandler}>Save</Button>
+            </Card.Body>
+          </Card>
+        )}
+        {parser && (
+          <Card style={{ width: '100%', marginBottom: 10 }}>
+            <Card.Body>
+              <Card.Title>Parser Settings</Card.Title>
+              <Form.Group className="mb-3" controlId="formAssumedTextWidth">
+                <Form.Label>Assumed Text Width</Form.Label>
+                <RangeSlider
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={parser.assumedTextWidth}
+                  onChange={assumedTextWidthChangeHandler}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formAssumedTextHeight">
+                <Form.Label>Assumed Text Height</Form.Label>
+                <RangeSlider
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={parser.assumedTextHeight}
+                  onChange={assumedTextHeightChangeHandler}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formSameLineAcceptanceRange">
+                <Form.Label>Same Line Acceptance Range</Form.Label>
+                <RangeSlider
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={parser.sameLineAcceptanceRange}
+                  onChange={sameLineAcceptanceRangeChangeHandler}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formSameColumnAcceptanceRange">
+                <Form.Label>Same Column Acceptance Range</Form.Label>
+                <RangeSlider
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={parser.sameColumnAcceptanceRange}
+                  onChange={sameColumnAcceptanceRangeChangeHandler}
+                />
+              </Form.Group>
+              <Button variant="primary" onClick={parserSettingsSaveBtnClickHandler}>Save</Button>
             </Card.Body>
           </Card>
         )}

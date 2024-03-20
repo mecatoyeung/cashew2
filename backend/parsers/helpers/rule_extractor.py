@@ -32,9 +32,9 @@ from parsers.helpers.calculate_separator_regions import calculate_separator_regi
 
 from django.conf import settings
 
-SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-ASSUMED_TEXT_WIDTH = Decimal(0.5)
-ASSUMED_TEXT_HEIGHT = Decimal(1.0)
+#SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
+#ASSUMED_TEXT_WIDTH = Decimal(0.5)
+#ASSUMED_TEXT_HEIGHT = Decimal(1.0)
 
 
 class RuleExtractor:
@@ -130,7 +130,8 @@ class RuleExtractor:
                     if textline_index == toppest_textline_index:
                         continue
 
-                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region, 
+                                                               same_line_acceptance_range=self.parser.same_line_acceptance_range):
                         if textlines_within_area[textline_index].region.y2 > toppest_textline.region.y2:
                             toppest_textline = textlines_within_area[textline_index]
                             toppest_textline_index = textline_index
@@ -153,20 +154,19 @@ class RuleExtractor:
                     if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
                         break
 
-                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region):
+                    if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region, 
+                                                               same_line_acceptance_range=self.parser.same_line_acceptance_range):
 
                         overlapping_column_with_existing_textlines = False
                         for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:
                             if textline_that_are_the_same_line_with_toppest == toppest_textline:
                                 continue
-                            if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
+                            if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region, 
+                                                               same_column_acceptance_range=self.parser.same_column_acceptance_range):
                                 overlapping_column_with_existing_textlines = True
                                 break
                             else:
                                 continue
-                            if textlines_within_area[textline_index].region.is_in_same_column(textline_that_are_the_same_line_with_toppest.region):
-                                overlapping_column_with_existing_textlines = True
-                                break
 
                         if not overlapping_column_with_existing_textlines:
                             textlines_that_are_the_same_line_with_toppest.append(
@@ -394,7 +394,8 @@ class RuleExtractor:
                         text_in_current_row = text_in_current_row + spaces + text_to_add
 
                     # if it is the last textline or next textline is a new line, push current row to textlines_in_rows
-                    if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region):
+                    if len(textlines_within_area) == 0 or not textlines_within_area[0].region.is_in_same_line(current_textline.region, 
+                                                               same_line_acceptance_range=self.parser.same_line_acceptance_range):
                         num_of_spaces_to_be_append = math.floor((xml_page.region.x2 - anchored_textline_region.x1) / xml_page.median_of_text_widths) - \
                             len(text_in_current_row)
                         spaces = " " * num_of_spaces_to_be_append
@@ -599,7 +600,8 @@ class RuleExtractor:
                         if textline_in_column.region.x2 < range_of_textlines_in_the_row["x2"] and textline_in_column.region.x2 > range_of_textlines_in_the_row["x1"]:
                             is_textline_under_existing_textlines_in_row = True
 
-                    if toppest_textline.region.is_in_same_line(textline_in_column.region) and \
+                    if toppest_textline.region.is_in_same_line(textline_in_column.region, 
+                                                               same_line_acceptance_range=self.parser.same_line_acceptance_range) and \
                             not is_textline_under_existing_textlines_in_row:
                         textline_indexes_to_be_popped.append(
                             textlines_in_column_index)

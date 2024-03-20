@@ -54,7 +54,9 @@ class ParserSerializer(serializers.ModelSerializer):
         model = Parser
         fields = ['id', 'type', 'guid', 'name', 'sources', 'preprocessings',
                   'rules', 'ocr', 'splitting', 'chatbot', 'open_ai', 'open_ai_metrics_key',
-                  'postprocessings', 'integrations', 'total_num_of_pages_processed', 'last_modified_at']
+                  'postprocessings', 'integrations', 'total_num_of_pages_processed', 
+                  'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'last_modified_at']
         read_only_fields = ['id']
 
     def _get_or_create_ocr(self, ocr, parser):
@@ -167,7 +169,9 @@ class ParserUpdateSerializer(ParserSerializer):
     class Meta:
         model = Parser
         fields = ['id', 'guid', 'type', 'name', 'ocr',
-                  'chatbot', 'open_ai', 'open_ai_metrics_key', 'last_modified_at']
+                  'chatbot', 'open_ai', 'open_ai_metrics_key', 
+                  'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'last_modified_at']
         read_only_fields = ['id']
 
 class ParserDeleteSerializer(ParserSerializer):
@@ -175,7 +179,9 @@ class ParserDeleteSerializer(ParserSerializer):
     class Meta:
         model = Parser
         fields = ['id', 'guid', 'type', 'name', 'ocr',
-                  'chatbot', 'open_ai', 'open_ai_metrics_key', 'last_modified_at']
+                  'chatbot', 'open_ai', 'open_ai_metrics_key', 
+                  'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'last_modified_at']
         read_only_fields = ['id']
 
 

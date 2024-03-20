@@ -1273,14 +1273,6 @@ def convert_hocr_to_xml(hocr_path, xml_path):
             ocr_line_y1 = page_height - int(ocr_line_bbox_search.group(4))
             ocr_line_x2 = int(ocr_line_bbox_search.group(3))
             ocr_line_y2 = page_height - int(ocr_line_bbox_search.group(2))
-            
-            textline = SubElement(
-                page,
-                "textline",
-                attrib={
-                    "bbox": str(ocr_line_x1) + "," + str(ocr_line_y1) + "," + str(ocr_line_x2) + "," + str(ocr_line_y2),
-                },
-            )
 
             for ocrx_word in ocr_line.cssselect('span.ocrx_word'):
                 ocrx_word_bbox_str = ocrx_word.attrib['title']
@@ -1293,6 +1285,14 @@ def convert_hocr_to_xml(hocr_path, xml_path):
                 ocrx_word_x2 = int(ocrx_word_bbox_search.group(3))
                 ocrx_word_y2 = page_height - int(ocrx_word_bbox_search.group(2))
                 ocrx_word_conf = ocrx_word_bbox_search.group(5)
+            
+                textline = SubElement(
+                    page,
+                    "textline",
+                    attrib={
+                        "bbox": str(ocrx_word_x1) + "," + str(ocrx_word_y1) + "," + str(ocrx_word_x2) + "," + str(ocrx_word_y2),
+                    },
+                )
 
                 width_of_word = ocrx_word_x2 - ocrx_word_x1
 

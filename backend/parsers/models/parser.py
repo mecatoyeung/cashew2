@@ -20,6 +20,10 @@ class Parser(models.Model):
         max_length=255, choices=ParserType.choices(), default=ParserType.LAYOUT.value)
     name = models.CharField(max_length=255, null=False)
     total_num_of_pages_processed = models.IntegerField(default=0)
+    assumed_text_width = models.DecimalField(null=True, default=0.3, decimal_places=2, max_digits=10)
+    assumed_text_height = models.DecimalField(null=True, default=0.6, decimal_places=2, max_digits=10)
+    same_line_acceptance_range = models.DecimalField(null=True, default=0.35, decimal_places=2, max_digits=10)
+    same_column_acceptance_range = models.DecimalField(null=True, default=0.25, decimal_places=2, max_digits=10)
     last_modified_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:

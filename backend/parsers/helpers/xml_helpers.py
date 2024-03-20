@@ -8,9 +8,9 @@ import statistics
 from decimal import Decimal
 from pathlib import Path
 
-SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
-ASSUMED_TEXT_WIDTH = Decimal(0.3)
-ASSUMED_TEXT_HEIGHT = Decimal(0.6)
+#SAME_LINE_ACCEPTANCE_RANGE = Decimal(2.0)
+#ASSUMED_TEXT_WIDTH = Decimal(0.3)
+#ASSUMED_TEXT_HEIGHT = Decimal(0.6)
 
 
 class XMLPage:
@@ -39,8 +39,8 @@ class XMLPage:
                 page_num=page_num).height
         self.text_widths = []
         self.text_heights = []
-        self.median_of_text_widths = ASSUMED_TEXT_WIDTH * self.width / Decimal(1000.00)
-        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT * self.height / Decimal(1000.00)
+        self.median_of_text_widths = self.document_parser.parser.assumed_text_width * self.width / Decimal(1000.00)
+        self.median_of_text_heights = self.document_parser.parser.assumed_text_height * self.height / Decimal(1000.00)
         self.textlines = []
         self.load_all_textlines()
 
@@ -363,8 +363,8 @@ class XMLPage:
 
         self.median_of_text_widths = statistics.median(text_widths) * 2 / 3
         self.median_of_text_heights = statistics.median(text_heights) * 2 / 3"""
-        self.median_of_text_widths = ASSUMED_TEXT_WIDTH * self.width / Decimal(1000.00)
-        self.median_of_text_heights = ASSUMED_TEXT_HEIGHT * self.height / Decimal(1000.00)
+        self.median_of_text_widths = self.document_parser.parser.assumed_text_width * self.width / Decimal(1000.00)
+        self.median_of_text_heights = self.document_parser.parser.assumed_text_height * self.height / Decimal(1000.00)
 
         return
 
@@ -408,7 +408,8 @@ class XMLPage:
                 return 1
             elif (a.region.y1 < b.region.y1):
                 return -1
-            elif (a.region.is_in_same_line(b.region)):
+            elif (a.region.is_in_same_line(b.region, 
+                    same_line_acceptance_range=self.document_parser.parser.same_line_acceptance_range)):
                 """for item_before in arr_before:
                     if a.region.is_in_same_column(item_before.region):
                         return -1"""
@@ -460,8 +461,9 @@ class XMLRegion:
         else:
             return True
 
-    def is_in_same_line(self, another_region):
-        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(1.0) # ZA Bank need 0.6 in Date and 日期, 1.0 in bottom address
+    def is_in_same_line(self, another_region, same_line_acceptance_range=0.35):
+        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * Decimal(0.35) # ZA Bank need 0.6 in Date and 日期, 1.0 in bottom address, Times Publishing GRN need 0.35
+        SAME_LINE_ACCEPTANCE_RANGE = (self.y2 - self.y1) * same_line_acceptance_range
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:
@@ -476,8 +478,9 @@ class XMLRegion:
             return True
         return False
 
-    def is_in_same_column(self, another_region):
+    def is_in_same_column(self, another_region, same_column_acceptance_range=0.25):
         SAME_COLUMN_ACCEPTANCE_RANGE = (self.x2 - self.x1) * Decimal(0.25)
+        SAME_COLUMN_ACCEPTANCE_RANGE = (self.x2 - self.x1) * same_column_acceptance_range
         if self.x1 == None or self.x2 == None or self.y1 == None or self.y2 == None:
             return False
         if another_region.x1 == None or another_region.x2 == None or another_region.y1 == None or another_region.y2 == None:

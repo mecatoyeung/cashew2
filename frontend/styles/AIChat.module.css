@@ -209,7 +209,7 @@
 }
 
 .streamTable {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', monospace;
   font-size: 90%;
   box-shadow: 4px 4px 14px -8px rgb(0 0 0 / 75%);
   border: 1px solid #0d2434;
