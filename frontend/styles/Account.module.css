@@ -143,3 +143,12 @@
   font-weight: bold;
   padding: 10px 0;
 }
+
+.usersDiv {
+  padding: 10px;
+}
+
+.agGridDiv {
+    flex-grow: 1;
+    padding: 0 10px;
+}

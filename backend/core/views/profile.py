@@ -14,7 +14,7 @@ from core.serializers.profile import ProfileRetrieveSerializer, \
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    """ View for manage recipe APIs. """
+    """ View for manage profile APIs. """
     serializer_class = ProfileRetrieveSerializer
     queryset = Profile.objects.all()
     authentication_classes = [TokenAuthentication]

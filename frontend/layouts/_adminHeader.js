@@ -21,7 +21,7 @@ export default function AdminHeader({ children }) {
 
   const [parser, setParser] = useState(null)
 
-  const [userProfile, setUserProfile] = useState(null)
+  const [user, setUser] = useState(null)
 
   const getParser = () => {
     if (!parserId) return
@@ -30,9 +30,9 @@ export default function AdminHeader({ children }) {
     })
   }
 
-  const getUserProfile = () => {
-    service.get("profiles/", (response) => {
-      setUserProfile(response.data[0])
+  const getUser = () => {
+    service.get("user/", (response) => {
+      setUser(response.data)
     })
   }
 
@@ -44,7 +44,7 @@ export default function AdminHeader({ children }) {
   }
 
   useEffect(() => {
-    getUserProfile()
+    getUser()
   }, [])
 
   useEffect(() => {
@@ -104,8 +104,8 @@ export default function AdminHeader({ children }) {
                     <ul>
                     <li>
                         <DropdownButton id="dropdown-basic-button" title="Account">
-                        {userProfile && (
-                            <Dropdown.Item href="#">Welcome, {userProfile.fullName}</Dropdown.Item>
+                        {user && (
+                            <Dropdown.Item href="#">Welcome, {user.profile.fullName}</Dropdown.Item>
                         )}
                         <Dropdown.Item
                           href={
@@ -118,8 +118,7 @@ export default function AdminHeader({ children }) {
                             ? "Switch to Workbench"
                             : "Switch to Workspace"}
                         </Dropdown.Item>
-                        <Dropdown.Item href="/account/profile">Profile</Dropdown.Item>
-                        <Dropdown.Item href="/account/change-password">Change Password</Dropdown.Item>
+                        <Dropdown.Item href="/account/profile">Account Management</Dropdown.Item>
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>Logout</Dropdown.Item>
                         </DropdownButton>
                     </li>

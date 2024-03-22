@@ -41,6 +41,7 @@ export default function SignUp() {
   const [formErrorMessages, setFormErrorMessages] = useState(null)
 
   const [signUpForm, setSignUpForm] = useState({
+    isSuperuser: false,
     username: "",
     email: "",
     password1: "",
@@ -59,6 +60,7 @@ export default function SignUp() {
         draft.fullName = e.target.value
       })
     )
+    console.log(signUpForm)
   }
 
   const companyNameChangeHandler = (e) => {
@@ -174,8 +176,19 @@ export default function SignUp() {
     })
   }
 
+  const getSuperuserExist = () => {
+    service.get("users/superuser_exists", response => {
+      setSignUpForm(
+        produce((draft) => {
+          draft.isSuperuser = !response.data.superuserExists
+        })
+      )
+    })
+  }
+
   useEffect(() => {
     getUserCountries()
+    getSuperuserExist()
   }, [])
 
   return (
@@ -189,6 +202,9 @@ export default function SignUp() {
             <i className={signUpStyles.backBtn + " bi" + " bi-arrow-left"} onClick={(() => router.back())}></i>
             <h1 className={signUpStyles.h1}>Sign up now!</h1>
           </div>
+          {signUpForm.isSuperuser && (
+            <p>You are the first one who registers. Therefore, you will register as super user.</p>
+          )}
           <div className={signUpStyles.form}>
             <Form>
               <Row>

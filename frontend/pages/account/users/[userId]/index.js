@@ -12,11 +12,13 @@ import { Row, Col } from 'react-bootstrap'
 
 import Select from 'react-select'
 
-import AccountLayout from '../../layouts/account'
+import Loader from '../../../../assets/icons/loader.svg'
 
-import service from '../../service'
+import AccountLayout from '../../../../layouts/account'
 
-import accountStyles from "../../styles/Account.module.css"
+import service from '../../../../service'
+
+import accountStyles from "../../../../styles/Account.module.css"
 
 export default function Profile() {
 
@@ -38,6 +40,19 @@ export default function Profile() {
     }
   })
 
+  const [userForm, setUserForm] = useState({
+    id: 0,
+    email: "",
+    username: "",
+    profile: {
+        fullName: "",
+        country: "",
+        companyName: "",
+    },
+    submitting: false
+  })
+
+
   const getUserCountries = () => {
     service.get("/user_countries/", response => {
       setUserCountries(response.data)
@@ -46,37 +61,23 @@ export default function Profile() {
 
   const getUser = () => {
     service.get("/user/", response => {
-      console.log(response)
       setUserForm(
         produce((draft) => {
-          draft.email = response.data.email,
-          draft.username = response.data.username,
+          draft.id = response.data.id
+          draft.email = response.data.email
+          draft.username = response.data.username
           draft.profile.fullName = response.data.profile.fullName
           draft.profile.companyName = response.data.profile.companyName
           draft.profile.country = userCountries.find(c => c.value == response.data.profile.country)
-          draft.id = response.data.id
         }
       )
     )
     })
   }
-
-const [userForm, setUserForm] = useState({
-    id: 0,
-    email: "",
-    username: "",
-    profile: {
-      fullName: "",
-      country: "",
-      companyName: "",
-    },
-    submitting: false
-  })
-
   const fullNameChangeHandler = (e) => {
     setProfileForm(
       produce((draft) => {
-        draft.fullName = e.target.value
+        draft.profile.fullName = e.target.value
       })
     )
   }
@@ -84,7 +85,7 @@ const [userForm, setUserForm] = useState({
   const companyNameChangeHandler = (e) => {
     setProfileForm(
       produce((draft) => {
-        draft.companyName = e.target.value
+        draft.profile.companyName = e.target.value
       })
     )
   }
@@ -92,19 +93,52 @@ const [userForm, setUserForm] = useState({
   const countryChangeHandler = (e) => {
     setProfileForm(
       produce((draft) => {
-        draft.country = e
+        draft.profile.country = e
       })
     )
   }
 
-  const saveBtnClickHandler = (e) => {
-    service.put("/user/", {
-      profile: {
-        fullName: userForm.profile.fullName,
-        country: userForm.profile.country.value,
-        companyName: userForm.profile.companyName,
-      }
+  const resetPasswordBtnClickHandler = (e) => {
+    setUserForm(
+    produce((draft) => {
+        draft.submitting = true
     })
+    )
+    service.post("/rest-auth/password/reset/", {
+        email: userForm.email
+    }, response => {
+        setUserForm(
+            produce((draft) => {
+                draft.submitting = false
+            })
+        )
+        setFormSuccessMessage("Reset password email sent.")
+    })
+  }
+
+  const saveBtnClickHandler = (e) => {
+    setUserForm(
+      produce((draft) => {
+        draft.submitting = true
+      })
+    )
+    service.put("/user/", {
+        profile: {
+            fullName: profileForm.fullName,
+            country: profileForm.country.value,
+            companyName: profileForm.companyName,
+        }
+    }, response => {
+        setUserForm(
+            produce((draft) => {
+                draft.submitting = false
+            })
+        )
+    })
+  }
+
+  const backBtnClickHandler = () => {
+    router.push("/account/users/")
   }
 
   useEffect(() => {
@@ -117,9 +151,9 @@ const [userForm, setUserForm] = useState({
 
   return (
     <AccountLayout>
-      {userForm.email != "" && (
+      {userForm?.email != "" && (
         <>
-          <h1 className={accountStyles.h1}>Profile</h1>
+          <h1 className={accountStyles.h1}>User</h1>
           <div className={accountStyles.profileDiv}>
             <Form>
               <Row>
@@ -218,10 +252,19 @@ const [userForm, setUserForm] = useState({
               </Row>
               <Row>
                 <Form.Group as={Col} className={accountStyles.actions + " " + accountStyles.col + " xs-12" + " md-3"}>
-                  <Button className={accountStyles.saveBtn + " " + accountStyles.btn}
+                    <Button className={accountStyles.saveBtn + " " + accountStyles.btn}
+                          style={{ marginRight: 10 }}
                           onClick={(e) => saveBtnClickHandler(e)}
                           disabled={userForm.submitting}>
                             {userForm.submitting && <img className="spinner" src={Loader.src} />}{userForm.submitting ? "Loading": "Save"}</Button>
+                    <Button className={accountStyles.resetPasswordBtn + " " + accountStyles.btn}
+                          style={{ marginRight: 10 }}
+                          onClick={(e) => resetPasswordBtnClickHandler(e)}
+                          disabled={userForm.submitting}>
+                            {userForm.submitting && <img className="spinner" src={Loader.src} />}{userForm.submitting ? "Loading": "Reset Password"}</Button>
+                    <Button variant="secondary" onClick={backBtnClickHandler}>
+                        Back
+                    </Button>
                 </Form.Group>
               </Row>
             </Form>

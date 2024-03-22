@@ -2,12 +2,12 @@ from rest_framework import serializers
 
 from core.models.profile import Profile
 
-from core.serializers.user import UserSerializer
+import core.serializers.user as user
 
 
 class ProfileSerializer(serializers.ModelSerializer):
 
-    user = UserSerializer(many=False, required=False)
+    user = user.UserSerializer(many=False, required=False)
 
     class Meta:
         model = Profile

@@ -101,7 +101,7 @@ export default function Parsers() {
   return (
     <AdminLayout>
       <div className={preProcessingStyles.wrapper}>
-        <h1 className={preProcessingStyles.h1}>Pre-Processing</h1>
+        <h1 className={preProcessingStyles.h1}>Pre-processing</h1>
         <div className={preProcessingStyles.actionsDiv}>
           <DropdownButton
             title="Perform Action"

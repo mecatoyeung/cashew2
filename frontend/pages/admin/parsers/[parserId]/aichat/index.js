@@ -893,6 +893,7 @@ const AIChat = (props) => {
                       marginLeft: 10,
                     }}
                   >
+                    <span style={{padding: 10}}>{parser.name}</span>
                     <Button
                       onClick={() =>
                         router.push("/admin/parsers/" + parserId + "/rules")

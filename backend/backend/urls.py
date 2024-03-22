@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
+from django.contrib.auth import views as auth_views
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from drf_spectacular.views import (
@@ -26,7 +28,7 @@ from drf_spectacular.views import (
 )
 
 from rest_auth.registration.views import RegisterView, VerifyEmailView
-from rest_auth.views import PasswordResetView, PasswordResetConfirmView
+#from rest_auth.views import PasswordResetView, PasswordResetConfirmView
 
 
 from .settings import STATIC_URL, STATIC_ROOT
@@ -36,6 +38,9 @@ urlpatterns = [
     re_path(r'^api/rest-auth/', include('rest_auth.urls')),
     re_path(r'^api/rest-auth/registration/',
             include('rest_auth.registration.urls')),
+    path("account/reset-password/<uidb64>/<token>",
+       auth_views.PasswordResetConfirmView.as_view(template_name='account/email/password_reset_form.html'),
+       name='password_reset_confirm'),
     re_path(r'^api/', include('user_countries.urls')),
     re_path(r'^api/', include('parsers.urls')),
     re_path(r'^api/', include('core.urls')),

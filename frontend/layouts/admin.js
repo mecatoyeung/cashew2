@@ -23,7 +23,7 @@ export default function WorkspaceLayout({ children }) {
   let { parserId } = router.query;
 
   const [parser, setParser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+  const [user, setUser] = useState(null);
 
   const getParser = () => {
     if (!parserId) return;
@@ -33,8 +33,8 @@ export default function WorkspaceLayout({ children }) {
   };
 
   const getUserProfile = () => {
-    service.get("profiles/", (response) => {
-      setUserProfile(response.data[0]);
+    service.get("user/", (response) => {
+      setUser(response.data);
     });
   };
 
@@ -112,7 +112,7 @@ export default function WorkspaceLayout({ children }) {
                           "/admin/parsers/" + parserId + "/preprocessings"
                         }
                       >
-                        <li>Pre-Processings</li>
+                        <li>Pre-processings</li>
                       </Link>
                       <Link href={"/admin/parsers/" + parserId + "/ocr"}>
                         <li>OCR</li>
@@ -140,7 +140,7 @@ export default function WorkspaceLayout({ children }) {
                             "/postprocessings"
                           }
                         >
-                          <li>Post-Processings</li>
+                          <li>Post-processings</li>
                         </Link>
                       )}
                       {parser.type == "LAYOUT" && (

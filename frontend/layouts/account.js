@@ -65,6 +65,12 @@ export default function AccountLayout({ children }) {
                     <Link href={"/account/change-password"}>
                       <li>Change Password</li>
                     </Link>
+                    <Link href={"/account/users"}>
+                      <li>Users</li>
+                    </Link>
+                    <Link href={"/account/groups"}>
+                      <li>User Groups</li>
+                    </Link>
                   </ul>
                 </div>
               </div>

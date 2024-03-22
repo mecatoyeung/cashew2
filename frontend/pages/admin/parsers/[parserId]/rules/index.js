@@ -202,11 +202,11 @@ export default function Parsers() {
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={closeRuleBtnClickHandler}>
-                            Close
-                        </Button>
                         <Button variant="primary" onClick={confirmAddRuleBtnClickHandler}>
                             Add
+                        </Button>
+                        <Button variant="secondary" onClick={closeRuleBtnClickHandler}>
+                            Close
                         </Button>
                     </Modal.Footer>
                     </Modal>

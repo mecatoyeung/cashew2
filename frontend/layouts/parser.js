@@ -11,15 +11,17 @@ import DropdownButton from "react-bootstrap/DropdownButton";
 import service from "../service";
 
 import adminLayoutStyles from "../styles/AdminLayout.module.css";
+import axios from "axios";
 
 export default function ParserLayout({ children }) {
   const router = useRouter();
 
-  const [userProfile, setUserProfile] = useState(null)
+  const [user, setUser] = useState(null)
 
-  const getUserProfile = () => {
-    service.get("profiles/", (response) => {
-      setUserProfile(response.data[0])
+  const getUser = () => {
+    service.get("user/", (response) => {
+      console.log(response)
+      setUser(response.data)
     })
   }
 
@@ -31,7 +33,7 @@ export default function ParserLayout({ children }) {
   };
 
   useEffect(() => {
-    getUserProfile()
+    getUser()
   }, []);
 
   return (
@@ -87,8 +89,8 @@ export default function ParserLayout({ children }) {
                         id="dropdown-basic-button"
                         title="Account"
                       >
-                        {userProfile && (
-                            <Dropdown.Item href="#">Welcome, {userProfile.fullName}</Dropdown.Item>
+                        {user && (
+                            <Dropdown.Item href="#">Welcome, {user.profile.fullName}</Dropdown.Item>
                         )}
                         <Dropdown.Item
                           href={
@@ -102,10 +104,7 @@ export default function ParserLayout({ children }) {
                             : "Switch to Admin Console"}
                         </Dropdown.Item>
                         <Dropdown.Item href="/account/profile">
-                          Profile
-                        </Dropdown.Item>
-                        <Dropdown.Item href="/account/change-password">
-                          Change Password
+                          Account Management
                         </Dropdown.Item>
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>
                           Logout

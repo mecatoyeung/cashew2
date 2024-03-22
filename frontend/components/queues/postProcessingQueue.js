@@ -123,7 +123,7 @@ const PostProcessingQueue = (props) => {
         <DropdownButton
           title="Perform Action"
           className={styles.performActionDropdown}>
-          <Dropdown.Item onClick={() => stopPostProcessingClickHandler()}>Stop Post-Processing and Move to Processed Queue</Dropdown.Item>
+          <Dropdown.Item onClick={() => stopPostProcessingClickHandler()}>Stop Post-processing and Move to Processed Queue</Dropdown.Item>
           {/*<Dropdown.Item href="#" onClick={moveToSplitQueueClickHandler}>Move to Split Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#" onClick={moveToParseQueueClickHandler}>Move to Parse Queue (In Progress)</Dropdown.Item>
           <Dropdown.Item href="#">Move to Integration Queue (In Progress)</Dropdown.Item>
