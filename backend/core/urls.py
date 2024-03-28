@@ -5,23 +5,24 @@ from django.urls import (
 
 from rest_framework.routers import DefaultRouter
 
-from core.views.profile import ProfileViewSet
 from core.views.user import UserViewSet
+from core.views.users import UsersViewSet
+from core.views.group import GroupViewSet
 
 
 users_router = DefaultRouter()
-users_router.register('', UserViewSet, basename="user")
+users_router.register('', UsersViewSet, basename="users")
 
-profiles_router = DefaultRouter()
-profiles_router.register('', ProfileViewSet, basename="profile")
+groups_router = DefaultRouter()
+groups_router.register('', GroupViewSet, basename="groups")
 
 app_name = "core"
 
 urlpatterns = [
-    #path('profiles/', include(profiles_router.urls), name="profiles"),
     path('users/', include(users_router.urls), name="users"),
     path('user/', UserViewSet.as_view(
         {"put": "partial_update", "get": "retrieve"}
-    ), name="user-update")
+    ), name="user-update"),
+    path('groups/', include(groups_router.urls), name="groups"),
 ]
 

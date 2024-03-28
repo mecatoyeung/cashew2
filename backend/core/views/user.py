@@ -25,9 +25,12 @@ class UserViewSet(mixins.ListModelMixin,
     """ View for manage user APIs. """
     serializer_class = UserSerializer
     model = get_user_model()
-    queryset = model.objects.select_related("profile").all()
+    queryset = User.objects.select_related("profile")
     authentication_classes = ([TokenAuthentication])
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.select_related("profile")
 
     def get_object(self):
         return self.request.user
@@ -47,12 +50,4 @@ class UserViewSet(mixins.ListModelMixin,
         serializer.save(user=self.request.user)
 
 
-    @action(detail=False,
-            methods=['GET'],
-            name='Check if super user exist',
-            url_path='superuser_exists')
-    def check_superuser_exists(self, request, *args, **kwargs):
-
-        superuser_exists = User.objects.filter(is_superuser=True).count() > 0
-
-        return Response({ 'superuser_exists': superuser_exists }, status=200)
+    

@@ -104,7 +104,10 @@ export default function ParserLayout({ children }) {
                             : "Switch to Admin Console"}
                         </Dropdown.Item>
                         <Dropdown.Item href="/account/profile">
-                          Account Management
+                          Account
+                        </Dropdown.Item>
+                        <Dropdown.Item href="/settings/users">
+                          Settings
                         </Dropdown.Item>
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>
                           Logout

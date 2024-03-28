@@ -1,28 +1,27 @@
-import Head from "next/head"
-import Image from "next/image"
-import Link from "next/link"
+import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
 
-import { useRouter } from "next/router"
-import { useState, useEffect } from "react"
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
-import { Nav } from "react-bootstrap"
-import { Button } from "react-bootstrap"
-import Dropdown from 'react-bootstrap/Dropdown'
-import DropdownButton from 'react-bootstrap/DropdownButton'
+import { Nav } from "react-bootstrap";
+import { Button } from "react-bootstrap";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
 
-import AdminHeader from "./_adminHeader"
+import AdminHeader from "./_adminHeader";
 
-import service from "../service"
+import service from "../service";
 
-import accountStyles from "../styles/Account.module.css"
+import settingsStyles from "../styles/Settings.module.css";
 
 export default function AccountLayout({ children }) {
   const router = useRouter();
 
-  let { } = router.query;
+  let {} = router.query;
 
-  useEffect(() => {
-  }, [])
+  useEffect(() => {}, []);
 
   return (
     <>
@@ -35,13 +34,13 @@ export default function AccountLayout({ children }) {
         ></meta>
         <link rel="icon" href="/static/favicon.ico" />
       </Head>
-      <div className={accountStyles.wrapper}>
-        <AdminHeader/>
-        <hr className={accountStyles.headerHr} />
-        <main className={accountStyles.main + " d-flex flex-column"}>
+      <div className={settingsStyles.wrapper}>
+        <AdminHeader />
+        <hr className={settingsStyles.headerHr} />
+        <main className={settingsStyles.main + " d-flex flex-column"}>
           <div
             className={
-              accountStyles.sideNavContainerDiv + " d-flex flex-grow-1"
+              settingsStyles.sideNavContainerDiv + " d-flex flex-grow-1"
             }
           >
             <div
@@ -53,17 +52,14 @@ export default function AccountLayout({ children }) {
                 style={{ paddingLeft: 0, paddingRight: 0, width: 200 }}
               >
                 <div
-                  className={
-                    accountStyles.sideNavDiv + " d-flex flex-grow-1"
-                  }
+                  className={settingsStyles.sideNavDiv + " d-flex flex-grow-1"}
                 >
-                  <ul className={accountStyles.sideNavUl}>
-                    <li style={{ fontFamily: "Oswald, sans", fontSize: "130%" }}>Account</li>
-                    <Link href={"/account/profile"}>
-                      <li>Profile</li>
+                  <ul className={settingsStyles.sideNavUl}>
+                    <Link href={"/settings/users"}>
+                      <li>Users</li>
                     </Link>
-                    <Link href={"/account/change-password"}>
-                      <li>Change Password</li>
+                    <Link href={"/settings/groups"}>
+                      <li>User Groups</li>
                     </Link>
                   </ul>
                 </div>
@@ -85,11 +81,11 @@ export default function AccountLayout({ children }) {
             </div>
           </div>
         </main>
-        <footer className={accountStyles.footer}>
+        <footer className={settingsStyles.footer}>
           <div style={{ width: "100%", padding: "0 10px" }}>
             <div className="row" style={{ padding: "0 10px" }}>
               <div className="col-sm" style={{ padding: "10px" }}>
-                <div className={accountStyles.copyright}>
+                <div className={settingsStyles.copyright}>
                   2023. All rights reserved.
                 </div>
               </div>

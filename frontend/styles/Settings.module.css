@@ -1,4 +1,154 @@
-.settingsWrapper {
-    padding: 10px;
-    width: 100%;
+.h1 {
+    padding: 10px 0 0 0;
+    text-align: center;
+    text-decoration: underline;
+}
+.parsersIcon {
+  display: inline-block;
+  color: #E31A2F;
+  line-height: 52px;
+  vertical-align: top;
+}
+
+.wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  color: #000;
+}
+
+.logoDiv {
+  float: left;
+  margin-right: 20px;
+  margin-top: 10px;
+}
+
+@media only screen and (min-width: 576px) {
+  .logoDiv {
+  }
+}
+
+.h1 {
+  font-size: 150%;
+  line-height: 52px;
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 20px;
+}
+
+.nav {
+  float: right
+}
+
+.nav ul {
+  margin: 7px 0;
+}
+
+.nav > ul > li {
+  display: inline-block;
+  margin-left: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav ul li:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+@media only screen and (min-width: 576px) {
+  .nav ul li {
+  }
+}
+
+.headerHr {
+  border-top: 3px solid #000;
+  margin: 0 0 0 0;
+  opacity: 1.0;
+}
+
+.sideNavDiv {
+  flex-grow: 1;
+  border-right: 3px solid #000;
+}
+
+.sideNavUl {
+  display: flex;
+  flex-direction: column;
+  background : #E31A2F;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  color: #fff;
+}
+
+.sideNavUl li {
+  width: 100%;
+  padding: 10px;
+  list-style: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.sideNavUl li:hover {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.sideNavUl li.active {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+@media only screen and (max-width: 768px) {
+  .sideNavContainerDiv {
+    flex-grow: 1 !important;
+  }
+}
+
+.sideNavContainerDiv { 
+  position: relative;
+}
+
+.sidebarSizeControlDiv {
+  right: 0;
+  bottom: 0;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+}
+
+.profileDiv {
+    border: 3px solid #000;
+    margin: 0 30px;
+    padding: 30px;
+}
+
+.actions {
+    margin-top: 10px;
+}
+
+.footer {
+  border-top: 3px solid #000;
+}
+
+.copyright {
+  font-family: Merriweather Sans, sans;
+  font-weight: bold;
+  padding: 10px 0;
+}
+
+.usersDiv {
+  padding: 10px;
+}
+
+.agGridDiv {
+    flex-grow: 1;
+    padding: 0 10px;
 }

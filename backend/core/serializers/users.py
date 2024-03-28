@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 
 from core.models.profile import Profile
+
+from core.serializers.group import GroupSerializer
 
 class ProfileSerializer(serializers.ModelSerializer):
 
@@ -13,10 +15,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'company_name', 'country']
         read_only_fields = ['id']
 
-
-class UserSerializer(serializers.ModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
 
     profile = ProfileSerializer(required=False)
+    groups = GroupSerializer(many=True, required=False)
+    permission_codenames = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -24,12 +27,29 @@ class UserSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name',
                   'is_superuser', 'is_staff', 'is_active',
                   'last_login', 'date_joined',
-                  'profile']
+                  'profile', 
+                  'groups',
+                  'permission_codenames']
         read_only_fields = ['id', 'username', 'email',
                             'is_superuser', 'is_staff',
                             'last_login', 'date_joined']
         
+    def get_permission_codenames(self, instance):   
+        return map(lambda u: u.codename, Permission.objects.filter(user__id=instance.id))
+        
+
+class UsersCreateSerializer(UsersSerializer):
+    pass
+
+class UsersListSerializer(UsersSerializer):
+    pass
+
+class UsersRetrieveSerializer(UsersSerializer):
+    pass
+
+class UsersUpdateSerializer(UsersSerializer):
     
+    permission_codenames = serializers.ListField(child = serializers.CharField())
     
     def update(self, instance, validated_data):
 
@@ -47,21 +67,19 @@ class UserSerializer(serializers.ModelSerializer):
         profile.country = profile_args.get('country', profile.country)
         profile.save()
 
-        instance.save()
+        permission_codenames = validated_data.pop(
+            "permission_codenames", None)
+
+        instance.user_permissions.clear()
+        if permission_codenames is not None:
+            permission_objs = Permission.objects.filter(codename__in=permission_codenames)
+            for permission_obj in permission_objs:
+                instance.user_permissions.add(permission_obj)
+
+        instance.permission_codenames = permission_codenames
+
         return instance
 
-class UserCreateSerializer(UserSerializer):
-    pass
-
-class UserListSerializer(UserSerializer):
-    pass
-
-class UserRetrieveSerializer(UserSerializer):
-    pass
-
-class UserUpdateSerializer(UserSerializer):
-    pass
-
-class UserDeleteSerializer(UserSerializer):
+class UsersDeleteSerializer(UsersSerializer):
     pass
 
