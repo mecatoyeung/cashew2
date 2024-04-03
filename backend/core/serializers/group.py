@@ -67,7 +67,7 @@ class GroupUpdateSerializer(GroupSerializer):
 
         Group.objects.filter(id=instance.id).delete()
 
-        """ Update User. """
+        """ Update Group. """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 

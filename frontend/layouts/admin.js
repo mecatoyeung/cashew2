@@ -1,57 +1,57 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
+import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
 
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useRouter } from 'next/router'
+import { useState, useEffect } from 'react'
 
-import { Nav } from "react-bootstrap";
-import { Button } from "react-bootstrap";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
+import { Nav } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import AdminHeader from "./_adminHeader";
+import AdminHeader from './_adminHeader'
 
-import service from "../service";
+import service from '../service'
 
-import "bootstrap-daterangepicker/daterangepicker.css";
-import adminStyles from "../styles/AdminLayout.module.css";
+import 'bootstrap-daterangepicker/daterangepicker.css'
+import adminStyles from '../styles/AdminLayout.module.css'
 
 export default function WorkspaceLayout({ children }) {
-  const router = useRouter();
+  const router = useRouter()
 
-  let { parserId } = router.query;
+  let { parserId } = router.query
 
-  const [parser, setParser] = useState(null);
-  const [user, setUser] = useState(null);
+  const [parser, setParser] = useState(null)
+  const [user, setUser] = useState(null)
 
   const getParser = () => {
-    if (!parserId) return;
-    service.get("parsers/" + parserId + "/", (response) => {
-      setParser(response.data);
-    });
-  };
+    if (!parserId) return
+    service.get('parsers/' + parserId + '/', (response) => {
+      setParser(response.data)
+    })
+  }
 
   const getUserProfile = () => {
-    service.get("user/", (response) => {
-      setUser(response.data);
-    });
-  };
+    service.get('account/', (response) => {
+      setUser(response.data)
+    })
+  }
 
   const logoutBtnClickHandler = () => {
-    service.post("rest-auth/logout/", {}, () => {
-      localStorage.removeItem("token");
-      router.push("/");
-    });
-  };
+    service.post('rest-auth/logout/', {}, () => {
+      localStorage.removeItem('token')
+      router.push('/')
+    })
+  }
 
   useEffect(() => {
-    getUserProfile();
-  }, []);
+    getUserProfile()
+  }, [])
 
   useEffect(() => {
-    getParser();
-  }, [parserId]);
+    getParser()
+  }, [parserId])
 
   return (
     <>
@@ -68,98 +68,79 @@ export default function WorkspaceLayout({ children }) {
         <div className={adminStyles.wrapper}>
           <AdminHeader />
           <hr className={adminStyles.headerHr} />
-          <main className={adminStyles.main + " d-flex flex-column"}>
+          <main className={adminStyles.main + ' d-flex flex-column'}>
             <div
               className={
-                adminStyles.sideNavContainerDiv +
-                " d-flex flex-grow-1"
+                adminStyles.sideNavContainerDiv + ' d-flex flex-grow-1'
               }
             >
               <div
                 className="row d-flex flex-grow-1"
-                style={{ padding: 0, margin: 0, flexDirection: "row" }}
+                style={{ padding: 0, margin: 0, flexDirection: 'row' }}
               >
                 <div
                   className="col-12 col-md-2 d-flex"
                   style={{ paddingLeft: 0, paddingRight: 0, width: 200 }}
                 >
                   <div
-                    className={
-                      adminStyles.sideNavDiv + " d-flex flex-grow-1"
-                    }
+                    className={adminStyles.sideNavDiv + ' d-flex flex-grow-1'}
                   >
                     <ul className={adminStyles.sideNavUl}>
                       {parser && (
                         <li
                           style={{
-                            fontFamily: "Oswald, sans",
-                            fontSize: "130%",
+                            fontFamily: 'Oswald, sans',
+                            fontSize: '130%',
                           }}
                         >
                           {parser.name}
                         </li>
                       )}
-                      <Link
-                        href={"/admin/parsers/" + parserId + "/sources"}
-                      >
+                      <Link href={'/admin/parsers/' + parserId + '/sources'}>
                         <li>Sources</li>
                       </Link>
-                      <Link href={"/admin/parsers/" + parserId + "/queues"}>
+                      <Link href={'/admin/parsers/' + parserId + '/queues'}>
                         <li>Queues</li>
                       </Link>
                       <Link
-                        href={
-                          "/admin/parsers/" + parserId + "/preprocessings"
-                        }
+                        href={'/admin/parsers/' + parserId + '/preprocessings'}
                       >
                         <li>Pre-processings</li>
                       </Link>
-                      <Link href={"/admin/parsers/" + parserId + "/ocr"}>
+                      <Link href={'/admin/parsers/' + parserId + '/ocr'}>
                         <li>OCR</li>
                       </Link>
-                      {parser.type == "LAYOUT" && (
-                        <Link
-                          href={"/admin/parsers/" + parserId + "/aichat"}
-                        >
+                      {parser.type == 'LAYOUT' && (
+                        <Link href={'/admin/parsers/' + parserId + '/aichat'}>
                           <li>AI Chat</li>
                         </Link>
                       )}
-                      <Link
-                        href={"/admin/parsers/" + parserId + "/splitting"}
-                      >
+                      <Link href={'/admin/parsers/' + parserId + '/splitting'}>
                         <li>Splitting</li>
                       </Link>
-                      <Link href={"/admin/parsers/" + parserId + "/rules"}>
+                      <Link href={'/admin/parsers/' + parserId + '/rules'}>
                         <li>Fields</li>
                       </Link>
-                      {parser.type == "LAYOUT" && (
+                      {parser.type == 'LAYOUT' && (
                         <Link
                           href={
-                            "/admin/parsers/" +
-                            parserId +
-                            "/postprocessings"
+                            '/admin/parsers/' + parserId + '/postprocessings'
                           }
                         >
                           <li>Post-processings</li>
                         </Link>
                       )}
-                      {parser.type == "LAYOUT" && (
+                      {parser.type == 'LAYOUT' && (
                         <Link
-                          href={
-                            "/admin/parsers/" + parserId + "/integrations"
-                          }
+                          href={'/admin/parsers/' + parserId + '/integrations'}
                         >
                           <li>Integrations</li>
                         </Link>
                       )}
-                      <Link
-                        href={"/admin/parsers/" + parserId + "/statistics"}
-                      >
+                      <Link href={'/admin/parsers/' + parserId + '/statistics'}>
                         <li>Statistics</li>
                       </Link>
-                      <Link
-                        href={"/admin/parsers/" + parserId + "/settings"}
-                      >
+                      <Link href={'/admin/parsers/' + parserId + '/settings'}>
                         <li>Settings</li>
                       </Link>
                     </ul>
@@ -171,9 +152,9 @@ export default function WorkspaceLayout({ children }) {
                     paddingLeft: 0,
                     paddingRight: 0,
                     paddingBottom: 10,
-                    minHeight: "480px",
-                    display: "flex",
-                    width: "calc(100% - 200px)",
+                    minHeight: '480px',
+                    display: 'flex',
+                    width: 'calc(100% - 200px)',
                   }}
                 >
                   {children}
@@ -182,9 +163,9 @@ export default function WorkspaceLayout({ children }) {
             </div>
           </main>
           <footer className={adminStyles.footer}>
-            <div style={{ width: "100%", padding: "0 10px" }}>
-              <div className="row" style={{ padding: "0 10px" }}>
-                <div className="col-sm" style={{ padding: "10px" }}>
+            <div style={{ width: '100%', padding: '0 10px' }}>
+              <div className="row" style={{ padding: '0 10px' }}>
+                <div className="col-sm" style={{ padding: '10px' }}>
                   <div className={adminStyles.copyright}>
                     2023. All rights reserved.
                   </div>
@@ -195,5 +176,5 @@ export default function WorkspaceLayout({ children }) {
         </div>
       )}
     </>
-  );
+  )
 }

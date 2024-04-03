@@ -7,18 +7,14 @@ from rest_framework import status
 
 from pathlib import Path
 
-from pdf2image import convert_from_path
 import PIL
-import PyPDF2
 
 from parsers.models.document import Document
-from parsers.models.document_type import DocumentType
 from parsers.models.document_extension import DocumentExtension
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
-from parsers.models.pre_processing import PreProcessing
 from parsers.models.parser import Parser
 
 from parsers.serializers.queue import QueueSerializer
@@ -103,23 +99,12 @@ class DocumentUploadSerializer(DocumentSerializer):
         elif extension == "jpg" or extension == "JPG":
             image = PIL.Image.open(file)
             im = image.convert('RGB')
-            #im_bytes = io.BytesIO()
-            #im.save(im_bytes, format="JPG")
-            #im.close()
-            #im_bytes.seek(0)
-            #file = im_bytes.getvalue()
         elif extension == "png" or extension == "PNG":
             image = PIL.Image.open(file)
             im = image.convert('RGB')
-            #im_bytes = io.BytesIO()
-            #im.save(im_bytes, format="PNG")
-            #im.close()
-            #im_bytes.seek(0)
-            #file = im_bytes.getvalue()
         elif extension == "tiff" or extension == "TIFF":
             image = PIL.Image.open(file)
             im = image.convert('RGB')
-            #file = im_bytes.getvalue()
 
         validated_data["extension"] = "pdf"
         validated_data["document_extension"] = "PDF"
@@ -141,8 +126,7 @@ class DocumentUploadSerializer(DocumentSerializer):
 
         parser = Parser.objects.get(id=document.parser_id)
 
-        #upload_document(document, im_bytes)
-        generate_images_from_pdf(document)
+        generate_images_from_pdf(parser, document)
 
         # Create queue object in database
         q = Queue()

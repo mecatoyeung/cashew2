@@ -1,55 +1,55 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
+import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
 
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useRouter } from 'next/router'
+import { useState, useEffect } from 'react'
 
-import { Nav } from "react-bootstrap";
-import { Button } from "react-bootstrap";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
+import { Nav } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import service from "../service";
+import service from '../service'
 
-import headerStyles from "../styles/AdminHeader.module.css";
+import headerStyles from '../styles/AdminHeader.module.css'
 
 export default function AdminHeader({ children }) {
-  const router = useRouter();
+  const router = useRouter()
 
-  let { parserId } = router.query;
+  let { parserId } = router.query
 
-  const [parser, setParser] = useState(null);
+  const [parser, setParser] = useState(null)
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null)
 
   const getParser = () => {
-    if (!parserId) return;
-    service.get("parsers/" + parserId + "/", (response) => {
-      setParser(response.data);
-    });
-  };
+    if (!parserId) return
+    service.get('parsers/' + parserId + '/', (response) => {
+      setParser(response.data)
+    })
+  }
 
   const getUser = () => {
-    service.get("user/", (response) => {
-      setUser(response.data);
-    });
-  };
+    service.get('account/', (response) => {
+      setUser(response.data)
+    })
+  }
 
   const logoutBtnClickHandler = () => {
-    service.post("rest-auth/logout/", {}, () => {
-      localStorage.removeItem("token");
-      router.push("/");
-    });
-  };
+    service.post('rest-auth/logout/', {}, () => {
+      localStorage.removeItem('token')
+      router.push('/')
+    })
+  }
 
   useEffect(() => {
-    getUser();
-  }, []);
+    getUser()
+  }, [])
 
   useEffect(() => {
-    getParser();
-  }, [parserId]);
+    getParser()
+  }, [parserId])
 
   return (
     <header className={headerStyles.header}>
@@ -62,9 +62,9 @@ export default function AdminHeader({ children }) {
             <div className={headerStyles.logoDiv}>
               <Link
                 href={
-                  router.pathname.split("/")[1] == "admin"
-                    ? "/admin/parsers"
-                    : "/workbench/parsers"
+                  router.pathname.split('/')[1] == 'admin'
+                    ? '/admin/parsers'
+                    : '/workbench/parsers'
                 }
               >
                 <img
@@ -77,9 +77,9 @@ export default function AdminHeader({ children }) {
             </div>
             <Link
               href={
-                router.pathname.split("/")[1] == "admin"
-                  ? "/admin/parsers"
-                  : "/workbench/parsers"
+                router.pathname.split('/')[1] == 'admin'
+                  ? '/admin/parsers'
+                  : '/workbench/parsers'
               }
             >
               <h2>Cashew</h2>
@@ -89,20 +89,20 @@ export default function AdminHeader({ children }) {
               href="#"
               onClick={() => router.back()}
               style={{
-                display: "inline-block",
-                verticalAlign: "top",
+                display: 'inline-block',
+                verticalAlign: 'top',
                 marginRight: 10,
               }}
             >
               <i
-                className={headerStyles.parsersIcon + " bi bi-arrow-90deg-left"}
+                className={headerStyles.parsersIcon + ' bi bi-arrow-90deg-left'}
               ></i>
             </a>
             <Nav.Link
               href="/admin/parsers"
-              style={{ display: "inline-block", verticalAlign: "top" }}
+              style={{ display: 'inline-block', verticalAlign: 'top' }}
             >
-              <i className={headerStyles.parsersIcon + " bi bi-grid"}></i>
+              <i className={headerStyles.parsersIcon + ' bi bi-grid'}></i>
             </Nav.Link>
           </div>
           <div
@@ -120,14 +120,14 @@ export default function AdminHeader({ children }) {
                       >
                         <Dropdown.Item
                           href={
-                            router.pathname.split("/")[1] == "admin"
-                              ? "/workbench/parsers"
-                              : "/admin/parsers"
+                            router.pathname.split('/')[1] == 'admin'
+                              ? '/workbench/parsers'
+                              : '/admin/parsers'
                           }
                         >
-                          {router.pathname.split("/")[1] == "admin"
-                            ? "Switch to Workbench"
-                            : "Switch to Workspace"}
+                          {router.pathname.split('/')[1] == 'admin'
+                            ? 'Switch to Workbench'
+                            : 'Switch to Workspace'}
                         </Dropdown.Item>
                         <Dropdown.Item href="/account/profile">
                           Account
@@ -148,5 +148,5 @@ export default function AdminHeader({ children }) {
         </div>
       </div>
     </header>
-  );
+  )
 }

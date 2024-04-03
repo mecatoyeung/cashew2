@@ -16,15 +16,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from django.http import StreamingHttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
-
-from drf_spectacular.utils import (
-    extend_schema_view,
-    extend_schema,
-    OpenApiParameter,
-    OpenApiTypes,
-)
 
 import requests
 import json
@@ -36,7 +28,6 @@ from parsers.models.table_column_separator import TableColumnSeparator
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.document import Document
-from parsers.models.document_page import DocumentPage
 from parsers.models.source import Source
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.ocr import OCR
@@ -55,12 +46,21 @@ from parsers.models.consecutive_page_splitting_condition import ConsecutivePageS
 from parsers.models.last_page_splitting_condition import LastPageSplittingCondition
 from parsers.models.post_processing import PostProcessing
 
-from parsers.serializers.parser import ParserSerializer, ParserListSerializer, ParserUpdateSerializer, ParserDeleteSerializer, \
-    ParserExportSerializer, ParserImportSerializer
+from parsers.serializers.parser import ParserSerializer,\
+    ParserCreateSerializer,\
+    ParserRetrieveSerializer,\
+    ParserListSerializer,\
+    ParserUpdateSerializer,\
+    ParserDeleteSerializer,\
+    ParserExportSerializer,\
+    ParserImportSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.integration import IntegrationSerializer
 from parsers.serializers.splitting import SplittingSerializer
+
+from parsers.permissions.parser_management import ParserManagementPermission
+
 from parsers.helpers.document_parser import DocumentParser
 
 from parsers.schedule_jobs.get_open_ai_metrics import get_single_parser_open_ai_metrics
@@ -75,9 +75,9 @@ class ParserViewSet(viewsets.ModelViewSet):
     """ View for manage recipe APIs. """
     serializer_class = ParserSerializer
     queryset = Parser.objects.all()
-    """authentication_classes = [
+    authentication_classes = [
         TokenAuthentication]
-    permission_classes = [IsAuthenticated]"""
+    permission_classes = [IsAuthenticated, ParserManagementPermission]
 
     def _params_to_ints(self, qs):
         """ Convert a list of strings to integers. """
@@ -118,10 +118,12 @@ class ParserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
-        if self.action == 'list':
-            return ParserListSerializer
+        if self.action == 'create':
+            return ParserCreateSerializer
         elif self.action == "retrieve":
-            return ParserSerializer
+            return ParserRetrieveSerializer
+        elif self.action == 'list':
+            return ParserListSerializer
         elif self.action == 'update':
             return ParserUpdateSerializer
         elif self.action == 'delete':

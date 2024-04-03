@@ -19,42 +19,42 @@ import AdminLayout from '../../../../../layouts/admin'
 
 import service from '../../../../../service'
 
-import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
+import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css'
 
 import styles from '../../../../../styles/Settings.module.css'
 
 const chatBotOptions = [
   {
-    label: "No Chatbot",
-    value: "NO_CHATBOT"
+    label: 'No Chatbot',
+    value: 'NO_CHATBOT',
   },
   {
-    label: "Open AI",
-    value: "OPEN_AI"
+    label: 'Open AI',
+    value: 'OPEN_AI',
   },
   {
-    label: "On Premise AI",
-    value: "ON_PREMISE_AI"
-  }
+    label: 'On Premise AI',
+    value: 'ON_PREMISE_AI',
+  },
 ]
 
 const Settings = () => {
-
   const router = useRouter()
 
   const [parser, setParser] = useState(null)
 
   const [updatedParser, setUpdatedParser] = useState(false)
 
-  const [importModal , setImportModal] = useState({
+  const [importModal, setImportModal] = useState({
     show: false,
     selectedFile: null,
-    parserName: "",
-    parserNameMatched: true
+    parserName: '',
+    parserNameMatched: true,
   })
 
   const getParser = () => {
-    service.get("parsers/" + parserId + "/", response => {
+    service.get('parsers/' + parserId + '/', (response) => {
+      console.log(response.data)
       setParser(response.data)
     })
   }
@@ -65,31 +65,37 @@ const Settings = () => {
   }, [router.isReady])
 
   const parserNameChangeHandler = (e) => {
-    let updatedParser = {...parser}
+    let updatedParser = { ...parser }
     updatedParser.name = e.target.value
     setParser(updatedParser)
   }
 
+  const pdfToImageDpiChangeHandler = (e) => {
+    let updatedParser = { ...parser }
+    updatedParser.pdfToImageDpi = e.target.value
+    setParser(updatedParser)
+  }
+
   const assumedTextWidthChangeHandler = (e) => {
-    let updatedParser = {...parser}
+    let updatedParser = { ...parser }
     updatedParser.assumedTextWidth = e.target.value
     setParser(updatedParser)
   }
 
   const assumedTextHeightChangeHandler = (e) => {
-    let updatedParser = {...parser}
+    let updatedParser = { ...parser }
     updatedParser.assumedTextHeight = e.target.value
     setParser(updatedParser)
   }
 
   const sameLineAcceptanceRangeChangeHandler = (e) => {
-    let updatedParser = {...parser}
+    let updatedParser = { ...parser }
     updatedParser.sameLineAcceptanceRange = e.target.value
     setParser(updatedParser)
   }
 
   const sameColumnAcceptanceRangeChangeHandler = (e) => {
-    let updatedParser = {...parser}
+    let updatedParser = { ...parser }
     updatedParser.sameColumnAcceptanceRange = e.target.value
     setParser(updatedParser)
   }
@@ -104,17 +110,16 @@ const Settings = () => {
   }
 
   const exportBtnClickHandler = () => {
-    service.get("parsers/" + parserId + "/export/", response => {
-
+    service.get('parsers/' + parserId + '/export/', (response) => {
       const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
         JSON.stringify(response.data)
       )}`
 
-      const link = document.createElement("a")
+      const link = document.createElement('a')
       link.href = jsonString
-      link.download = "parser-" + parserId + ".json"
+      link.download = 'parser-' + parserId + '.json'
 
-      link.click();
+      link.click()
     })
   }
 
@@ -123,7 +128,7 @@ const Settings = () => {
     updatedChatBot.chatbotType = e.value
     setParser({
       ...parser,
-      chatbot: updatedChatBot
+      chatbot: updatedChatBot,
     })
   }
 
@@ -132,7 +137,7 @@ const Settings = () => {
     updatedChatbot.openAiResourceName = e.target.value
     setParser({
       ...parser,
-      chatbot: updatedChatbot
+      chatbot: updatedChatbot,
     })
   }
 
@@ -141,7 +146,7 @@ const Settings = () => {
     updatedChatbot.openAiApiKey = e.target.value
     setParser({
       ...parser,
-      chatbot: updatedChatbot
+      chatbot: updatedChatbot,
     })
   }
 
@@ -150,7 +155,7 @@ const Settings = () => {
     updatedChatbot.openAiDeployment = e.target.value
     setParser({
       ...parser,
-      chatbot: updatedChatbot
+      chatbot: updatedChatbot,
     })
   }
 
@@ -159,7 +164,7 @@ const Settings = () => {
     updatedChatbot.openAiDefaultQuestion = e.target.value
     setParser({
       ...parser,
-      chatbot: updatedChatbot
+      chatbot: updatedChatbot,
     })
   }
 
@@ -168,7 +173,7 @@ const Settings = () => {
     updatedChatbot.baseUrl = e.target.value
     setParser({
       ...parser,
-      chatbot: updatedChatbot
+      chatbot: updatedChatbot,
     })
   }
 
@@ -177,7 +182,7 @@ const Settings = () => {
     updatedOpenAi.enabled = e.target.checked
     setParser({
       ...parser,
-      openAi: updatedOpenAi
+      openAi: updatedOpenAi,
     })
   }
 
@@ -186,7 +191,7 @@ const Settings = () => {
     updatedOpenAi.openAiResourceName = e.target.value
     setParser({
       ...parser,
-      openAi: updatedOpenAi
+      openAi: updatedOpenAi,
     })
   }
 
@@ -195,7 +200,7 @@ const Settings = () => {
     updatedOpenAi.openAiApiKey = e.target.value
     setParser({
       ...parser,
-      openAi: updatedOpenAi
+      openAi: updatedOpenAi,
     })
   }
 
@@ -204,7 +209,7 @@ const Settings = () => {
     updatedOpenAi.openAiDeployment = e.target.value
     setParser({
       ...parser,
-      openAi: updatedOpenAi
+      openAi: updatedOpenAi,
     })
   }
 
@@ -214,7 +219,7 @@ const Settings = () => {
     updatedOpenAiMetricsKey.openAiMetricsTenantId = e.target.value
     setParser({
       ...parser,
-      openAiMetricsKey: updatedOpenAiMetricsKey
+      openAiMetricsKey: updatedOpenAiMetricsKey,
     })
   }
 
@@ -223,7 +228,7 @@ const Settings = () => {
     updatedOpenAiMetricsKey.openAiMetricsClientId = e.target.value
     setParser({
       ...parser,
-      openAiMetricsKey: updatedOpenAiMetricsKey
+      openAiMetricsKey: updatedOpenAiMetricsKey,
     })
   }
 
@@ -232,7 +237,7 @@ const Settings = () => {
     updatedOpenAiMetricsKey.openAiMetricsClientSecret = e.target.value
     setParser({
       ...parser,
-      openAiMetricsKey: updatedOpenAiMetricsKey
+      openAiMetricsKey: updatedOpenAiMetricsKey,
     })
   }
 
@@ -241,7 +246,7 @@ const Settings = () => {
     updatedOpenAiMetricsKey.openAiMetricsSubscriptionId = e.target.value
     setParser({
       ...parser,
-      openAiMetricsKey: updatedOpenAiMetricsKey
+      openAiMetricsKey: updatedOpenAiMetricsKey,
     })
   }
 
@@ -250,7 +255,7 @@ const Settings = () => {
     updatedOpenAiMetricsKey.openAiMetricsServiceName = e.target.value
     setParser({
       ...parser,
-      openAiMetricsKey: updatedOpenAiMetricsKey
+      openAiMetricsKey: updatedOpenAiMetricsKey,
     })
   }
 
@@ -267,11 +272,7 @@ const Settings = () => {
   }
 
   const updateParser = () => {
-    service.put("parsers/" + parserId + "/",
-      parser,
-      response => {
-      }
-    )
+    service.put('parsers/' + parserId + '/', parser, (response) => {})
   }
 
   useEffect(() => {
@@ -289,9 +290,14 @@ const Settings = () => {
             <Card.Body>
               <Card.Title>Parser Name</Card.Title>
               <Form.Group className="mb-3" controlId="formParserName">
-                <Form.Control onChange={parserNameChangeHandler} value={parser.name}/>
+                <Form.Control
+                  onChange={parserNameChangeHandler}
+                  value={parser.name}
+                />
               </Form.Group>
-              <Button variant="primary" onClick={parserSaveBtnClickHandler}>Save</Button>
+              <Button variant="primary" onClick={parserSaveBtnClickHandler}>
+                Save
+              </Button>
             </Card.Body>
           </Card>
         )}
@@ -299,6 +305,19 @@ const Settings = () => {
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>
               <Card.Title>Parser Settings</Card.Title>
+              <Form.Group className="mb-3" controlId="formAssumedTextWidth">
+                <Form.Label>
+                  PDF to image DPI (Smaller means smaller file size, larger
+                  means higher image quality and higher OCR accuracy)
+                </Form.Label>
+                <RangeSlider
+                  min={100}
+                  max={300}
+                  step={50}
+                  value={parser.pdfToImageDpi}
+                  onChange={pdfToImageDpiChangeHandler}
+                />
+              </Form.Group>
               <Form.Group className="mb-3" controlId="formAssumedTextWidth">
                 <Form.Label>Assumed Text Width</Form.Label>
                 <RangeSlider
@@ -319,7 +338,10 @@ const Settings = () => {
                   onChange={assumedTextHeightChangeHandler}
                 />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formSameLineAcceptanceRange">
+              <Form.Group
+                className="mb-3"
+                controlId="formSameLineAcceptanceRange"
+              >
                 <Form.Label>Same Line Acceptance Range</Form.Label>
                 <RangeSlider
                   min={0.1}
@@ -329,7 +351,10 @@ const Settings = () => {
                   onChange={sameLineAcceptanceRangeChangeHandler}
                 />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formSameColumnAcceptanceRange">
+              <Form.Group
+                className="mb-3"
+                controlId="formSameColumnAcceptanceRange"
+              >
                 <Form.Label>Same Column Acceptance Range</Form.Label>
                 <RangeSlider
                   min={0.1}
@@ -339,7 +364,12 @@ const Settings = () => {
                   onChange={sameColumnAcceptanceRangeChangeHandler}
                 />
               </Form.Group>
-              <Button variant="primary" onClick={parserSettingsSaveBtnClickHandler}>Save</Button>
+              <Button
+                variant="primary"
+                onClick={parserSettingsSaveBtnClickHandler}
+              >
+                Save
+              </Button>
             </Card.Body>
           </Card>
         )}
@@ -349,7 +379,13 @@ const Settings = () => {
             <Card.Text>
               Export and Import this parser to transfer between servers
             </Card.Text>
-            <Button variant="primary" style={{ marginRight: 10 }} onClick={exportBtnClickHandler}>Export</Button>
+            <Button
+              variant="primary"
+              style={{ marginRight: 10 }}
+              onClick={exportBtnClickHandler}
+            >
+              Export
+            </Button>
           </Card.Body>
         </Card>
         {parser && parser.chatbot != null && (
@@ -359,40 +395,72 @@ const Settings = () => {
               <Form.Group className="mb-3" controlId="formChatBotType">
                 <Select
                   options={chatBotOptions}
-                  value={chatBotOptions.find(oo => oo.value == parser.chatbot.chatbotType)}
+                  value={chatBotOptions.find(
+                    (oo) => oo.value == parser.chatbot.chatbotType
+                  )}
                   onChange={(e) => chatbotTypeChangeHandler(e)}
                   menuPlacement="auto"
-                  menuPosition="fixed" />
+                  menuPosition="fixed"
+                />
               </Form.Group>
-              {parser.chatbot.chatbotType == "OPEN_AI" && (
+              {parser.chatbot.chatbotType == 'OPEN_AI' && (
                 <>
-                  <Form.Group className="mb-3" controlId="formChatbotOpenAIResourceName">
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formChatbotOpenAIResourceName"
+                  >
                     <Form.Label>Open AI Resource Name</Form.Label>
-                    <Form.Control onChange={chatbotOpenAIResourceNameChangeHandler} value={parser.chatbot.openAiResourceName}/>
+                    <Form.Control
+                      onChange={chatbotOpenAIResourceNameChangeHandler}
+                      value={parser.chatbot.openAiResourceName}
+                    />
                   </Form.Group>
-                  <Form.Group className="mb-3" controlId="formChatbotOpenAIApiKey">
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formChatbotOpenAIApiKey"
+                  >
                     <Form.Label>Open AI API KEY</Form.Label>
-                    <Form.Control onChange={chatbotOpenAIApiKeyChangeHandler} value={parser.chatbot.openAiApiKey}/>
+                    <Form.Control
+                      onChange={chatbotOpenAIApiKeyChangeHandler}
+                      value={parser.chatbot.openAiApiKey}
+                    />
                   </Form.Group>
-                  <Form.Group className="mb-3" controlId="formChatbotOpenAIDeployment">
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formChatbotOpenAIDeployment"
+                  >
                     <Form.Label>Open AI Deplyment</Form.Label>
-                    <Form.Control onChange={chatbotOpenAIDeploymentChangeHandler} value={parser.chatbot.openAiDeployment}/>
+                    <Form.Control
+                      onChange={chatbotOpenAIDeploymentChangeHandler}
+                      value={parser.chatbot.openAiDeployment}
+                    />
                   </Form.Group>
-                  <Form.Group className="mb-3" controlId="formChatbotOpenAIDefaultQuestion">
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formChatbotOpenAIDefaultQuestion"
+                  >
                     <Form.Label>Open AI Default Question</Form.Label>
-                    <Form.Control onChange={chatbotOpenAIDefaultQuestionChangeHandler} value={parser.chatbot.openAiDefaultQuestion}/>
+                    <Form.Control
+                      onChange={chatbotOpenAIDefaultQuestionChangeHandler}
+                      value={parser.chatbot.openAiDefaultQuestion}
+                    />
                   </Form.Group>
                 </>
               )}
-              {parser.chatbot.chatbotType == "ON_PREMISE_AI" && (
+              {parser.chatbot.chatbotType == 'ON_PREMISE_AI' && (
                 <>
                   <Form.Group className="mb-3" controlId="formChatbotBaseUrl">
                     <Form.Label>Base Url</Form.Label>
-                    <Form.Control onChange={chatbotBaseUrlChangeHandler} value={parser.chatbot.baseUrl}/>
+                    <Form.Control
+                      onChange={chatbotBaseUrlChangeHandler}
+                      value={parser.chatbot.baseUrl}
+                    />
                   </Form.Group>
                 </>
               )}
-              <Button variant="primary" onClick={chatBotSaveBtnClickHandler}>Save</Button>
+              <Button variant="primary" onClick={chatBotSaveBtnClickHandler}>
+                Save
+              </Button>
             </Card.Body>
           </Card>
         )}
@@ -411,17 +479,28 @@ const Settings = () => {
               </Form.Group>
               <Form.Group className="mb-3" controlId="formOpenAIResourceName">
                 <Form.Label>Open AI Resource Name</Form.Label>
-                <Form.Control onChange={openAIResourceNameChangeHandler} value={parser.openAi.openAiResourceName}/>
+                <Form.Control
+                  onChange={openAIResourceNameChangeHandler}
+                  value={parser.openAi.openAiResourceName}
+                />
               </Form.Group>
               <Form.Group className="mb-3" controlId="formOpenAIApiKey">
                 <Form.Label>Open AI API KEY</Form.Label>
-                <Form.Control onChange={openAIApiKeyChangeHandler} value={parser.openAi.openAiApiKey}/>
+                <Form.Control
+                  onChange={openAIApiKeyChangeHandler}
+                  value={parser.openAi.openAiApiKey}
+                />
               </Form.Group>
               <Form.Group className="mb-3" controlId="formOpenAIDeployment">
                 <Form.Label>Open AI Deployment</Form.Label>
-                <Form.Control onChange={openAIDeploymentChangeHandler} value={parser.openAi.openAiDeployment}/>
+                <Form.Control
+                  onChange={openAIDeploymentChangeHandler}
+                  value={parser.openAi.openAiDeployment}
+                />
               </Form.Group>
-              <Button variant="primary" onClick={openAISaveBtnClickHandler}>Save</Button>
+              <Button variant="primary" onClick={openAISaveBtnClickHandler}>
+                Save
+              </Button>
             </Card.Body>
           </Card>
         )}
@@ -430,27 +509,62 @@ const Settings = () => {
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>
               <Card.Title>Open AI Metrics</Card.Title>
-              <Form.Group className="mb-3" controlId="formOpenAIMetricsKeyTenantId">
+              <Form.Group
+                className="mb-3"
+                controlId="formOpenAIMetricsKeyTenantId"
+              >
                 <Form.Label>Open AI Metrics Tenant ID</Form.Label>
-                <Form.Control onChange={openAIMetricsTenantIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsTenantId}/>
+                <Form.Control
+                  onChange={openAIMetricsTenantIdChangeHandler}
+                  value={parser.openAiMetricsKey.openAiMetricsTenantId}
+                />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formOpenAIMetricsKeyClientId">
+              <Form.Group
+                className="mb-3"
+                controlId="formOpenAIMetricsKeyClientId"
+              >
                 <Form.Label>Open AI Metrics Client ID</Form.Label>
-                <Form.Control onChange={openAIMetricsClientIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsClientId}/>
+                <Form.Control
+                  onChange={openAIMetricsClientIdChangeHandler}
+                  value={parser.openAiMetricsKey.openAiMetricsClientId}
+                />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formOpenAIMetricsClientSecret">
+              <Form.Group
+                className="mb-3"
+                controlId="formOpenAIMetricsClientSecret"
+              >
                 <Form.Label>Open AI Metrics Client Secret</Form.Label>
-                <Form.Control onChange={openAIMetricsClientSecretChangeHandler} value={parser.openAiMetricsKey.openAiMetricsClientSecret}/>
+                <Form.Control
+                  onChange={openAIMetricsClientSecretChangeHandler}
+                  value={parser.openAiMetricsKey.openAiMetricsClientSecret}
+                />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formOpenAIMetricsSubscriptionId">
+              <Form.Group
+                className="mb-3"
+                controlId="formOpenAIMetricsSubscriptionId"
+              >
                 <Form.Label>Open AI Metrics Subscription ID</Form.Label>
-                <Form.Control onChange={openAIMetricsSubscriptionIdChangeHandler} value={parser.openAiMetricsKey.openAiMetricsSubscriptionId}/>
+                <Form.Control
+                  onChange={openAIMetricsSubscriptionIdChangeHandler}
+                  value={parser.openAiMetricsKey.openAiMetricsSubscriptionId}
+                />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formOpenAIMetricsServiceName">
+              <Form.Group
+                className="mb-3"
+                controlId="formOpenAIMetricsServiceName"
+              >
                 <Form.Label>Open AI Metrics Service Name</Form.Label>
-                <Form.Control onChange={openAIMetricsServiceNameChangeHandler} value={parser.openAiMetricsKey.openAiMetricsServiceName}/>
+                <Form.Control
+                  onChange={openAIMetricsServiceNameChangeHandler}
+                  value={parser.openAiMetricsKey.openAiMetricsServiceName}
+                />
               </Form.Group>
-              <Button variant="primary" onClick={openAIMetricsSaveBtnClickHandler}>Save</Button>
+              <Button
+                variant="primary"
+                onClick={openAIMetricsSaveBtnClickHandler}
+              >
+                Save
+              </Button>
             </Card.Body>
           </Card>
         )}

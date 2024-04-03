@@ -10,29 +10,34 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.contrib.auth.models import Group
 
-from core.serializers.group import Group, \
-    GroupSerializer,\
-    GroupCreateSerializer, GroupDeleteSerializer, GroupListSerializer, GroupRetrieveSerializer, GroupUpdateSerializer
+from core.serializers.group import GroupSerializer,\
+    GroupCreateSerializer,\
+    GroupRetrieveSerializer,\
+    GroupListSerializer,\
+    GroupUpdateSerializer,\
+    GroupDeleteSerializer
 
 
 class GroupViewSet(viewsets.ModelViewSet):
-    """ View for manage recipe APIs. """
+    
     serializer_class = GroupSerializer
     model = Group
     queryset = Group.objects
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = ([TokenAuthentication])
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """ Retrieve parsers for authenticated user. """
+        
         return Group.objects
 
     def get_serializer_class(self):
-        """ Return the serializer class for request """
-        if self.action == 'list':
-            return GroupListSerializer
-        elif self.action == 'create':
+        
+        if self.action == 'create':
             return GroupCreateSerializer
+        elif self.action == 'retrieve':
+            return GroupRetrieveSerializer
+        elif self.action == 'list':
+            return GroupListSerializer
         elif self.action == 'update':
             return GroupUpdateSerializer
         elif self.action == "delete":

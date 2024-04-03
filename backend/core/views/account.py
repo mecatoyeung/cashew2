@@ -2,28 +2,32 @@ from rest_framework import (
     viewsets,
     mixins
 )
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from rest_framework.decorators import action
+
 from rest_framework.response import Response
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from django.contrib.auth import get_user_model
-from django.contrib.auth import get_user
 
 from django.contrib.auth.models import User
-from core.serializers.user import UserSerializer, \
-    UserListSerializer, \
-    UserCreateSerializer, \
-    UserUpdateSerializer, \
-    UserDeleteSerializer
 
-class UserViewSet(mixins.ListModelMixin,
+from core.serializers.account import AccountSerializer, \
+    AccountCreateSerializer, \
+    AccountRetrieveSerializer,\
+    AccountListSerializer, \
+    AccountUpdateSerializer, \
+    AccountDeleteSerializer
+
+class AccountViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
-    """ View for manage user APIs. """
-    serializer_class = UserSerializer
+    
+    serializer_class = AccountSerializer
     model = get_user_model()
     queryset = User.objects.select_related("profile")
     authentication_classes = ([TokenAuthentication])
@@ -36,18 +40,19 @@ class UserViewSet(mixins.ListModelMixin,
         return self.request.user
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return UserListSerializer
-        elif self.action == 'create':
-            return UserCreateSerializer
+        if self.action == 'create':
+            return AccountCreateSerializer
+        elif self.action == 'retrieve':
+            return AccountRetrieveSerializer
+        elif self.action == 'list':
+            return AccountListSerializer
         elif self.action == 'update':
-            return UserUpdateSerializer
+            return AccountUpdateSerializer
         elif self.action == "delete":
-            return UserDeleteSerializer
+            return AccountDeleteSerializer
         return self.serializer_class
     
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
-
-
+    
     

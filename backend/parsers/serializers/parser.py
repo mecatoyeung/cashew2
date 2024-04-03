@@ -20,14 +20,6 @@ from parsers.serializers.post_processing import PostProcessingSerializer
 from parsers.serializers.integration import IntegrationSerializer
 
 
-class ParserListSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Parser
-        fields = ['id', 'type', 'guid', 'name', 'last_modified_at']
-        read_only_fields = ['id']
-
-
 class ParserSerializer(serializers.ModelSerializer):
 
     sources = SourceSerializer(
@@ -55,6 +47,7 @@ class ParserSerializer(serializers.ModelSerializer):
         fields = ['id', 'type', 'guid', 'name', 'sources', 'preprocessings',
                   'rules', 'ocr', 'splitting', 'chatbot', 'open_ai', 'open_ai_metrics_key',
                   'postprocessings', 'integrations', 'total_num_of_pages_processed', 
+                  'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
                   'last_modified_at']
         read_only_fields = ['id']
@@ -163,6 +156,20 @@ class ParserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class ParserCreateSerializer(ParserSerializer):
+
+    pass
+
+class ParserRetrieveSerializer(ParserSerializer):
+
+    pass
+
+class ParserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Parser
+        fields = ['id', 'type', 'guid', 'name', 'last_modified_at']
+        read_only_fields = ['id']
 
 class ParserUpdateSerializer(ParserSerializer):
 
@@ -170,6 +177,7 @@ class ParserUpdateSerializer(ParserSerializer):
         model = Parser
         fields = ['id', 'guid', 'type', 'name', 'ocr',
                   'chatbot', 'open_ai', 'open_ai_metrics_key', 
+                  'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
                   'last_modified_at']
         read_only_fields = ['id']
@@ -180,6 +188,7 @@ class ParserDeleteSerializer(ParserSerializer):
         model = Parser
         fields = ['id', 'guid', 'type', 'name', 'ocr',
                   'chatbot', 'open_ai', 'open_ai_metrics_key', 
+                  'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
                   'last_modified_at']
         read_only_fields = ['id']

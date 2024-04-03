@@ -14,7 +14,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-class UserSerializer(serializers.ModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
 
     profile = ProfileSerializer(required=False)
 
@@ -50,18 +50,18 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class UserCreateSerializer(UserSerializer):
+class AccountCreateSerializer(AccountSerializer):
     pass
 
-class UserListSerializer(UserSerializer):
+class AccountListSerializer(AccountSerializer):
     pass
 
-class UserRetrieveSerializer(UserSerializer):
+class AccountRetrieveSerializer(AccountSerializer):
     pass
 
-class UserUpdateSerializer(UserSerializer):
+class AccountUpdateSerializer(AccountSerializer):
     pass
 
-class UserDeleteSerializer(UserSerializer):
+class AccountDeleteSerializer(AccountSerializer):
     pass
 

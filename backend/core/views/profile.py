@@ -29,12 +29,12 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return ProfileCreateSerializer
-        if self.action == 'update':
-            return ProfileUpdateSerializer
         elif self.action == 'retrieve':
             return ProfileRetrieveSerializer
         elif self.action == 'list':
             return ProfileListSerializer
+        if self.action == 'update':
+            return ProfileUpdateSerializer
         elif self.action == 'delete':
             return ProfileDeleteSerializer
 

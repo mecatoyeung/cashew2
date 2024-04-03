@@ -1,40 +1,42 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useState, useEffect } from 'react'
 
-import { Button } from "react-bootstrap";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
+import { Button } from 'react-bootstrap'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import service from "../service";
+import service from '../service'
 
-import adminLayoutStyles from "../styles/AdminLayout.module.css";
-import axios from "axios";
+import hasPermission from '../helpers/hasPermission'
+
+import adminLayoutStyles from '../styles/AdminLayout.module.css'
+import axios from 'axios'
 
 export default function ParserLayout({ children }) {
-  const router = useRouter();
+  const router = useRouter()
 
   const [user, setUser] = useState(null)
 
   const getUser = () => {
-    service.get("user/", (response) => {
+    service.get('account/', (response) => {
       console.log(response)
       setUser(response.data)
     })
   }
 
   const logoutBtnClickHandler = () => {
-    service.post("rest-auth/logout/", {}, () => {
-      localStorage.removeItem("token");
-      router.push("/");
-    });
-  };
+    service.post('rest-auth/logout/', {}, () => {
+      localStorage.removeItem('token')
+      router.push('/')
+    })
+  }
 
   useEffect(() => {
     getUser()
-  }, []);
+  }, [])
 
   return (
     <>
@@ -53,32 +55,44 @@ export default function ParserLayout({ children }) {
             <div className="row">
               <div className="col-4 col-md-4">
                 <div className={adminLayoutStyles.logoDiv}>
-                  <Link href={
-                    router.pathname.split("/")[1] == "admin"
-                      ? "/admin/parsers"
-                      : "/workbench/parsers"
-                  }>
-                  <img
-                  src="/static/img/logo.png"
-                  width="40"
-                  height="36"
-                  alt="Cashew Docparser"
-                  />
-                </Link>
-              </div>
-                <Link href={
-                  router.pathname.split("/")[1] == "admin"
-                    ? "/admin/parsers"
-                      : "/workbench/parsers"
-                }>
+                  <Link
+                    href={
+                      router.pathname.split('/')[1] == 'admin'
+                        ? '/admin/parsers'
+                        : '/workbench/parsers'
+                    }
+                  >
+                    <img
+                      src="/static/img/logo.png"
+                      width="40"
+                      height="36"
+                      alt="Cashew Docparser"
+                    />
+                  </Link>
+                </div>
+                <Link
+                  href={
+                    router.pathname.split('/')[1] == 'admin'
+                      ? '/admin/parsers'
+                      : '/workbench/parsers'
+                  }
+                >
                   <h2>Cashew</h2>
                 </Link>
-                  <a
-                    href="#"
-                    onClick={() => router.back()}
-                    style={{ display: "inline-block", verticalAlign: "top", marginRight: 10 }}
-                  >
-                  <i className={ adminLayoutStyles.parsersIcon + " bi bi-arrow-90deg-left" }></i>
+                <a
+                  href="#"
+                  onClick={() => router.back()}
+                  style={{
+                    display: 'inline-block',
+                    verticalAlign: 'top',
+                    marginRight: 10,
+                  }}
+                >
+                  <i
+                    className={
+                      adminLayoutStyles.parsersIcon + ' bi bi-arrow-90deg-left'
+                    }
+                  ></i>
                 </a>
               </div>
               <div className="col-8 col-md-8">
@@ -90,19 +104,21 @@ export default function ParserLayout({ children }) {
                         title="Account"
                       >
                         {user && (
-                            <Dropdown.Item href="#">Welcome, {user.profile.fullName}</Dropdown.Item>
+                          <Dropdown.Item href="#">
+                            Welcome, {user.profile.fullName}
+                          </Dropdown.Item>
                         )}
-                        <Dropdown.Item
-                          href={
-                            router.pathname.split("/")[1] == "admin"
-                              ? "/workbench/parsers"
-                              : "/admin/parsers"
-                          }
-                        >
-                          {router.pathname.split("/")[1] == "admin"
-                            ? "Switch to Workbench"
-                            : "Switch to Admin Console"}
-                        </Dropdown.Item>
+                        {router.pathname.split('/')[1] == 'admin' && (
+                          <Dropdown.Item href="/workbench/parsers">
+                            Switch to Workbench
+                          </Dropdown.Item>
+                        )}
+                        {router.pathname.split('/')[1] == 'workbench' &&
+                          hasPermission('cashew_parser_management') && (
+                            <Dropdown.Item href="/admin/parsers">
+                              Switch to Admin Console
+                            </Dropdown.Item>
+                          )}
                         <Dropdown.Item href="/account/profile">
                           Account
                         </Dropdown.Item>
@@ -121,11 +137,11 @@ export default function ParserLayout({ children }) {
           </div>
         </header>
         <hr className={adminLayoutStyles.headerHr} />
-        <main className={adminLayoutStyles.main + " d-flex flex-column"}>
+        <main className={adminLayoutStyles.main + ' d-flex flex-column'}>
           <div
             className={
               adminLayoutStyles.sideNavContainerDiv +
-              " container-md d-flex flex-grow-1"
+              ' container-md d-flex flex-grow-1'
             }
           >
             <div className="row d-flex flex-grow-1">
@@ -151,5 +167,5 @@ export default function ParserLayout({ children }) {
         </footer>
       </div>
     </>
-  );
+  )
 }
