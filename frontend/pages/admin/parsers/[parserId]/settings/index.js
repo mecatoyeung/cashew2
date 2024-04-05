@@ -45,6 +45,8 @@ const Settings = () => {
 
   const [updatedParser, setUpdatedParser] = useState(false)
 
+  const [users, setUsers] = useState([])
+
   const [importModal, setImportModal] = useState({
     show: false,
     selectedFile: null,
@@ -56,6 +58,20 @@ const Settings = () => {
     service.get('parsers/' + parserId + '/', (response) => {
       console.log(response.data)
       setParser(response.data)
+    })
+  }
+
+  const getUsers = () => {
+    service.get('users/', (response) => {
+      console.log(response.data)
+      setUsers(
+        response.data.map((u) => {
+          return {
+            value: u.id,
+            label: u.profile.fullName,
+          }
+        })
+      )
     })
   }
 
@@ -97,6 +113,27 @@ const Settings = () => {
   const sameColumnAcceptanceRangeChangeHandler = (e) => {
     let updatedParser = { ...parser }
     updatedParser.sameColumnAcceptanceRange = e.target.value
+    setParser(updatedParser)
+  }
+
+  const ownerChangeHandler = (e) => {
+    let updatedParser = { ...parser }
+    updatedParser.owner = { id: e.value }
+    setParser(updatedParser)
+  }
+
+  const permittedUsersChangeHandler = (e) => {
+    let updatedParser = { ...parser }
+    let permittedUsers = []
+    console.log(e)
+    for (let i = 0; i < e.length; i++) {
+      console.log(users.filter((u) => u.value == e[i].value))
+      if (users.filter((u) => u.value == e[i].value).length > 0) {
+        permittedUsers.push({ id: e[i].value })
+      }
+    }
+    console.log(permittedUsers)
+    updatedParser.permittedUsers = permittedUsers
     setParser(updatedParser)
   }
 
@@ -277,6 +314,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (!router.isReady) return
+    getUsers()
   }, [router.isReady])
 
   const { parserId } = router.query
@@ -362,6 +400,53 @@ const Settings = () => {
                   step={0.05}
                   value={parser.sameColumnAcceptanceRange}
                   onChange={sameColumnAcceptanceRangeChangeHandler}
+                />
+              </Form.Group>
+              <Button
+                variant="primary"
+                onClick={parserSettingsSaveBtnClickHandler}
+              >
+                Save
+              </Button>
+            </Card.Body>
+          </Card>
+        )}
+        {parser && (
+          <Card style={{ width: '100%', marginBottom: 10 }}>
+            <Card.Body>
+              <Card.Title>Permissions</Card.Title>
+              <Form.Group className="mb-3" controlId="formAssumedTextWidth">
+                <Form.Label>Owner</Form.Label>
+                <Select
+                  options={users}
+                  value={users.find((oo) => oo.value == parser.owner.id)}
+                  onChange={(e) => ownerChangeHandler(e)}
+                  menuPlacement="auto"
+                  menuPosition="fixed"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formAssumedTextWidth">
+                <Form.Label>Permitted users to manage this parser</Form.Label>
+                <Select
+                  options={users}
+                  value={users.filter((oo) =>
+                    parser.permittedUsers.map((u) => u.id).includes(oo.value)
+                  )}
+                  onChange={permittedUsersChangeHandler}
+                  isMulti
+                  menuPlacement="auto"
+                  menuPosition="fixed"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formAssumedTextHeight">
+                <Form.Label>Permitted groups to manage this parser</Form.Label>
+                <Select
+                  options={users}
+                  value={users.find((oo) => oo.value == parser.owner.id)}
+                  onChange={(e) => {}}
+                  isMulti
+                  menuPlacement="auto"
+                  menuPosition="fixed"
                 />
               </Form.Group>
               <Button

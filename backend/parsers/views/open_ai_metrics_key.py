@@ -22,7 +22,7 @@ class OpenAIMetricsKeyViewSet(viewsets.ModelViewSet):
 
         return queryset \
             .filter(
-                parser__user=self.request.user
+                parser__owner=self.request.user
             ).order_by('id').distinct()
 
     def get_serializer_class(self):

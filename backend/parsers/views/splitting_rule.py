@@ -22,7 +22,7 @@ class SplittingRuleViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         return queryset.filter(
-            splitting__parser__user=self.request.user
+            splitting__parser__owner=self.request.user
         ).order_by('id').distinct()
 
     def get_serializer_class(self):

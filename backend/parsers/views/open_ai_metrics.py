@@ -55,7 +55,7 @@ class OpenAIMetricsViewSet(viewsets.ReadOnlyModelViewSet):
 
         return queryset \
             .filter(
-                parser__user=self.request.user,
+                parser__owner=self.request.user,
                 parser_id=parser_id,
                 date__range=[start_date, end_date]
             ).order_by('id').distinct()

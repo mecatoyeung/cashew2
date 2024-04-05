@@ -29,7 +29,7 @@ class StreamViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         return queryset.filter(
-            rule__parser__user=self.request.user
+            rule__parser__owner=self.request.user
         ).order_by('id').distinct()
 
     def get_serializer_class(self):

@@ -64,12 +64,12 @@ class QueueViewSet(viewsets.ModelViewSet):
 
             return queryset.filter(
                 parser_id=parser_id,
-                parser__user=self.request.user,
+                parser__owner=self.request.user,
                 queue_class__in=queue_classes
             ).order_by('id').distinct()
         else:
             return queryset.filter(
-                parser__user=self.request.user,
+                parser__owner=self.request.user,
             ).order_by('id').distinct()
 
     def get_serializer_class(self):

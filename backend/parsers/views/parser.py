@@ -88,7 +88,9 @@ class ParserViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         if self.action == "retrieve":
-            queryset = queryset.select_related("ocr") \
+            queryset = queryset\
+                .select_related("owner")\
+                .select_related("ocr") \
                 .select_related("chatbot") \
                 .select_related("open_ai") \
                 .select_related("open_ai_metrics_key") \
@@ -107,11 +109,14 @@ class ParserViewSet(viewsets.ModelViewSet):
                                                                       queryset=ConsecutivePageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
                                            .prefetch_related(Prefetch("last_page_splitting_rules",
                                                                       queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions")))
-                                           ))
+                                           ))\
+                .prefetch_related("permitted_users")\
+                .prefetch_related("permitted_groups")
             
             return queryset
 
         return queryset.prefetch_related("rules") \
+            .select_related("owner")\
             .select_related("chatbot") \
             .select_related("ocr") \
             .order_by('id').distinct()

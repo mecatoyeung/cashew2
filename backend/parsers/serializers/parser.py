@@ -7,6 +7,7 @@ from parsers.models.open_ai import OpenAI
 from parsers.models.open_ai_metrics_key import OpenAIMetricsKey
 from parsers.models.splitting import Splitting
 
+from core.serializers.users import UsersSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.pre_processing import PreProcessingSerializer
@@ -41,6 +42,8 @@ class ParserSerializer(serializers.ModelSerializer):
         many=True, required=False, allow_null=False)
     integrations = IntegrationSerializer(
         many=True, required=False, allow_null=False)
+    owner = UsersSerializer(
+        many=False, required=False, allow_null=True)
 
     class Meta:
         model = Parser
@@ -49,6 +52,7 @@ class ParserSerializer(serializers.ModelSerializer):
                   'postprocessings', 'integrations', 'total_num_of_pages_processed', 
                   'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'owner', 'permitted_users', 'permitted_groups',
                   'last_modified_at']
         read_only_fields = ['id']
 
@@ -179,6 +183,7 @@ class ParserUpdateSerializer(ParserSerializer):
                   'chatbot', 'open_ai', 'open_ai_metrics_key', 
                   'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'owner', 'permitted_users', 'permitted_groups',
                   'last_modified_at']
         read_only_fields = ['id']
 
@@ -190,6 +195,7 @@ class ParserDeleteSerializer(ParserSerializer):
                   'chatbot', 'open_ai', 'open_ai_metrics_key', 
                   'pdf_to_image_dpi',
                   'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'owner', 'permitted_users', 'permitted_groups',
                   'last_modified_at']
         read_only_fields = ['id']
 
