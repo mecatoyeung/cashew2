@@ -10,6 +10,5 @@ export default function hasPermission(checkingPermission) {
       'sonikgloballimited'
     ).toString(CryptoJS.enc.Utf8)
   )
-  console.log(allPermissions)
   return allPermissions.includes(checkingPermission)
 }

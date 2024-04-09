@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from rest_access_policy import FieldAccessMixin
+
 from parsers.models.ocr import OCR
 
 from parsers.serializers.rule import RuleSerializer
@@ -33,3 +35,15 @@ class OCRSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class ProtectedOCRSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OCR
+        fields = ['id', 'guid', 'ocr_type',
+                  'paddle_ocr_language', 
+                  'omnipage_ocr_language', 
+                  'ocr_image_layer_type', 'image_layer_preprocessing', 
+                  'detect_searchable',
+                  'debug']
+        read_only_fields = ['id']

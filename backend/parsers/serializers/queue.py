@@ -16,12 +16,12 @@ from parsers.models.queue import Queue
 from parsers.models.queue import QueueClass
 from parsers.models.queue_status import QueueStatus
 
-from parsers.serializers.nested.document import DocumentSerializer
+#from parsers.serializers.nested.document import DocumentSerializer
 
 from backend import settings
 
 
-"""class DocumentPageSerializer(serializers.ModelSerializer):
+class QueueDocumentPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DocumentPage
@@ -38,10 +38,9 @@ from backend import settings
         ]
         read_only_fields = ['id']
 
+class QueueDocumentSerializer(serializers.ModelSerializer):
 
-class DocumentSerializer(serializers.ModelSerializer):
-
-    document_pages = DocumentPageSerializer(many=True, read_only=True)
+    document_pages = QueueDocumentPageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Document
@@ -58,13 +57,11 @@ class DocumentSerializer(serializers.ModelSerializer):
             'last_modified_at',
             'document_pages',
         ]
-        read_only_fields = ['id']"""
-
+        read_only_fields = ['id']
 
 class QueueSerializer(serializers.ModelSerializer):
 
-    """document = DocumentSerializer(
-        many=False, required=False, allow_null=True)"""
+
     document = serializers.SerializerMethodField()
 
     class Meta:
@@ -81,9 +78,9 @@ class QueueSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
-    @extend_schema_field(DocumentSerializer)
+    @extend_schema_field(QueueDocumentSerializer)
     def get_document(self, obj):
-        return DocumentSerializer(obj.document).data
+        return QueueDocumentSerializer(obj.document).data
 
     def create(self, validated_data):
         """ Create a queue. """

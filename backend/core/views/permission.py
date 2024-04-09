@@ -14,9 +14,11 @@ from django.contrib.auth import get_user_model
 
 from django.contrib.auth.models import User,\
     Permission
-
+from core.serializers.permission import PermissionSerializer
 
 class PermissionViewSet(viewsets.GenericViewSet):
+
+    serializer_class = PermissionSerializer
 
     @action(detail=False,
             methods=['GET'],

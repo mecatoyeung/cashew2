@@ -34,3 +34,13 @@ class ChatBotSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class ProtectedChatBotSerializer(ChatBotSerializer):
+
+    class Meta:
+        model = ChatBot
+        fields = ['id', 'guid', 'chatbot_type',
+                  'open_ai_default_question',
+                  'base_url']
+        read_only_fields = ['id']
+

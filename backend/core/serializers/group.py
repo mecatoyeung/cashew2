@@ -2,10 +2,12 @@ from rest_framework import serializers
 
 from django.contrib.auth.models import Group, User, Permission
 
+from parsers.models.parser import Parser
+
 class GroupSerializer(serializers.ModelSerializer):
 
     user_ids = serializers.SerializerMethodField()
-    permission_codenames = serializers.SerializerMethodField()
+    permission_codenames = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Group
@@ -21,7 +23,7 @@ class GroupSerializer(serializers.ModelSerializer):
 class GroupCreateSerializer(GroupSerializer):
     
     user_ids = serializers.ListField(child = serializers.IntegerField())
-    permission_codenames = serializers.ListField(child = serializers.CharField())
+    permission_codenames = serializers.ListField(child = serializers.CharField(), read_only=True)
     
     def create(self, validated_data):
         user_ids = validated_data.pop(
@@ -64,8 +66,10 @@ class GroupUpdateSerializer(GroupSerializer):
         
         permission_codenames = validated_data.pop(
             "permission_codenames", None)
+        
+        """permitted_parser_ids = map(lambda p: p.id, instance.permitted_parsers.all())"""
 
-        Group.objects.filter(id=instance.id).delete()
+        """Group.objects.filter(id=instance.id).delete()"""
 
         """ Update Group. """
         for attr, value in validated_data.items():
@@ -85,6 +89,12 @@ class GroupUpdateSerializer(GroupSerializer):
             instance.permissions.set(permission_objs)
 
         instance.permission_codenames = permission_codenames
+
+        """for permitted_parser_id in permitted_parser_ids:
+            permitted_parser = Parser()
+            permitted_parser.id = permitted_parser_id
+            permitted_parser.permitted_groups.add(permitted_parser)
+            permitted_parser.save()"""
 
         return instance
 

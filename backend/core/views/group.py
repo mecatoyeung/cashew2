@@ -22,7 +22,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     
     serializer_class = GroupSerializer
     model = Group
-    queryset = Group.objects
+    queryset = Group.objects.prefetch_related("permitted_parsers")
     authentication_classes = ([TokenAuthentication])
     permission_classes = [IsAuthenticated]
 

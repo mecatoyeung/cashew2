@@ -18,7 +18,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class UsersSerializer(serializers.ModelSerializer):
 
     profile = ProfileSerializer(required=False)
-    groups = GroupSerializer(many=True, required=False)
+    groups = GroupSerializer(many=True, required=False, read_only=True)
     permission_codenames = serializers.SerializerMethodField()
 
     class Meta:

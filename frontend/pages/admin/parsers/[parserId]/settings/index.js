@@ -45,13 +45,17 @@ const Settings = () => {
 
   const [updatedParser, setUpdatedParser] = useState(false)
 
-  const [users, setUsers] = useState([])
+  const [parserErrorMessage, setParserErrorMessage] = useState('')
+  const [permissionSettingsErrorMessage, setPermissionSettingsErrorMessage] =
+    useState('')
 
-  const [importModal, setImportModal] = useState({
+  const [account, setAccount] = useState(null)
+  const [users, setUsers] = useState([])
+  const [groups, setGroups] = useState([])
+
+  const [transferOwnerModal, setTransferOwnerModal] = useState({
     show: false,
-    selectedFile: null,
-    parserName: '',
-    parserNameMatched: true,
+    ownerId: null,
   })
 
   const getParser = () => {
@@ -61,24 +65,46 @@ const Settings = () => {
     })
   }
 
+  const getAccount = () => {
+    service.get('account/', (response) => {
+      setAccount(response.data)
+    })
+  }
+
   const getUsers = () => {
+    if (!account) return
     service.get('users/', (response) => {
-      console.log(response.data)
       setUsers(
         response.data.map((u) => {
-          return {
-            value: u.id,
-            label: u.profile.fullName,
+          if (u.id == account.id) {
+            return {
+              value: u.id,
+              label: u.profile.fullName + ' (current user)',
+            }
+          } else {
+            return {
+              value: u.id,
+              label: u.profile.fullName,
+            }
           }
         })
       )
     })
   }
 
-  useEffect(() => {
-    if (!router.isReady) return
-    getParser()
-  }, [router.isReady])
+  const getGroups = () => {
+    service.get('groups/', (response) => {
+      console.log(response.data)
+      setGroups(
+        response.data.map((u) => {
+          return {
+            value: u.id,
+            label: u.name,
+          }
+        })
+      )
+    })
+  }
 
   const parserNameChangeHandler = (e) => {
     let updatedParser = { ...parser }
@@ -118,32 +144,95 @@ const Settings = () => {
 
   const ownerChangeHandler = (e) => {
     let updatedParser = { ...parser }
-    updatedParser.owner = { id: e.value }
+    updatedParser.owner = e.value
     setParser(updatedParser)
   }
 
   const permittedUsersChangeHandler = (e) => {
     let updatedParser = { ...parser }
     let permittedUsers = []
-    console.log(e)
     for (let i = 0; i < e.length; i++) {
-      console.log(users.filter((u) => u.value == e[i].value))
       if (users.filter((u) => u.value == e[i].value).length > 0) {
-        permittedUsers.push({ id: e[i].value })
+        permittedUsers.push(e[i].value)
       }
     }
-    console.log(permittedUsers)
     updatedParser.permittedUsers = permittedUsers
     setParser(updatedParser)
   }
 
-  const parserSettingsSaveBtnClickHandler = () => {
-    updateParser()
+  const permittedGroupsChangeHandler = (e) => {
+    let updatedParser = { ...parser }
+    let permittedGroups = []
+    for (let i = 0; i < e.length; i++) {
+      if (groups.filter((u) => u.value == e[i].value).length > 0) {
+        permittedGroups.push(e[i].value)
+      }
+    }
+    updatedParser.permittedGroups = permittedGroups
+    setParser(updatedParser)
+  }
+
+  const openTransferOwnerModalHandler = (e) => {
+    let updatedTransferOwnerModal = { ...transferOwnerModal }
+    updatedTransferOwnerModal.show = true
+    updatedTransferOwnerModal.ownerId = parser.owner.id
+    setTransferOwnerModal(updatedTransferOwnerModal)
+  }
+
+  const closeTransferOwnerModalHandler = (e) => {
+    let updatedTransferOwnerModal = { ...transferOwnerModal }
+    updatedTransferOwnerModal.show = false
+    setTransferOwnerModal(updatedTransferOwnerModal)
+  }
+
+  const confirmTransferOwnerBtnClickHandler = () => {
+    service.post(
+      `parsers/${parserId}/transfer_owner/${transferOwnerModal.ownerId}/`,
+      {},
+      (response) => {
+        let updatedTransferOwnerModal = { ...transferOwnerModal }
+        updatedTransferOwnerModal.show = false
+        setTransferOwnerModal(updatedTransferOwnerModal)
+        getParser()
+      }
+    )
+  }
+
+  const transferOwnerChangeHandler = (e) => {
+    let updatedTransferOwnerModal = { ...transferOwnerModal }
+    updatedTransferOwnerModal.ownerId = e.value
+    setTransferOwnerModal(updatedTransferOwnerModal)
+  }
+
+  const permissionSettingsSaveBtnClickHandler = () => {
+    service.put(
+      'parsers/' + parserId + '/',
+      parser,
+      (response) => {
+        //router.replace(router.asPath)
+        setUpdatedParser(!updatedParser)
+      },
+      (errorResponse) => {
+        if (errorResponse.response.status == 403) {
+          setPermissionSettingsErrorMessage('Permission Denied.')
+        }
+      }
+    )
   }
 
   const parserSaveBtnClickHandler = () => {
-    updateParser()
-    setUpdatedParser(!updatedParser)
+    service.put(
+      'parsers/' + parserId + '/',
+      parser,
+      (response) => {
+        setUpdatedParser(!updatedParser)
+      },
+      (errorResponse) => {
+        if (errorResponse.response.status == 403) {
+          setParserErrorMessage('Permission Denied.')
+        }
+      }
+    )
   }
 
   const exportBtnClickHandler = () => {
@@ -309,13 +398,36 @@ const Settings = () => {
   }
 
   const updateParser = () => {
-    service.put('parsers/' + parserId + '/', parser, (response) => {})
+    service.put(
+      'parsers/' + parserId + '/',
+      parser,
+      (response) => {
+        //router.replace(router.asPath)
+        setUpdatedParser(!updatedParser)
+      },
+      (errorResponse) => {
+        console.log(errorResponse)
+        if (errorResponse.response.status == 403) {
+        }
+      }
+    )
   }
 
   useEffect(() => {
     if (!router.isReady) return
-    getUsers()
+    getParser()
   }, [router.isReady])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    getGroups()
+    getAccount()
+  }, [router.isReady])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    getUsers()
+  }, [router.isReady, account])
 
   const { parserId } = router.query
 
@@ -333,6 +445,9 @@ const Settings = () => {
                   value={parser.name}
                 />
               </Form.Group>
+              {parserErrorMessage && parserErrorMessage != '' && (
+                <p style={{ color: 'red' }}>{parserErrorMessage}</p>
+              )}
               <Button variant="primary" onClick={parserSaveBtnClickHandler}>
                 Save
               </Button>
@@ -402,16 +517,16 @@ const Settings = () => {
                   onChange={sameColumnAcceptanceRangeChangeHandler}
                 />
               </Form.Group>
-              <Button
-                variant="primary"
-                onClick={parserSettingsSaveBtnClickHandler}
-              >
+              {parserErrorMessage && parserErrorMessage != '' && (
+                <p style={{ color: 'red' }}>{parserErrorMessage}</p>
+              )}
+              <Button variant="primary" onClick={parserSaveBtnClickHandler}>
                 Save
               </Button>
             </Card.Body>
           </Card>
         )}
-        {parser && (
+        {parser && users && (
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>
               <Card.Title>Permissions</Card.Title>
@@ -419,8 +534,22 @@ const Settings = () => {
                 <Form.Label>Owner</Form.Label>
                 <Select
                   options={users}
-                  value={users.find((oo) => oo.value == parser.owner.id)}
+                  value={users.find((oo) => oo.value == parser.owner)}
                   onChange={(e) => ownerChangeHandler(e)}
+                  menuPlacement="auto"
+                  menuPosition="fixed"
+                  isDisabled={true}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formAssumedTextHeight">
+                <Form.Label>Permitted groups to manage this parser</Form.Label>
+                <Select
+                  options={groups}
+                  value={groups.filter((oo) =>
+                    parser.permittedGroups.map((u) => u).includes(oo.value)
+                  )}
+                  onChange={permittedGroupsChangeHandler}
+                  isMulti
                   menuPlacement="auto"
                   menuPosition="fixed"
                 />
@@ -430,7 +559,7 @@ const Settings = () => {
                 <Select
                   options={users}
                   value={users.filter((oo) =>
-                    parser.permittedUsers.map((u) => u.id).includes(oo.value)
+                    parser.permittedUsers.map((u) => u).includes(oo.value)
                   )}
                   onChange={permittedUsersChangeHandler}
                   isMulti
@@ -438,23 +567,63 @@ const Settings = () => {
                   menuPosition="fixed"
                 />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formAssumedTextHeight">
-                <Form.Label>Permitted groups to manage this parser</Form.Label>
-                <Select
-                  options={users}
-                  value={users.find((oo) => oo.value == parser.owner.id)}
-                  onChange={(e) => {}}
-                  isMulti
-                  menuPlacement="auto"
-                  menuPosition="fixed"
-                />
-              </Form.Group>
+              {permissionSettingsErrorMessage &&
+                permissionSettingsErrorMessage != '' && (
+                  <p style={{ color: 'red' }}>
+                    {permissionSettingsErrorMessage}
+                  </p>
+                )}
               <Button
                 variant="primary"
-                onClick={parserSettingsSaveBtnClickHandler}
+                onClick={permissionSettingsSaveBtnClickHandler}
               >
                 Save
               </Button>
+              {parser && account && parser.owner == account.id && (
+                <>
+                  <Button
+                    variant="primary"
+                    style={{ marginLeft: 10 }}
+                    onClick={openTransferOwnerModalHandler}
+                  >
+                    Transfer Owner
+                  </Button>
+                  <Modal
+                    show={transferOwnerModal.show}
+                    onHide={closeTransferOwnerModalHandler}
+                  >
+                    <Modal.Header closeButton>
+                      <Modal.Title>Transfer Owner</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <p>Are you sure to continue?</p>
+                      <Select
+                        options={users.filter((u) => u.value != account.id)}
+                        value={users.find(
+                          (oo) => oo.value == transferOwnerModal.ownerId
+                        )}
+                        onChange={(e) => transferOwnerChangeHandler(e)}
+                        menuPlacement="auto"
+                        menuPosition="fixed"
+                      />
+                    </Modal.Body>
+                    <Modal.Footer>
+                      <Button
+                        variant="primary"
+                        onClick={confirmTransferOwnerBtnClickHandler}
+                      >
+                        Transfer Owner
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={closeTransferOwnerModalHandler}
+                      >
+                        Close
+                      </Button>
+                    </Modal.Footer>
+                  </Modal>
+                </>
+              )}
             </Card.Body>
           </Card>
         )}
@@ -589,7 +758,6 @@ const Settings = () => {
             </Card.Body>
           </Card>
         )}
-        {console.log(parser)}
         {parser && parser.openAiMetricsKey && (
           <Card style={{ width: '100%', marginBottom: 10 }}>
             <Card.Body>

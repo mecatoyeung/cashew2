@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from django.contrib.auth.models import User, Group
+
 from parsers.models.parser import Parser
 from parsers.models.ocr import OCR
 from parsers.models.chatbot import ChatBot
@@ -8,10 +10,12 @@ from parsers.models.open_ai_metrics_key import OpenAIMetricsKey
 from parsers.models.splitting import Splitting
 
 from core.serializers.users import UsersSerializer
+from core.serializers.group import GroupSerializer
+
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.pre_processing import PreProcessingSerializer
-from parsers.serializers.ocr import OCRSerializer
+from parsers.serializers.ocr import OCRSerializer, ProtectedOCRSerializer
 from parsers.serializers.chatbot import ChatBotSerializer
 from parsers.serializers.splitting import SplittingSerializer
 from parsers.serializers.open_ai import OpenAISerializer
@@ -42,8 +46,13 @@ class ParserSerializer(serializers.ModelSerializer):
         many=True, required=False, allow_null=False)
     integrations = IntegrationSerializer(
         many=True, required=False, allow_null=False)
-    owner = UsersSerializer(
-        many=False, required=False, allow_null=True)
+    owner = serializers.PrimaryKeyRelatedField(
+        many=False, queryset=User.objects.all(),
+        default=None)
+    permitted_users = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all())
+    permitted_groups = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Group.objects.all())
 
     class Meta:
         model = Parser
@@ -124,6 +133,9 @@ class ParserSerializer(serializers.ModelSerializer):
         open_ai_validated_data = validated_data.pop("open_ai", None)
         open_ai_metrics_key_validated_data = validated_data.pop("open_ai_metrics_key", None)
         splitting = validated_data.pop("splitting", None)
+        owner =  validated_data.pop("owner", None)
+        permitted_users =  validated_data.pop("permitted_users", None)
+        permitted_groups =  validated_data.pop("permitted_groups", None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -156,6 +168,12 @@ class ParserSerializer(serializers.ModelSerializer):
             splitting = Splitting.objects.get(parser_id=instance.id)
             instance.splitting.delete()
             self._get_or_create_splitting(splitting, instance)
+
+        if permitted_users is not None:
+            instance.permitted_users.set(permitted_users)
+
+        if permitted_groups is not None:
+            instance.permitted_groups.set(permitted_groups)
 
         instance.save()
         return instance
@@ -208,3 +226,8 @@ class ParserExportSerializer(ParserSerializer):
 class ParserImportSerializer(ParserSerializer):
 
     pass
+
+class ProtectedParserSerializer(ParserSerializer):
+
+    ocr = ProtectedOCRSerializer(
+        many=False, required=True, allow_null=True)

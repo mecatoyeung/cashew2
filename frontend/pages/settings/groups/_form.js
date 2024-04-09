@@ -110,7 +110,11 @@ export default function _GroupForm(props) {
         router.push('/settings/groups')
       },
       (error) => {
-        console.log(error)
+        setGroupForm(
+          produce((draft) => {
+            draft.submitting = false
+          })
+        )
         setFormErrorMessages(error.response.data)
       }
     )
@@ -245,52 +249,46 @@ export default function _GroupForm(props) {
               )}
             </Form.Group>
           </Row>
-          {console.log(groupForm)}
           <Row>
-            {groupForm.id != 0 && (
-              <Form.Group
-                as={Col}
-                className={accountStyles.col + ' xs-12' + ' md-12'}
-                controlId="formPermissions"
-              >
-                <Form.Label>Permissions</Form.Label>
-                <FormCheck
-                  label="User Management"
-                  onChange={(e) =>
-                    permissionCheckHandler(e, 'cashew_user_management')
-                  }
-                  checked={groupForm.permissions.includes(
-                    'cashew_user_management'
-                  )}
-                />
-                <FormCheck
-                  label="Parser Management"
-                  onChange={(e) =>
-                    permissionCheckHandler(e, 'cashew_parser_management')
-                  }
-                  checked={groupForm.permissions.includes(
-                    'cashew_parser_management'
-                  )}
-                />
-                <FormCheck
-                  label="User can assign another user to the parser"
-                  onChange={(e) =>
-                    permissionCheckHandler(
-                      e,
-                      'cashew_parser_assign_permissions'
-                    )
-                  }
-                  checked={groupForm.permissions.includes(
-                    'cashew_parser_assign_permissions'
-                  )}
-                />
-                {!formValidation.isValid && (
-                  <div className="formErrorMessage">
-                    {formValidation.errorMessages.permissionCodenames}
-                  </div>
+            <Form.Group
+              as={Col}
+              className={accountStyles.col + ' xs-12' + ' md-12'}
+              controlId="formPermissions"
+            >
+              <Form.Label>Permissions</Form.Label>
+              <FormCheck
+                label="User Management"
+                onChange={(e) =>
+                  permissionCheckHandler(e, 'cashew_user_management')
+                }
+                checked={groupForm.permissions.includes(
+                  'cashew_user_management'
                 )}
-              </Form.Group>
-            )}
+              />
+              <FormCheck
+                label="Parser Management"
+                onChange={(e) =>
+                  permissionCheckHandler(e, 'cashew_parser_management')
+                }
+                checked={groupForm.permissions.includes(
+                  'cashew_parser_management'
+                )}
+              />
+              <FormCheck
+                label="User can assign another user to the parser"
+                onChange={(e) =>
+                  permissionCheckHandler(e, 'cashew_parser_assign_permissions')
+                }
+                checked={groupForm.permissions.includes(
+                  'cashew_parser_assign_permissions'
+                )}
+              />
+              {!formValidation.isValid && (
+                <div className="formErrorMessage">
+                  {formValidation.errorMessages.permissionCodenames}
+                </div>
+              )}
+            </Form.Group>
           </Row>
           {formSuccessMessage && formSuccessMessage.length > 0 && (
             <Row>

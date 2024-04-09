@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from django.http import StreamingHttpResponse
 from rest_framework.authentication import SessionAuthentication
+from django.contrib.auth.models import User
 
 import requests
 import json
@@ -53,13 +54,14 @@ from parsers.serializers.parser import ParserSerializer,\
     ParserUpdateSerializer,\
     ParserDeleteSerializer,\
     ParserExportSerializer,\
-    ParserImportSerializer
+    ParserImportSerializer,\
+    ProtectedParserSerializer
 from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.integration import IntegrationSerializer
 from parsers.serializers.splitting import SplittingSerializer
 
-from parsers.permissions.parser_management import ParserManagementPermission
+from core.permissions.parser_management import ParserManagementPermission
 
 from parsers.helpers.document_parser import DocumentParser
 
@@ -72,7 +74,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 
 class ParserViewSet(viewsets.ModelViewSet):
-    """ View for manage recipe APIs. """
+    """ View for manage parser APIs. """
     serializer_class = ParserSerializer
     queryset = Parser.objects.all()
     authentication_classes = [
@@ -126,7 +128,22 @@ class ParserViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return ParserCreateSerializer
         elif self.action == "retrieve":
-            return ParserRetrieveSerializer
+            if self.request.user.is_superuser:
+                return ParserRetrieveSerializer
+            else:
+                if self.request.user.has_perm("parsers.cashew_parser_management"):
+                    obj = self.get_object()
+                    if obj.owner.id == self.request.user.id:
+                        return ParserRetrieveSerializer
+                    for permitted_user in obj.permitted_users.all():
+                        if permitted_user.id == self.request.user.id:
+                            return ParserRetrieveSerializer
+                    for permitted_group in obj.permitted_groups.all():
+                        users = User.objects.filter(groups__id=permitted_group.id)
+                        for user in users:
+                            if user.id == self.request.user.id:
+                                return ParserRetrieveSerializer
+            return ProtectedParserSerializer
         elif self.action == 'list':
             return ParserListSerializer
         elif self.action == 'update':
@@ -266,6 +283,252 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"message": "ERROR", "detail": str(e)}, status=400)
+        
+    
+    @action(detail=True,
+            methods=['GET'],
+            name='Get All Texts',
+            url_path='documents/(?P<document_id>[^/.]+)/extract_all_text')
+    def extract_all_text(self, request, pk, document_id, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=int(pk))
+
+        document = Document.objects.get(id=document_id)
+
+        document_parser = DocumentParser(parser, document)
+
+        result = document_parser.extract_all_text_in_all_pages()
+
+        return Response(result, status=200)
+    
+    @action(detail=True,
+            methods=['POST'],
+            name='Ask OpenAI about PDF content',
+            url_path='documents/(?P<document_id>[^/.]+)/ask_chatbot')
+    def ask_openai_about_pdf_content(self, request, pk, document_id, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=int(pk))
+
+        document = Document.objects.get(id=document_id)
+
+        document_parser = DocumentParser(parser, document)
+
+        chatbot = ChatBot.objects.get(parser_id=parser.id)
+
+        question = request.data["question"]
+
+        if question == "":
+            return Response("Please ask me with meaningful questions.", status=200)
+
+        if chatbot.chatbot_type == ChatBotType.OPEN_AI.value:
+
+            content_to_be_sent_to_openai = "\n".join(
+                document_parser.extract_all_text_in_all_pages())
+
+            content_to_be_sent_to_openai = re.sub(
+                ' +', '\n', content_to_be_sent_to_openai)
+
+            try:
+
+                headers = {
+                    "Content-Type": "application/json",
+                    "api-key": chatbot.open_ai_api_key
+                }
+                open_ai_content = question + " Please control the output in depth of 3 only. Please return in JSON format.\nInput: " + \
+                    content_to_be_sent_to_openai
+                json_data = {
+                    "messages": [{"role": "user", "content": open_ai_content}],
+                    "temperature": 0.2
+                }
+
+                response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/' + chatbot.open_ai_deployment + '/chat/completions?api-version=2023-05-15',
+                                         data=json.dumps(json_data), headers=headers)
+                if response.status_code == 400:
+                    raise Exception(response.json()["error"]["message"])
+                try:
+                    s = response.json()["choices"][0]["message"]['content'].replace(
+                        "Output:", "")
+                    while True:
+                        try:
+                            # try to parse...
+                            response_dict = json.loads(s)
+                            break                    # parsing worked -> exit loop
+                        except Exception as e:
+                            # "Expecting , delimiter: line 34 column 54 (char 1158)"
+                            # position of unexpected character after '"'
+                            unexp = int(re.findall(
+                                r'\(char (\d+)\)', str(e))[0])
+                            # position of unescaped '"' before that
+                            second_unesc = s.rfind(r'"', 0, unexp)
+                            first_unesc = s.rfind(r'"', 0, second_unesc)
+                            s = s[:first_unesc] + s[second_unesc+3:]
+
+                except:
+                    print(traceback.format_exc())
+                    response_dict = {
+                        "Message": "Encountered errors. Please try again or contact system administrator."
+                    }
+                    return Response(response_dict, status.HTTP_400_BAD_REQUEST)
+
+                return StreamingHttpResponse(
+                    json.dumps(response_dict), status=200,
+                    content_type='text/event-stream')
+
+            except Exception as e:
+                print(traceback.format_exc())
+                return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
+
+        elif chatbot.chatbot_type == ChatBotType.ON_PREMISE_AI.value:
+
+            try:
+
+                content_to_be_sent_to_openai = "\n".join(
+                    document_parser.extract_all_text_in_all_pages())
+                chatbot_content = question + " Please return in JSON format.\nInput: " + \
+                    content_to_be_sent_to_openai
+
+                def generate_response(content):
+                    s = requests.Session()
+                    headers = {}
+                    payload = {
+                        "model": "gpt-3.5-turbo",
+                        "messages": [{"role": "user", "content": content}],
+                        "stream": True,
+                        "temperature": 0.7
+                    }
+                    with s.post(chatbot.base_url,
+                                headers=headers,
+                                json=payload,
+                                stream=True) as resp:
+
+                        for line in resp.iter_lines():
+                            if line:
+                                try:
+                                    line = line.decode("utf-8")
+                                    if line.startswith("data: "):
+                                        line = line.replace('data: ', '', 1)
+                                    print(line)
+                                    if line == None:
+                                        continue
+                                    json_line = json.loads(line)
+                                    data = json_line["choices"][0]["delta"]["content"]
+                                    yield data
+                                except:
+                                    print(traceback.format_exc())
+                                    pass
+
+                return StreamingHttpResponse(
+                    generate_response(chatbot_content), status=200, content_type='text/event-stream')
+
+            except Exception as e:
+                print(traceback.format_exc())
+                response_dict = {
+                        "Message": "Encountered errors. Please try again or contact system administrator."
+                    }
+                return Response(response_dict, status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True,
+            methods=['GET'],
+            name='Get All Texts in One Page',
+            url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
+    def extract_all_text_in_one_page(self, request, pk, document_id, page_num, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=int(pk))
+
+        document = Document.objects.get(id=document_id)
+
+        document_parser = DocumentParser(parser, document)
+
+        result = document_parser.extract_all_text_in_one_page(page_num)
+
+        return Response(result, status=200)
+
+    @action(detail=False,
+            methods=['GET'],
+            name='Open AI Metrics',
+            url_path='(?P<pk>[^/.]+)/open_ai_metrics')
+    def metrics(self, request, pk, *args, **kwargs):
+
+        parser = Parser \
+                    .objects \
+                    .select_related("open_ai_metrics") \
+                    .get(pk=pk)
+        
+        tenant_id = parser.open_ai_metrics.open_ai_metrics_tenant_id
+        client_id = parser.open_ai_metrics.open_ai_metrics_client_id
+        client_secret = parser.open_ai_metrics.open_ai_metrics_client_secret
+        resource = "https://management.core.windows.net/"
+
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+
+        payload = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "resource": resource,
+        }
+
+        token_response = requests.post(token_url, data=payload)
+
+        if token_response.status_code == 200:
+            token_data = token_response.json()
+            access_token = token_data.get("access_token")
+            print(f"Access token: {access_token}")
+
+            subscription_id = parser.open_ai_metrics.open_ai_metrics_subscription_id
+            open_ai_service_name = parser.open_ai_metrics.open_ai_metrics_service_name
+
+            metrics_headers = {
+                'Authorization': 'Bearer ' + access_token,
+            }
+
+            current_datetime = datetime.now()
+            one_month_before_datetime = current_datetime - relativedelta(months=1)
+            timespan = one_month_before_datetime.strftime("%Y-%m-%dT00:00:00Z/") + current_datetime.strftime("%Y-%m-%dT00:00:00Z")
+
+            generated_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=GeneratedTokens&interval=P1D&aggregation=Total&timespan={timespan}"
+            generated_tokens_metrics_response = requests.get(generated_tokens_metrics_url, headers=metrics_headers)
+            generated_tokens_metrics_data = generated_tokens_metrics_response.json()
+
+            processed_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=ProcessedPromptTokens&interval=P1D&aggregation=Total&timespan={timespan}"
+            processed_tokens_metrics_response = requests.get(processed_tokens_metrics_url, headers=metrics_headers)
+            processed_tokens_metrics_data = processed_tokens_metrics_response.json()
+
+            processed_tokens_pricing = 0.0005
+            generated_tokens_pricing = 0.0015
+            processed_tokens_data = processed_tokens_metrics_data['value'][0]['timeseries'][0]['data']
+            generated_tokens_data = generated_tokens_metrics_data['value'][0]['timeseries'][0]['data']
+            pricing_metrics_data = []
+            for i in range(len(generated_tokens_data)):
+                price = decimal.Decimal(processed_tokens_data[i]['total'] * processed_tokens_pricing / 1000 + generated_tokens_data[i]['total'] * generated_tokens_pricing / 1000)
+                rounded_price = decimal.Decimal(price).quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+                remained_value = price - rounded_price
+                if remained_value > 0:
+                    rounded_price += decimal.Decimal(0.01)
+                pricing_metrics_data.append({
+                    "timeStamp": generated_tokens_data[i]["timeStamp"],
+                    "total": rounded_price
+                })
+
+            merged_metrics_data = []
+            for i in range(len(generated_tokens_data)):
+                merged_metrics_data.append({
+                    "timeStamp": generated_tokens_data[i]["timeStamp"],
+                    "processed_tokens": processed_tokens_data[i]["total"],
+                    "generated_tokens": generated_tokens_data[i]["total"],
+                    "price": pricing_metrics_data[i]["total"]
+                })
+
+            return Response(merged_metrics_data, status=status.HTTP_200_OK)
+        
+
+    
+
+class ParserGenericViewSet(viewsets.GenericViewSet):
+
+    authentication_classes = [
+        TokenAuthentication]
+    permission_classes = [IsAuthenticated, ParserManagementPermission]
 
     @action(detail=False,
             methods=['POST'],
@@ -511,261 +774,6 @@ class ParserViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"message": "ERROR", "detail": str(e)}, status=400)
 
-    @action(detail=True,
-            methods=['GET'],
-            name='Get All Texts in One Page',
-            url_path='document/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/extract_all_text')
-    def extract_all_text_in_one_page(self, request, pk, document_id, page_num, *args, **kwargs):
-
-        parser = Parser.objects.get(pk=int(pk))
-
-        document = Document.objects.get(id=document_id)
-
-        document_parser = DocumentParser(parser, document)
-
-        result = document_parser.extract_all_text_in_one_page(page_num)
-
-        return Response(result, status=200)
-    
-    @action(detail=True,
-            methods=['GET'],
-            name='Get All Texts',
-            url_path='document/(?P<document_id>[^/.]+)/extract_all_text')
-    def extract_all_text(self, request, pk, document_id, *args, **kwargs):
-
-        parser = Parser.objects.get(pk=int(pk))
-
-        document = Document.objects.get(id=document_id)
-
-        document_parser = DocumentParser(parser, document)
-
-        result = document_parser.extract_all_text_in_all_pages()
-
-        return Response(result, status=200)
-
-    @action(detail=True,
-            methods=['POST'],
-            name='Ask OpenAI about PDF content',
-            url_path='documents/(?P<document_id>[^/.]+)/pages/(?P<page_num>[^/.]+)/ask_chatbot')
-    def ask_openai_about_pdf_content(self, request, pk, document_id, page_num, *args, **kwargs):
-
-        parser = Parser.objects.get(pk=int(pk))
-
-        document = Document.objects.get(id=document_id)
-
-        document_parser = DocumentParser(parser, document)
-
-        chatbot = ChatBot.objects.get(parser_id=parser.id)
-
-        question = request.data["question"]
-
-        if question == "":
-            return Response("Please ask me with meaningful questions.", status=200)
-
-        if chatbot.chatbot_type == ChatBotType.OPEN_AI.value:
-
-            content_to_be_sent_to_openai = "\n".join(
-                document_parser.extract_all_text_in_all_pages())
-
-            content_to_be_sent_to_openai = re.sub(
-                ' +', '\n', content_to_be_sent_to_openai)
-
-            try:
-
-                headers = {
-                    "Content-Type": "application/json",
-                    "api-key": chatbot.open_ai_api_key
-                }
-                open_ai_content = question + " Please control the output in depth of 3 only. Please return in JSON format.\nInput: " + \
-                    content_to_be_sent_to_openai
-                json_data = {
-                    "messages": [{"role": "user", "content": open_ai_content}],
-                    "temperature": 0.2
-                }
-
-                response = requests.post('https://' + chatbot.open_ai_resource_name + '.openai.azure.com/openai/deployments/' + chatbot.open_ai_deployment + '/chat/completions?api-version=2023-05-15',
-                                         data=json.dumps(json_data), headers=headers)
-                if response.status_code == 400:
-                    raise Exception(response.json()["error"]["message"])
-                try:
-                    s = response.json()["choices"][0]["message"]['content'].replace(
-                        "Output:", "")
-                    while True:
-                        try:
-                            # try to parse...
-                            response_dict = json.loads(s)
-                            break                    # parsing worked -> exit loop
-                        except Exception as e:
-                            # "Expecting , delimiter: line 34 column 54 (char 1158)"
-                            # position of unexpected character after '"'
-                            unexp = int(re.findall(
-                                r'\(char (\d+)\)', str(e))[0])
-                            # position of unescaped '"' before that
-                            second_unesc = s.rfind(r'"', 0, unexp)
-                            first_unesc = s.rfind(r'"', 0, second_unesc)
-                            s = s[:first_unesc] + s[second_unesc+3:]
-
-                except:
-                    print(traceback.format_exc())
-                    response_dict = {
-                        "Message": "Encountered errors. Please try again or contact system administrator."
-                    }
-
-                """response_dict = {
-                    "Document No": "12345",
-                    "Document Date": "11 Dec 2023",
-                    "Item Table": [
-                        {
-                            "Item Description": "Car",
-                            "Quantity": 123,
-                            "Amount": 123.00
-                        },
-                        {
-                            "Item Description": "Ship",
-                            "Quantity": 234,
-                            "Amount": 234.00
-                        },
-                        {
-                            "Item Description": "Airplane",
-                            "Quantity": 345,
-                            "Amount": 345.00
-                        }
-                    ]
-                }"""
-
-                return StreamingHttpResponse(
-                    json.dumps(response_dict), status=200,
-                    content_type='text/event-stream')
-
-            except Exception as e:
-                print(traceback.format_exc())
-                return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
-
-        elif chatbot.chatbot_type == ChatBotType.ON_PREMISE_AI.value:
-
-            try:
-
-                content_to_be_sent_to_openai = "\n".join(
-                    document_parser.extract_all_text_in_all_pages())
-                chatbot_content = question + " Please return in JSON format.\nInput: " + \
-                    content_to_be_sent_to_openai
-
-                def generate_response(content):
-                    s = requests.Session()
-                    headers = {}
-                    payload = {
-                        "model": "gpt-3.5-turbo",
-                        "messages": [{"role": "user", "content": content}],
-                        "stream": True,
-                        "temperature": 0.7
-                    }
-                    with s.post(chatbot.base_url,
-                                headers=headers,
-                                json=payload,
-                                stream=True) as resp:
-
-                        for line in resp.iter_lines():
-                            if line:
-                                try:
-                                    line = line.decode("utf-8")
-                                    if line.startswith("data: "):
-                                        line = line.replace('data: ', '', 1)
-                                    print(line)
-                                    if line == None:
-                                        continue
-                                    json_line = json.loads(line)
-                                    data = json_line["choices"][0]["delta"]["content"]
-                                    yield data
-                                except:
-                                    print(traceback.format_exc())
-                                    pass
-
-                return StreamingHttpResponse(
-                    generate_response(chatbot_content), status=200, content_type='text/event-stream')
-
-            except Exception as e:
-                print(traceback.format_exc())
-                pass
-
-    @action(detail=False,
-            methods=['GET'],
-            name='Open AI Metrics',
-            url_path='(?P<pk>[^/.]+)/open_ai_metrics')
-    def metrics(self, request, pk, *args, **kwargs):
-
-        parser = Parser \
-                    .objects \
-                    .select_related("open_ai_metrics") \
-                    .get(pk=pk)
-        
-        tenant_id = parser.open_ai_metrics.open_ai_metrics_tenant_id
-        client_id = parser.open_ai_metrics.open_ai_metrics_client_id
-        client_secret = parser.open_ai_metrics.open_ai_metrics_client_secret
-        resource = "https://management.core.windows.net/"
-
-        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
-
-        payload = {
-            "grant_type": "client_credentials",
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "resource": resource,
-        }
-
-        token_response = requests.post(token_url, data=payload)
-
-        if token_response.status_code == 200:
-            token_data = token_response.json()
-            access_token = token_data.get("access_token")
-            print(f"Access token: {access_token}")
-
-            subscription_id = parser.open_ai_metrics.open_ai_metrics_subscription_id
-            open_ai_service_name = parser.open_ai_metrics.open_ai_metrics_service_name
-
-            metrics_headers = {
-                'Authorization': 'Bearer ' + access_token,
-            }
-
-            current_datetime = datetime.now()
-            one_month_before_datetime = current_datetime - relativedelta(months=1)
-            timespan = one_month_before_datetime.strftime("%Y-%m-%dT00:00:00Z/") + current_datetime.strftime("%Y-%m-%dT00:00:00Z")
-
-            generated_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=GeneratedTokens&interval=P1D&aggregation=Total&timespan={timespan}"
-            generated_tokens_metrics_response = requests.get(generated_tokens_metrics_url, headers=metrics_headers)
-            generated_tokens_metrics_data = generated_tokens_metrics_response.json()
-
-            processed_tokens_metrics_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/Cashew/providers/Microsoft.CognitiveServices/accounts/{open_ai_service_name}/providers/microsoft.insights/metrics?api-version=2023-10-01&metricnames=ProcessedPromptTokens&interval=P1D&aggregation=Total&timespan={timespan}"
-            processed_tokens_metrics_response = requests.get(processed_tokens_metrics_url, headers=metrics_headers)
-            processed_tokens_metrics_data = processed_tokens_metrics_response.json()
-
-            processed_tokens_pricing = 0.0005
-            generated_tokens_pricing = 0.0015
-            processed_tokens_data = processed_tokens_metrics_data['value'][0]['timeseries'][0]['data']
-            generated_tokens_data = generated_tokens_metrics_data['value'][0]['timeseries'][0]['data']
-            pricing_metrics_data = []
-            for i in range(len(generated_tokens_data)):
-                price = decimal.Decimal(processed_tokens_data[i]['total'] * processed_tokens_pricing / 1000 + generated_tokens_data[i]['total'] * generated_tokens_pricing / 1000)
-                rounded_price = decimal.Decimal(price).quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
-                remained_value = price - rounded_price
-                if remained_value > 0:
-                    rounded_price += decimal.Decimal(0.01)
-                pricing_metrics_data.append({
-                    "timeStamp": generated_tokens_data[i]["timeStamp"],
-                    "total": rounded_price
-                })
-
-            merged_metrics_data = []
-            for i in range(len(generated_tokens_data)):
-                merged_metrics_data.append({
-                    "timeStamp": generated_tokens_data[i]["timeStamp"],
-                    "processed_tokens": processed_tokens_data[i]["total"],
-                    "generated_tokens": generated_tokens_data[i]["total"],
-                    "price": pricing_metrics_data[i]["total"]
-                })
-
-            return Response(merged_metrics_data, status=status.HTTP_200_OK)
-        
-
     @action(detail=False,
             methods=['POST'],
             name='Update Statistic',
@@ -777,3 +785,16 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         return Response("Statistics has been updated", status=200)
 
+    @action(detail=False,
+            methods=['POST'],
+            name='Transfer Owner',
+            url_path='(?P<pk>[^/.]+)/transfer_owner/(?P<new_owner_id>[^/.]+)')
+    def transfer_owner(self, request, pk, new_owner_id, *args, **kwargs):
+
+        parser = Parser.objects.get(pk=int(pk))
+        new_owner = User.objects.get(pk=new_owner_id)
+
+        parser.owner = new_owner
+        parser.save()
+
+        return Response("Owner has been transferred", status=200)
