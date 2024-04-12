@@ -450,19 +450,11 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                 parsed_result = []
                 for rule in rules:
                     rule.pages = str(page_num)
-                    extracted = document_parser.extract(rule)
-                    stream_processor = StreamProcessor(rule)
-                    processed_streams = stream_processor.process(extracted)
+                    result = document_parser.extract_and_stream(rule, parsed_result)
+                    #stream_processor = StreamProcessor(rule)
+                    #processed_streams = stream_processor.process(extracted)
 
-                    parsed_result.append({
-                        "rule": {
-                            "id": rule.id,
-                            "name": rule.name,
-                            "type": processed_streams[-1]["type"]
-                        },
-                        "extracted": extracted,
-                        "streamed": processed_streams[-1]["data"]
-                    })
+                    parsed_result.append(result)
 
                 previous_pages_parsed_result[page_num] = parsed_result
 
@@ -526,20 +518,9 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                             for rule in rules:
                                 rule.pages = str(page_num)
                                 document_parser = DocumentParser(parser, document)
-                                extracted = document_parser.extract(rule)
-                                stream_processor = StreamProcessor(rule)
-                                processed_streams = stream_processor.process(
-                                    extracted)
+                                result = document_parser.extract_and_stream(rule)
 
-                                parsed_result.append({
-                                    "rule": {
-                                        "id": rule.id,
-                                        "name": rule.name,
-                                        "type": processed_streams[-1]["type"]
-                                    },
-                                    "extracted": extracted,
-                                    "streamed": processed_streams[-1]["data"]
-                                })
+                                parsed_result.append(result)
 
                             previous_pages_parsed_result[page_num] = parsed_result
 

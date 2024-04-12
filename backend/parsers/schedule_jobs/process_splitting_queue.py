@@ -112,19 +112,9 @@ def process_single_splitting_queue(queue_job):
                 parsed_result = []
                 for rule in rules:
                     rule.pages = str(page_num)
-                    extracted = document_parser.extract(rule)
-                    stream_processor = StreamProcessor(rule)
-                    processed_streams = stream_processor.process(extracted)
+                    result = document_parser.extract_and_stream(rule)
 
-                    parsed_result.append({
-                        "rule": {
-                            "id": rule.id,
-                            "name": rule.name,
-                            "type": processed_streams[-1]["type"]
-                        },
-                        "extracted": extracted,
-                        "streamed": processed_streams[-1]["data"]
-                    })
+                    parsed_result.append(result)
 
                 previous_pages_parsed_result[page_num] = parsed_result
 
@@ -183,20 +173,9 @@ def process_single_splitting_queue(queue_job):
                             parsed_result = []
                             for rule in rules:
                                 rule.pages = str(page_num)
-                                extracted = document_parser.extract(rule)
-                                stream_processor = StreamProcessor(rule)
-                                processed_streams = stream_processor.process(
-                                    extracted)
+                                result = document_parser.extract_and_stream(rule)
 
-                                parsed_result.append({
-                                    "rule": {
-                                        "id": rule.id,
-                                        "name": rule.name,
-                                        "type": processed_streams[-1]["type"]
-                                    },
-                                    "extracted": extracted,
-                                    "streamed": processed_streams[-1]["data"]
-                                })
+                                parsed_result.append(result)
 
                             previous_pages_parsed_result[page_num] = parsed_result
 
@@ -432,6 +411,7 @@ def process_single_splitting_queue(queue_job):
 
         # Update last modified at
         document.last_modified_at = datetime.now()
+        document.save()
 
         # Mark the job as complete
         queue_job.queue_class = QueueClass.PARSING.value

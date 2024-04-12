@@ -83,6 +83,8 @@ def process_single_integration_queue(queue_job):
             if single_parsed_result["rule"]["type"] == "TEXTFIELD" or \
                     single_parsed_result["rule"]["type"] == "ANCHORED_TEXTFIELD" or \
                     single_parsed_result["rule"]["type"] == "BARCODE":
+                if type(single_parsed_result["streamed"]) == list:
+                    single_parsed_result["streamed"] = " ".join(single_parsed_result["streamed"])
                 updated_parsed_result[single_parsed_result["rule"]
                                       ["name"]] = single_parsed_result["streamed"]
             elif single_parsed_result["rule"]["type"] == "TABLE":
@@ -190,6 +192,8 @@ def process_single_integration_queue(queue_job):
 
             # Update last modified at
             document.last_modified_at = datetime.now()
+
+        document.save()
 
         # Mark the job as completed
         if document.document_type == DocumentType.IMPORT.value:

@@ -42,7 +42,6 @@ def process_single_ocr_queue(queue_job):
     parser = queue_job.parser
     document = Document.objects.prefetch_related(Prefetch(
         "document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
-    preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
     ocr = OCR.objects.get(parser_id=parser.id)
 
     # Mark the job as in progress
@@ -99,6 +98,7 @@ def process_single_ocr_queue(queue_job):
         
         # Update last modified at
         document.last_modified_at = datetime.now()
+        document.save()
 
         try:
             splitting = Splitting.objects.get(parser_id=parser.id)

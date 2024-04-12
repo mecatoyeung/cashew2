@@ -18,35 +18,41 @@ import * as _ from 'lodash'
 
 import EditorLayout from '../../layouts/editor'
 
-
-import service from "../../service"
+import service from '../../service'
 
 import 'react-image-crop/dist/ReactCrop.css'
 import styles from '../../styles/Editor.module.css'
 
 const RegionSelector = () => {
-
   const router = useRouter()
 
-  const { pathname, parserId, layoutId, ruleId, documentId = 0, pageNum = 1 } = router.query
+  const {
+    pathname,
+    parserId,
+    layoutId,
+    ruleId,
+    documentId = 0,
+    pageNum = 1,
+  } = router.query
 
-  const [regionMode, setRegionMode] = useState("Textfield")
+  const [regionMode, setRegionMode] = useState('Textfield')
   const [textfieldRegion, setTextfieldRegion] = useState({
     unit: '%',
     x: 25,
     y: 25,
     width: 50,
-    height: 50
+    height: 50,
   })
   const [anchorRegion, setAnchorRegion] = useState({
     unit: '%',
     x: 25,
     y: 25,
     width: 50,
-    height: 50
+    height: 50,
   })
 
-  const [textfieldAnchorToggle, setTextfieldAnchorToggle] = useState("textfield")
+  const [textfieldAnchorToggle, setTextfieldAnchorToggle] =
+    useState('textfield')
 
   const [parserDocuments, setParserDocuments] = useState([])
   const [layout, setLayout] = useState([])
@@ -86,49 +92,56 @@ const RegionSelector = () => {
     getDocumentPageImage()
   }, [router.isReady, parserId, documentId, pageNum])
 
-  useEffect(() => {
-  }, [imageRef])
+  useEffect(() => {}, [imageRef])
 
   const getLayout = () => {
-    service.get("layouts/" + layoutId, response => {
+    service.get('layouts/' + layoutId, (response) => {
       setLayout(response.data)
     })
   }
 
   const getRule = () => {
-    service.get("rules/" + ruleId + "?parserId" + parserId, response => {
+    service.get('rules/' + ruleId + '?parserId' + parserId, (response) => {
       if (documentId != null) {
         response.data.anchorDocument = {
-          id: parseInt(documentId)
+          id: parseInt(documentId),
         }
       }
-      console.log(response.data)
       setRule(response.data)
     })
   }
 
   const getParserDocuments = () => {
-    service.get("documents/?parserId=" + parserId, response => {
+    service.get('documents/?parserId=' + parserId, (response) => {
       let parserDocuments = response.data
-      for (let j=0; j<parserDocuments.length; j++) {
+      for (let j = 0; j < parserDocuments.length; j++) {
         let pd = parserDocuments[j]
         let ocredPagesCount = 0
-        for (let i=0 ;i<pd.documentPages.length; i++) {
+        for (let i = 0; i < pd.documentPages.length; i++) {
           if (pd.documentPages[i].ocred) {
             ocredPagesCount += 1
           }
         }
         pd.ocredPagesCount = ocredPagesCount
-        pd.name = pd.filenameWithoutExtension + "." + pd.extension + " (Page " + ocredPagesCount + " of " + pd.totalPageNum + ")"
-        pd.documentPages = pd.documentPages.sort((a, b) => a.pageNum - b.pageNum)
-        console.log(pd)
+        pd.name =
+          pd.filenameWithoutExtension +
+          '.' +
+          pd.extension +
+          ' (Page ' +
+          ocredPagesCount +
+          ' of ' +
+          pd.totalPageNum +
+          ')'
+        pd.documentPages = pd.documentPages.sort(
+          (a, b) => a.pageNum - b.pageNum
+        )
       }
       setParserDocuments(parserDocuments)
       if (parserDocuments.length > 0 && documentId == 0) {
         selectedDocumentChangeHandler({
           target: {
-            value: parserDocuments[0].id
-          }
+            value: parserDocuments[0].id,
+          },
         })
       }
     })
@@ -137,13 +150,15 @@ const RegionSelector = () => {
   const getDocumentPageImage = () => {
     if (parserId == undefined) return
     if (documentId == 0) return
-    service.getFile("documents/" + documentId + "/pages/" + pageNum + "/image/",
+    service.getFile(
+      'documents/' + documentId + '/pages/' + pageNum + '/image/',
       (response) => {
         let data = `data:${
-          response.headers["content-type"]
-        };base64,${new Buffer(response.data, "binary").toString("base64")}`
+          response.headers['content-type']
+        };base64,${new Buffer(response.data, 'binary').toString('base64')}`
         setImageUri(data)
-      })
+      }
+    )
   }
 
   const closeChangeDocumentModalHandler = () => {
@@ -153,10 +168,10 @@ const RegionSelector = () => {
   const openChangeDocumentModalHandler = () => setShowChangeDocumentModal(true)
 
   const updateRule = (updatedRule) => {
-    service.put("rules/" + ruleId + "/?parserId=" + parserId,
+    service.put(
+      'rules/' + ruleId + '/?parserId=' + parserId,
       updatedRule,
-      response => {
-      }
+      (response) => {}
     )
   }
 
@@ -165,7 +180,7 @@ const RegionSelector = () => {
       pathname,
       query: {
         ...router.query,
-        documentId: e.target.value
+        documentId: e.target.value,
       },
     })
   }
@@ -175,7 +190,7 @@ const RegionSelector = () => {
       pathname,
       query: {
         ...router.query,
-        pageNum: e.target.value
+        pageNum: e.target.value,
       },
     })
   }
@@ -194,7 +209,7 @@ const RegionSelector = () => {
     setRule(updatedRule)
   }
 
-  const selectRegionModeChangeHandler =(e) => {
+  const selectRegionModeChangeHandler = (e) => {
     setRegionMode(e.target.value)
   }
 
@@ -205,19 +220,19 @@ const RegionSelector = () => {
     let anchorY2 = 100 - rule.anchorY1
     let initialRegions = [
       {
-        unit: "%",
+        unit: '%',
         x: parseFloat(rule.x1),
         y: y1,
         width: rule.x2 - rule.x1,
-        height: y2 - y1
+        height: y2 - y1,
       },
       {
-        unit: "%",
+        unit: '%',
         x: parseFloat(rule.anchorX1),
         y: anchorY1,
         width: rule.anchorX2 - rule.anchorX1,
-        height: anchorY2 - anchorY1
-      }
+        height: anchorY2 - anchorY1,
+      },
     ]
     setTextfieldRegion(initialRegions[0])
     setAnchorRegion(initialRegions[1])
@@ -240,9 +255,9 @@ const RegionSelector = () => {
       anchorY1: (100 - anchorRegion.y - anchorRegion.height).toFixed(2),
       anchorY2: (100 - anchorRegion.y).toFixed(2),
       anchorDocument: {
-        id: parseInt(documentId)
+        id: parseInt(documentId),
       },
-      anchorPageNum: pageNum
+      anchorPageNum: pageNum,
     }
     setRule(updatedRule)
   }
@@ -259,36 +274,33 @@ const RegionSelector = () => {
       anchorX2: (p.x + p.width).toFixed(2),
       anchorY1: (100 - p.y - p.height).toFixed(2),
       anchorY2: (100 - p.y).toFixed(2),
-      anchorDocument: { 
-        id: parseInt(documentId)
+      anchorDocument: {
+        id: parseInt(documentId),
       },
-      anchorPageNum: pageNum
+      anchorPageNum: pageNum,
     }
     setRule(updatedRule)
   }
 
   const anchorRegionDragEndHandler = (p) => {
     updateRule(rule)
-    console.log(rule)
   }
 
   const textfieldRegionDragEndHandler = (p) => {
     updateRule(rule)
-    console.log(rule)
   }
 
   const addSeparatorBtnClickHandler = (e) => {
     let updatedRule = { ...rule }
     let tableColumnSeparators = [...updatedRule.tableColumnSeparators]
-    let x;
+    let x
     if (tableColumnSeparators.length > 0) {
-      x = tableColumnSeparators.slice(-1)[0].x  + 10.0
+      x = tableColumnSeparators.slice(-1)[0].x + 10.0
     } else {
       x = 10.0
     }
     tableColumnSeparators.push({ x, rule: updatedRule.id })
     updatedRule.tableColumnSeparators = tableColumnSeparators
-    console.log(tableColumnSeparators)
     updateRule(updatedRule)
     setRule(updatedRule)
   }
@@ -315,64 +327,100 @@ const RegionSelector = () => {
 
     let updatedRule = { ...rule }
     let tableColumnSeparators = updatedRule.tableColumnSeparators
-    tableColumnSeparators[xIndex] = { 
-      x: (el.x / width * 100).toFixed(2),
-      rule: updatedRule.id
+    tableColumnSeparators[xIndex] = {
+      x: ((el.x / width) * 100).toFixed(2),
+      rule: updatedRule.id,
     }
-    tableColumnSeparators.sort((a, b) => (a.x > b.x) ? 1 : -1)
-    console.log(updatedRule)
+    tableColumnSeparators.sort((a, b) => (a.x > b.x ? 1 : -1))
     setRule(updatedRule)
     updateRule(updatedRule)
     e.stopPropagation()
   }
 
   const proceedToStreamEditorBtnClickHandler = () => {
-    //clearInterval(getParserDocumentsTimer)
-    console.log("cleared!")
-    router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=streamEditor&documentId=" + documentId + "&pageNum=" + pageNum)
+    router.push(
+      '/admin/parsers/' +
+        parserId +
+        '/rules/' +
+        ruleId +
+        '?type=streamEditor&documentId=' +
+        documentId +
+        '&pageNum=' +
+        pageNum
+    )
   }
 
   return (
     <EditorLayout>
       <div className={styles.workbenchHeader}>
-        <div className={styles.guidelines}>
-          Define Field Position
-        </div>
+        <div className={styles.guidelines}>Define Field Position</div>
         <div className={styles.changeSampleDocumentWrapper}>
-          <Button variant="primary" className={styles.changeSampleDocumentBtn} onClick={openChangeDocumentModalHandler}>Change Sample Document</Button>
-          <Modal show={showChangeDocumentModal} onHide={closeChangeDocumentModalHandler}>
+          <Button
+            variant="primary"
+            className={styles.changeSampleDocumentBtn}
+            onClick={openChangeDocumentModalHandler}
+          >
+            Change Sample Document
+          </Button>
+          <Modal
+            show={showChangeDocumentModal}
+            onHide={closeChangeDocumentModalHandler}
+          >
             <Modal.Header closeButton>
               <Modal.Title>Change Document</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form.Group className="mb-3" controlId="formRuleType">
-                <Form.Select aria-label="Document" onChange={selectedDocumentChangeHandler} value={documentId}>
+                <Form.Select
+                  aria-label="Document"
+                  onChange={selectedDocumentChangeHandler}
+                  value={documentId}
+                >
                   <option value=""></option>
-                  {parserDocuments && parserDocuments.map(parserDocument => (
-                    <option key={parserDocument.id} value={parserDocument.id}>{parserDocument.name}</option>
-                  ))}
+                  {parserDocuments &&
+                    parserDocuments.map((parserDocument) => (
+                      <option key={parserDocument.id} value={parserDocument.id}>
+                        {parserDocument.name}
+                      </option>
+                    ))}
                 </Form.Select>
               </Form.Group>
               <Form.Group className="mb-3" controlId="formPageNum">
-                <Form.Select aria-label="Page No." onChange={pageNumChangeHandler} value={pageNum}>
+                <Form.Select
+                  aria-label="Page No."
+                  onChange={pageNumChangeHandler}
+                  value={pageNum}
+                >
                   <option value=""></option>
-                  {parserDocuments.length > 0 && documentId != 0 && (
-                    parserDocuments.find(d => d.id == documentId).documentPages.filter(dp => dp.ocred).map(
-                      documentPage => {
+                  {parserDocuments.length > 0 &&
+                    documentId != 0 &&
+                    parserDocuments
+                      .find((d) => d.id == documentId)
+                      .documentPages.filter((dp) => dp.ocred)
+                      .map((documentPage) => {
                         return (
-                          <option key={documentPage.pageNum} value={documentPage.pageNum}>{documentPage.pageNum}</option>
+                          <option
+                            key={documentPage.pageNum}
+                            value={documentPage.pageNum}
+                          >
+                            {documentPage.pageNum}
+                          </option>
                         )
-                      }
-                    )
-                  )}
+                      })}
                 </Form.Select>
               </Form.Group>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="primary" onClick={closeChangeDocumentModalHandler}>
+              <Button
+                variant="primary"
+                onClick={closeChangeDocumentModalHandler}
+              >
                 Confirm
               </Button>
-              <Button variant="secondary" onClick={closeChangeDocumentModalHandler}>
+              <Button
+                variant="secondary"
+                onClick={closeChangeDocumentModalHandler}
+              >
                 Close
               </Button>
             </Modal.Footer>
@@ -387,32 +435,64 @@ const RegionSelector = () => {
                 <div className="col-3">
                   <Form.Group className="mb-3" controlId="formPages">
                     <Form.Label>Pages: </Form.Label>
-                    <Form.Control value={rule.pages} onChange={txtPagesChangeHandler} />
+                    <Form.Control
+                      value={rule.pages}
+                      onChange={txtPagesChangeHandler}
+                    />
                   </Form.Group>
                 </div>
-                {rule.ruleType == "TABLE" && (
+                {rule.ruleType == 'TABLE' && (
                   <div className="col-6">
-                    <Form.Group className="mb-3" controlId="formPages" style={{ padding: "0 10px" }}>
+                    <Form.Group
+                      className="mb-3"
+                      controlId="formPages"
+                      style={{ padding: '0 10px' }}
+                    >
                       <Form.Label>Separators: </Form.Label>
-                      <div className={styles.regionSelectActions} style={{display: "block", padding: "0"}}>
-                        <Button variant="primary" className={styles.addSeparatorBtn} onClick={addSeparatorBtnClickHandler}>Add</Button>
-                        <Button variant="primary" className={styles.removeSeparatorBtn} onClick={removeSeparatorBtnClickHandler}>Remove</Button>
+                      <div
+                        className={styles.regionSelectActions}
+                        style={{ display: 'block', padding: '0' }}
+                      >
+                        <Button
+                          variant="primary"
+                          className={styles.addSeparatorBtn}
+                          onClick={addSeparatorBtnClickHandler}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          variant="primary"
+                          className={styles.removeSeparatorBtn}
+                          onClick={removeSeparatorBtnClickHandler}
+                        >
+                          Remove
+                        </Button>
                       </div>
                     </Form.Group>
                   </div>
                 )}
-                {rule.ruleType == "ANCHORED_TEXTFIELD" && (
+                {rule.ruleType == 'ANCHORED_TEXTFIELD' && (
                   <>
                     <div className="col-3">
                       <Form.Group className="mb-3" controlId="formAnchorText">
                         <Form.Label>Anchor Text: </Form.Label>
-                        <Form.Control value={rule.anchorText} onChange={txtAnchorTextChangeHandler} />
+                        <Form.Control
+                          value={rule.anchorText}
+                          onChange={txtAnchorTextChangeHandler}
+                        />
                       </Form.Group>
                     </div>
                     <div className="col-3">
                       <Form.Group className="mb-3" controlId="formRegionMode">
                         <Form.Label>Region Mode: </Form.Label>
-                        <Form.Select className={styles.textfieldAnchorSelect} aria-label="textFieldAnchor" onChange={(e) => selectTextFieldAnchorChangeHandler(e)} value={textfieldAnchorToggle}>
+                        <Form.Select
+                          className={styles.textfieldAnchorSelect}
+                          aria-label="textFieldAnchor"
+                          onChange={(e) =>
+                            selectTextFieldAnchorChangeHandler(e)
+                          }
+                          value={textfieldAnchorToggle}
+                        >
                           <option value="textfield">Textfield</option>
                           <option value="anchor">Anchor</option>
                         </Form.Select>
@@ -426,52 +506,77 @@ const RegionSelector = () => {
               <div className={styles.regionSelectorWrapper}>
                 <Form.Label>Region: </Form.Label>
                 <div className={styles.imageCropperContainer}>
-                  {(rule.ruleType == "TEXTFIELD" ||
-                    (rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "textfield") ||
-                    rule.ruleType == "BARCODE") && (
-                    <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
-                      textfieldRegionChangeHandler(p)
-                    }} onDragEnd={textfieldRegionDragEndHandler}>
-                      <img src={imageUri} ref={imageRef}/>
-                    </ReactCrop>
-                  )}
-                  {rule.ruleType == "ANCHORED_TEXTFIELD" && textfieldAnchorToggle == "anchor" && (
-                    <ReactCrop className={styles.myReactCrop + " " + "anchorReactCrop"} crop={anchorRegion} onChange={(c, p) => {
-                      anchorRegionChangeHandler(p)
-                    }} onDragEnd={anchorRegionDragEndHandler}>
-
-                      <img src={imageUri} ref={imageRef}/>
-
-                    </ReactCrop>
-                  )}
-                  {rule.ruleType == "TABLE"  && (
-                    <div style={{position: "relative"}}>
-                      <ReactCrop className={styles.myReactCrop} crop={textfieldRegion} onChange={(c, p) => {
+                  {(rule.ruleType == 'TEXTFIELD' ||
+                    (rule.ruleType == 'ANCHORED_TEXTFIELD' &&
+                      textfieldAnchorToggle == 'textfield') ||
+                    rule.ruleType == 'BARCODE') && (
+                    <ReactCrop
+                      className={styles.myReactCrop}
+                      crop={textfieldRegion}
+                      onChange={(c, p) => {
                         textfieldRegionChangeHandler(p)
-                      }} onDragEnd={textfieldRegionDragEndHandler}>
-                        <img src={imageUri} ref={newImageRef => setImageRef(newImageRef)}/>
+                      }}
+                      onDragEnd={textfieldRegionDragEndHandler}
+                    >
+                      <img src={imageUri} ref={imageRef} />
+                    </ReactCrop>
+                  )}
+                  {rule.ruleType == 'ANCHORED_TEXTFIELD' &&
+                    textfieldAnchorToggle == 'anchor' && (
+                      <ReactCrop
+                        className={styles.myReactCrop + ' ' + 'anchorReactCrop'}
+                        crop={anchorRegion}
+                        onChange={(c, p) => {
+                          anchorRegionChangeHandler(p)
+                        }}
+                        onDragEnd={anchorRegionDragEndHandler}
+                      >
+                        <img src={imageUri} ref={imageRef} />
                       </ReactCrop>
-                      {rule && rule.tableColumnSeparators && imageRef && rule.tableColumnSeparators.map(
-                        (separator, sIndex) => {
+                    )}
+                  {rule.ruleType == 'TABLE' && (
+                    <div style={{ position: 'relative' }}>
+                      <ReactCrop
+                        className={styles.myReactCrop}
+                        crop={textfieldRegion}
+                        onChange={(c, p) => {
+                          textfieldRegionChangeHandler(p)
+                        }}
+                        onDragEnd={textfieldRegionDragEndHandler}
+                      >
+                        <img
+                          src={imageUri}
+                          ref={(newImageRef) => setImageRef(newImageRef)}
+                        />
+                      </ReactCrop>
+                      {rule &&
+                        rule.tableColumnSeparators &&
+                        imageRef &&
+                        rule.tableColumnSeparators.map((separator, sIndex) => {
                           return (
-                          <Draggable
-                            axis="x"
-                            defaultPosition={{x: 0, y: 0}}
-                            grid={[1, 1]}
-                            scale={1}
-                            position={{ x: separator.x / 100 * imageRef.width, y: 0 }}
-                            onStart={separatorStartHandler}
-                            onDrag={separatorDragHandler}
-                            onStop={(e, el) => separatorStopHandler(e, el, sIndex)}
-                            key={sIndex}>
-                            <div>
-                              <div className="handle"></div>
-                              <div className="line"></div>
-                            </div>
-                          </Draggable>
+                            <Draggable
+                              axis="x"
+                              defaultPosition={{ x: 0, y: 0 }}
+                              grid={[1, 1]}
+                              scale={1}
+                              position={{
+                                x: (separator.x / 100) * imageRef.width,
+                                y: 0,
+                              }}
+                              onStart={separatorStartHandler}
+                              onDrag={separatorDragHandler}
+                              onStop={(e, el) =>
+                                separatorStopHandler(e, el, sIndex)
+                              }
+                              key={sIndex}
+                            >
+                              <div>
+                                <div className="handle"></div>
+                                <div className="line"></div>
+                              </div>
+                            </Draggable>
                           )
-                        }
-                      )}
+                        })}
                     </div>
                   )}
                 </div>
@@ -480,21 +585,54 @@ const RegionSelector = () => {
           </>
         )}
       </div>
-      {rule && rule.rule_type == "TABLE" && (
+      {rule && rule.rule_type == 'TABLE' && (
         <div className={styles.regionSelectActions}>
-          <Button variant="primary" className={styles.addSeparatorBtn} onClick={addSeparatorBtnClickHandler}>Add Separator</Button>
-          <Button variant="primary" className={styles.removeSeparatorBtn} onClick={removeSeparatorBtnClickHandler}>Remove Separator</Button>
+          <Button
+            variant="primary"
+            className={styles.addSeparatorBtn}
+            onClick={addSeparatorBtnClickHandler}
+          >
+            Add Separator
+          </Button>
+          <Button
+            variant="primary"
+            className={styles.removeSeparatorBtn}
+            onClick={removeSeparatorBtnClickHandler}
+          >
+            Remove Separator
+          </Button>
         </div>
       )}
       <div className={styles.workbenchFooter}>
         <div className={styles.backBtnWrapper}>
-          <Button variant="success" className={styles.confirmBtn} onClick={() => router.push("/admin/parsers/" + parserId + "/rules/" + ruleId + "?type=ruleProperties&documentId=" + documentId + "&pageNum=" + pageNum)}>Back to Rule Properties</Button>
+          <Button
+            variant="success"
+            className={styles.confirmBtn}
+            onClick={() =>
+              router.push(
+                '/admin/parsers/' +
+                  parserId +
+                  '/rules/' +
+                  ruleId +
+                  '?type=ruleProperties&documentId=' +
+                  documentId +
+                  '&pageNum=' +
+                  pageNum
+              )
+            }
+          >
+            Back to Rule Properties
+          </Button>
         </div>
-        <div className={styles.copyrightWrapper}>
-          Copyright @ 2022
-        </div>
+        <div className={styles.copyrightWrapper}>Copyright @ 2022</div>
         <div className={styles.confirmBtnWrapper}>
-          <Button variant="success" className={styles.confirmBtn} onClick={proceedToStreamEditorBtnClickHandler}>Proceed to Stream Editor</Button>
+          <Button
+            variant="success"
+            className={styles.confirmBtn}
+            onClick={proceedToStreamEditorBtnClickHandler}
+          >
+            Proceed to Stream Editor
+          </Button>
         </div>
       </div>
     </EditorLayout>

@@ -35,7 +35,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class ProtectedChatBotSerializer(ChatBotSerializer):
+class ProtectedChatBotSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatBot

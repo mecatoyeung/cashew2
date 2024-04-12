@@ -1,79 +1,78 @@
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/router";
-import Image from "next/image";
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/router'
+import Image from 'next/image'
 
-import { produce } from "immer";
+import { produce } from 'immer'
 
-import { Form } from "react-bootstrap";
-import { Modal } from "react-bootstrap";
-import { Button } from "react-bootstrap";
+import { Form } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
 
-import Select from "react-select";
+import Select from 'react-select'
 
-import Toast from "react-bootstrap/Toast";
-import ToastContainer from "react-bootstrap/ToastContainer";
+import Toast from 'react-bootstrap/Toast'
+import ToastContainer from 'react-bootstrap/ToastContainer'
 
-import { useDropzone } from "react-dropzone";
+import { useDropzone } from 'react-dropzone'
 
-import ProgressBar from "react-bootstrap/ProgressBar";
+import ProgressBar from 'react-bootstrap/ProgressBar'
 
-import ParserLayout from "../../../layouts/parser";
+import ParserLayout from '../../../layouts/parser'
 
-import service from "../../../service";
+import service from '../../../service'
 
-import aichatStyles from "../../../styles/AIChat.module.css";
+import aichatStyles from '../../../styles/AIChat.module.css'
 
 export default function Parsers() {
-  const router = useRouter();
+  const router = useRouter()
 
-  const [parsers, setParsers] = useState([]);
+  const [parsers, setParsers] = useState([])
 
   const [showDefaultParserWarning, setShowDefaultParserWarning] =
-    useState(false);
+    useState(false)
 
   const [trashConfirmForm, setTrashConfirmForm] = useState({
     show: false,
     isValid: true,
-    name: "",
-    errorMessage: "",
-  });
+    name: '',
+    errorMessage: '',
+  })
 
   const [showUploadConfigModal, setShowUploadConfigModal] = useState({
     show: false,
     uploadDefaultParser:
-      typeof window == "undefined"
+      typeof window == 'undefined'
         ? 0
-        : parseInt(localStorage.getItem("uploadDefaultParser")),
-  });
+        : parseInt(localStorage.getItem('uploadDefaultParser')),
+  })
 
   const closeUploadConfigModalHandler = () => {
     setShowUploadConfigModal({
       ...showUploadConfigModal,
       show: !showUploadConfigModal.show,
-    });
-  };
+    })
+  }
 
   const uploadDefaultParserChangeHandler = (e) => {
-    console.log(e);
     setShowUploadConfigModal({
       ...showUploadConfigModal,
       uploadDefaultParser: e.value,
-    });
-  };
+    })
+  }
 
   const getParsers = () => {
-    service.get("parsers/", (response) => {
-      setParsers(response.data);
-    });
-  };
+    service.get('parsers/', (response) => {
+      setParsers(response.data)
+    })
+  }
 
   const trashLayoutNameChangeHandler = (e) => {
     setTrashConfirmForm(
       produce((draft) => {
-        draft.name = e.target.value;
+        draft.name = e.target.value
       })
-    );
-  };
+    )
+  }
 
   const confirmTrashHandler = (parserId) => {
     if (
@@ -82,131 +81,131 @@ export default function Parsers() {
     ) {
       setTrashConfirmForm(
         produce((draft) => {
-          draft.isValid = false;
-          draft.errorMessage = "Parser name does not match.";
+          draft.isValid = false
+          draft.errorMessage = 'Parser name does not match.'
         })
-      );
-      return;
+      )
+      return
     } else {
       setTrashConfirmForm(
         produce((draft) => {
-          draft.isValid = true;
-          draft.errorMessage = "";
+          draft.isValid = true
+          draft.errorMessage = ''
         })
-      );
+      )
     }
-    service.delete("parsers/" + trashConfirmForm.parserId + "/", (response) => {
+    service.delete('parsers/' + trashConfirmForm.parserId + '/', (response) => {
       if (response.status == 204) {
         setTrashConfirmForm(
           produce((draft) => {
-            draft.show = false;
+            draft.show = false
           })
-        );
-        getParsers();
+        )
+        getParsers()
       } else {
         setTrashConfirmForm(
           produce((draft) => {
-            draft.isValid = false;
+            draft.isValid = false
             draft.errorMessage =
-              "Delete parser failed. Please consult system administrator.";
+              'Delete parser failed. Please consult system administrator.'
           })
-        );
-        return;
+        )
+        return
       }
-    });
-  };
+    })
+  }
 
   const closeTrashHandler = () => {
     setTrashConfirmForm(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   const defaultUploadConfigClickHandler = () => {
     setShowUploadConfigModal({
       ...showUploadConfigModal,
       show: true,
-    });
-  };
+    })
+  }
 
   const uploadDocumentsAfterDroppingFiles = async (droppedFiles) => {
     for (let i = 0; i < droppedFiles.length; i++) {
-      let droppedFile = droppedFiles[i];
-      let formData = new FormData();
-      let uploadDefaultParser = 0;
-      if (typeof window !== "undefined") {
-        uploadDefaultParser = localStorage.getItem("uploadDefaultParser");
-        formData.set("parser", uploadDefaultParser);
+      let droppedFile = droppedFiles[i]
+      let formData = new FormData()
+      let uploadDefaultParser = 0
+      if (typeof window !== 'undefined') {
+        uploadDefaultParser = localStorage.getItem('uploadDefaultParser')
+        formData.set('parser', uploadDefaultParser)
       }
-      formData.set("documentType", "AICHAT");
-      formData.append("file", droppedFile, droppedFile.name);
+      formData.set('documentType', 'AICHAT')
+      formData.append('file', droppedFile, droppedFile.name)
 
       const response = service
         .post(
-          "documents/?parserId=" + uploadDefaultParser,
+          'documents/?parserId=' + uploadDefaultParser,
           formData,
           () => {},
           () => {},
           {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
           {
             onUploadProgress: (progressEvent) => {
               const progress =
-                (progressEvent.loaded / progressEvent.total) * 100;
-              let updatedFiles = [...droppedFiles];
-              updatedFiles[i].progress = progress;
-              setDroppedFiles(updatedFiles);
+                (progressEvent.loaded / progressEvent.total) * 100
+              let updatedFiles = [...droppedFiles]
+              updatedFiles[i].progress = progress
+              setDroppedFiles(updatedFiles)
               if (updatedFiles[i].progress == 100) {
-                updatedFiles[i].uploaded = true;
-                setDroppedFiles(updatedFiles);
+                updatedFiles[i].uploaded = true
+                setDroppedFiles(updatedFiles)
               }
             },
           }
         )
-        .catch((error) => {});
+        .catch((error) => {})
     }
-  };
+  }
 
-  const [droppedFiles, setDroppedFiles] = useState([]);
+  const [droppedFiles, setDroppedFiles] = useState([])
   const onDrop = useCallback((acceptedFiles) => {
-    if (typeof window !== "undefined") {
-      let uploadDefaultParser = localStorage.getItem("uploadDefaultParser");
+    if (typeof window !== 'undefined') {
+      let uploadDefaultParser = localStorage.getItem('uploadDefaultParser')
       if (uploadDefaultParser == null) {
-        setShowDefaultParserWarning(true);
-        return;
+        setShowDefaultParserWarning(true)
+        return
       }
     }
 
-    let result = [];
+    let result = []
     for (let i = 0; i < acceptedFiles.length; i++) {
       if (acceptedFiles[i].progress == undefined) {
-        acceptedFiles[i].progress = 0;
+        acceptedFiles[i].progress = 0
       }
-      result.push(acceptedFiles[i]);
+      result.push(acceptedFiles[i])
     }
-    setDroppedFiles(result);
-    uploadDocumentsAfterDroppingFiles(result);
-  }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-  let rootProps = getRootProps();
+    setDroppedFiles(result)
+    uploadDocumentsAfterDroppingFiles(result)
+  }, [])
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
+  let rootProps = getRootProps()
 
   const confirmUploadConfigBtnClickHandler = () => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       localStorage.setItem(
-        "uploadDefaultParser",
+        'uploadDefaultParser',
         showUploadConfigModal.uploadDefaultParser
-      );
-      setShowDefaultParserWarning(false);
+      )
+      setShowDefaultParserWarning(false)
     }
-    closeUploadConfigModalHandler();
-  };
+    closeUploadConfigModalHandler()
+  }
 
   useEffect(() => {
-    getParsers();
-  }, []);
+    getParsers()
+  }, [])
 
   return (
     <ParserLayout>
@@ -214,10 +213,10 @@ export default function Parsers() {
         <>
           <h1 className={aichatStyles.parsersH1}>Parsers</h1>
           {showDefaultParserWarning && (
-            <div style={{ position: "relative" }}>
+            <div style={{ position: 'relative' }}>
               <ToastContainer
                 className="p-3"
-                position={"top-center"}
+                position={'top-center'}
                 style={{ zIndex: 1 }}
               >
                 <Toast>
@@ -233,7 +232,10 @@ export default function Parsers() {
                 {isDragActive ? (
                   <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here ...</p>
                 ) : (
-                  <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to upload...</p>
+                  <p>
+                    Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to
+                    upload...
+                  </p>
                 )}
               </div>
               <div className={aichatStyles.progressBarDiv}>
@@ -256,7 +258,7 @@ export default function Parsers() {
                 <i
                   className="bi bi-gear"
                   onClick={() => defaultUploadConfigClickHandler()}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: 'pointer' }}
                 ></i>
                 <Modal
                   show={showUploadConfigModal.show}
@@ -277,7 +279,7 @@ export default function Parsers() {
                           return {
                             label: p.name,
                             value: p.id,
-                          };
+                          }
                         })}
                         onChange={uploadDefaultParserChangeHandler}
                         value={{
@@ -323,7 +325,7 @@ export default function Parsers() {
                     <Button
                       onClick={() =>
                         router.push(
-                          "/workbench/parsers/" + parser.id + "/aichat/"
+                          '/workbench/parsers/' + parser.id + '/aichat/'
                         )
                       }
                     >
@@ -375,5 +377,5 @@ export default function Parsers() {
         </>
       )}
     </ParserLayout>
-  );
+  )
 }

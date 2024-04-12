@@ -31,3 +31,11 @@ class OpenAISerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class ProtectedOpenAISerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OpenAI
+        fields = ['id', 'guid', 'parser_id', 'enabled']
+        read_only_fields = ['id']

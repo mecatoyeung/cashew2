@@ -53,7 +53,6 @@ export default function _GroupForm(props) {
     if (!groupId) return
     if (users.length == 0) return
     service.get(`/groups/${groupId}/`, (response) => {
-      console.log(response)
       setGroupForm(
         produce((draft) => {
           draft.id = response.data.id
@@ -143,7 +142,6 @@ export default function _GroupForm(props) {
     setGroupForm(
       produce((draft) => {
         draft.userIds = e
-        console.log(draft.userIds)
       })
     )
   }

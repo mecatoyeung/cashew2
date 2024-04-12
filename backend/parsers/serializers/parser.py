@@ -16,10 +16,10 @@ from parsers.serializers.rule import RuleSerializer
 from parsers.serializers.source import SourceSerializer
 from parsers.serializers.pre_processing import PreProcessingSerializer
 from parsers.serializers.ocr import OCRSerializer, ProtectedOCRSerializer
-from parsers.serializers.chatbot import ChatBotSerializer
+from parsers.serializers.chatbot import ChatBotSerializer, ProtectedChatBotSerializer
 from parsers.serializers.splitting import SplittingSerializer
-from parsers.serializers.open_ai import OpenAISerializer
-from parsers.serializers.open_ai_metrics_key import OpenAIMetricsKeySerializer
+from parsers.serializers.open_ai import OpenAISerializer, ProtectedOpenAISerializer
+from parsers.serializers.open_ai_metrics_key import OpenAIMetricsKeySerializer, ProtectedOpenAIMetricsKeySerializer
 from parsers.serializers.splitting import SplittingSerializer
 from parsers.serializers.post_processing import PostProcessingSerializer
 from parsers.serializers.integration import IntegrationSerializer
@@ -231,3 +231,9 @@ class ProtectedParserSerializer(ParserSerializer):
 
     ocr = ProtectedOCRSerializer(
         many=False, required=True, allow_null=True)
+    chatbot = ProtectedChatBotSerializer(
+        many=False, required=True, allow_null=True)
+    open_ai = ProtectedOpenAISerializer(
+        many=False, required=False, allow_null=True)
+    open_ai_metrics_key = ProtectedOpenAIMetricsKeySerializer(
+        many=False, required=False, allow_null=True)

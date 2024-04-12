@@ -39,6 +39,7 @@ class StreamSerializer(serializers.ModelSerializer):
                   'col_indexes',
                   'stream_conditions',
                   'remove_matched_row_also',
+                  'json_extract_code'
                   ]
         read_only_fields = ['id']
 

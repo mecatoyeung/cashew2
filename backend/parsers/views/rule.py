@@ -56,14 +56,11 @@ class RuleViewSet(viewsets.ModelViewSet):
             parser_id = int(self.request.query_params.get("parserId"))
 
             return queryset.filter(
-                parser__owner=self.request.user,
                 parser_id=parser_id
             ).order_by('id').distinct()
 
         else:
-            return queryset.filter(
-                parser__owner=self.request.user
-            ).order_by('id').distinct()
+            return queryset.order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
@@ -134,10 +131,8 @@ class RuleViewSet(viewsets.ModelViewSet):
 
         document_parser = DocumentParser(rule.parser, document)
 
-        rule_raw_result = document_parser.extract(rule)
+        result = document_parser.extract_and_stream(rule, with_processed_stream=True)
 
-        stream_processor = StreamProcessor(rule)
-
-        response = stream_processor.process(rule_raw_result)
+        response = result["processed_streams"]
 
         return Response(response, status=200)

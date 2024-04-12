@@ -1,97 +1,97 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
 
-import Table from "react-bootstrap/Table";
-import Form from "react-bootstrap/Form";
-import DropdownButton from "react-bootstrap/DropdownButton";
-import Dropdown from "react-bootstrap/Dropdown";
-import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
-import ProgressBar from "react-bootstrap/ProgressBar";
-import Toast from "react-bootstrap/Toast";
-import Select from "react-select";
+import Table from 'react-bootstrap/Table'
+import Form from 'react-bootstrap/Form'
+import DropdownButton from 'react-bootstrap/DropdownButton'
+import Dropdown from 'react-bootstrap/Dropdown'
+import Button from 'react-bootstrap/Button'
+import Modal from 'react-bootstrap/Modal'
+import ProgressBar from 'react-bootstrap/ProgressBar'
+import Toast from 'react-bootstrap/Toast'
+import Select from 'react-select'
 
-import { AgGridReact } from "ag-grid-react";
+import { AgGridReact } from 'ag-grid-react'
 
-import { useDropzone } from "react-dropzone";
+import { useDropzone } from 'react-dropzone'
 
-import axios from "axios";
+import axios from 'axios'
 
-import every from "lodash/every";
+import every from 'lodash/every'
 
-import moment from "moment";
+import moment from 'moment'
 
-import camelize from "../../helpers/camelize";
+import camelize from '../../helpers/camelize'
 
-import service from "../../service";
+import service from '../../service'
 
-import sharedStyles from "../../styles/Queue.module.css";
-import styles from "../../styles/ImportQueue.module.css";
-import { LayoutCssClasses } from "ag-grid-community";
+import sharedStyles from '../../styles/Queue.module.css'
+import styles from '../../styles/ImportQueue.module.css'
+import { LayoutCssClasses } from 'ag-grid-community'
 
 const documentTypes = [
   {
-    label: "Template",
-    value: "TEMPLATE"
+    label: 'Template',
+    value: 'TEMPLATE',
   },
   {
-    label: "Import",
-    value: "IMPORT"
-  }
+    label: 'Import',
+    value: 'IMPORT',
+  },
 ]
 
 const ImportQueue = (props) => {
-  const router = useRouter();
+  const router = useRouter()
 
   const [showUploadDocumentsModal, setShowUploadDocumentsModal] =
-    useState(false);
+    useState(false)
   const closeUploadDocumentsModalHandler = () =>
-    setShowUploadDocumentsModal(false);
+    setShowUploadDocumentsModal(false)
   const openUploadDocumentsModalHandler = () =>
-    setShowUploadDocumentsModal(true);
+    setShowUploadDocumentsModal(true)
 
   const uploadDocumentsBtnClickHandler = () => {
-    setDroppedFiles([]);
-    openUploadDocumentsModalHandler();
-  };
+    setDroppedFiles([])
+    openUploadDocumentsModalHandler()
+  }
 
   const moveToSplitQueueClickHandler = () => {
     let documentIds = queues
       .filter((d) => d.selected == true)
-      .map((d) => d.document.id);
-    service.put("documents/change-queue-class/", {
+      .map((d) => d.document.id)
+    service.put('documents/change-queue-class/', {
       documents: documentIds,
-      queueClass: "SPLIT",
-      queueStatus: "READY"
-    });
-  };
+      queueClass: 'SPLIT',
+      queueStatus: 'READY',
+    })
+  }
 
   const moveToParseQueueClickHandler = () => {
     let documentIds = queues
       .filter((d) => d.selected == true)
-      .map((d) => d.document.id);
-    service.put("documents/change-queue-class/", {
+      .map((d) => d.document.id)
+    service.put('documents/change-queue-class/', {
       documents: documentIds,
-      queue_class: "PARSING",
-      queue_status: "READY"
+      queue_class: 'PARSING',
+      queue_status: 'READY',
     })
   }
 
   const chkQueueChangeHandler = (index, e) => {
-    let updateQueues = [...props.queues];
-    updateQueues[index].selected = e.target.checked;
-    setQueues(updateQueues);
+    let updateQueues = [...props.queues]
+    updateQueues[index].selected = e.target.checked
+    setQueues(updateQueues)
   }
 
   const convertBase64 = (file) => {
     return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
+      const fileReader = new FileReader()
       fileReader.readAsDataURL(file)
       fileReader.onload = () => {
-        resolve(fileReader.result);
+        resolve(fileReader.result)
       }
       fileReader.onerror = (error) => {
-        reject(error);
+        reject(error)
       }
     })
   }
@@ -99,62 +99,68 @@ const ImportQueue = (props) => {
   const confirmUploadDocumentsBtnClickHandler = async () => {
     let errorMessages = []
     for (let i = 0; i < droppedFiles.length; i++) {
-      let droppedFile = droppedFiles[i];
-      let fileExtension = droppedFile.path.split('.').pop();
-      if (fileExtension !== "pdf" && fileExtension !== "PDF" &&
-          fileExtension !== "jpg" && fileExtension !== "JPG" &&
-          fileExtension !== "png" && fileExtension !== "PNG" &&
-          fileExtension !== "tiff" && fileExtension !== "TIFF") {
-        errorMessages.push("File type of filename(" + droppedFile.name + ") is not supported.\n")
-        console.log("continue")
+      let droppedFile = droppedFiles[i]
+      let fileExtension = droppedFile.path.split('.').pop()
+      if (
+        fileExtension !== 'pdf' &&
+        fileExtension !== 'PDF' &&
+        fileExtension !== 'jpg' &&
+        fileExtension !== 'JPG' &&
+        fileExtension !== 'png' &&
+        fileExtension !== 'PNG' &&
+        fileExtension !== 'tiff' &&
+        fileExtension !== 'TIFF'
+      ) {
+        errorMessages.push(
+          'File type of filename(' + droppedFile.name + ') is not supported.\n'
+        )
         continue
       }
-      let formData = new FormData();
-      formData.set("parser", props.parserId)
-      formData.set("documentType", documentType)
-      formData.append("file", droppedFile, droppedFile.name)
+      let formData = new FormData()
+      formData.set('parser', props.parserId)
+      formData.set('documentType', documentType)
+      formData.append('file', droppedFile, droppedFile.name)
 
       const response = service
         .post(
-          "documents/?parserId=" + props.parserId,
+          'documents/?parserId=' + props.parserId,
           formData,
           () => {},
           () => {},
           {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
           {
             onUploadProgress: (progressEvent) => {
               const progress =
-                (progressEvent.loaded / progressEvent.total) * 100;
-              console.log("progress", progress);
-              let updatedFiles = [...droppedFiles];
-              updatedFiles[i].progress = progress;
-              setDroppedFiles(updatedFiles);
+                (progressEvent.loaded / progressEvent.total) * 100
+              let updatedFiles = [...droppedFiles]
+              updatedFiles[i].progress = progress
+              setDroppedFiles(updatedFiles)
               if (every(updatedFiles, { progress: 100 })) {
-                getParser();
-                closeUploadDocumentsModalHandler();
+                getParser()
+                closeUploadDocumentsModalHandler()
               }
             },
           }
         )
-        .catch((error) => {});
+        .catch((error) => {})
     }
     setUploadErrorMessages(errorMessages)
-  };
+  }
 
-  const [uploadErrorMessages, setUploadErrorMessages] = useState("")
-  const [droppedFiles, setDroppedFiles] = useState([]);
+  const [uploadErrorMessages, setUploadErrorMessages] = useState('')
+  const [droppedFiles, setDroppedFiles] = useState([])
   const onDrop = useCallback((acceptedFiles) => {
-    let result = [];
+    let result = []
     for (let i = 0; i < acceptedFiles.length; i++) {
       if (acceptedFiles[i].progress == undefined) {
-        acceptedFiles[i].progress = 0;
+        acceptedFiles[i].progress = 0
       }
-      result.push(acceptedFiles[i]);
+      result.push(acceptedFiles[i])
     }
-    setDroppedFiles(result);
-  }, []);
+    setDroppedFiles(result)
+  }, [])
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
   const [parser, setParser] = useState(null)
@@ -163,11 +169,11 @@ const ImportQueue = (props) => {
   const [queues, setQueues] = useState([])
   const [selectedIds, setSelectedIds] = useState([])
   const [inputData, setInputData] = useState({})
-  const [documentType, setDocumentType] = useState("IMPORT")
+  const [documentType, setDocumentType] = useState('IMPORT')
 
   const getParser = () => {
-    if (!props.parserId) return;
-    service.get("parsers/" + props.parserId + "/", (response) => {
+    if (!props.parserId) return
+    service.get('parsers/' + props.parserId + '/', (response) => {
       setParser(response.data)
     })
   }
@@ -183,26 +189,26 @@ const ImportQueue = (props) => {
   }
 
   const getQueues = () => {
-    if (!props.parserId) return;
+    if (!props.parserId) return
     service.get(
-      "queues/?parserId=" + props.parserId + "&queueClass=IMPORT",
+      'queues/?parserId=' + props.parserId + '&queueClass=IMPORT',
       (response) => {
-        let queues = response.data;
-        setSelectedIds([]);
-        setQueues(response.data);
+        let queues = response.data
+        setSelectedIds([])
+        setQueues(response.data)
       }
-    );
-  };
+    )
+  }
 
   useEffect(() => {
-    getParser();
+    getParser()
     setQueues(props.queues)
     /*getQueues();
     const interval = setInterval(() => {
       getQueues();
     }, 5000);
     return () => clearInterval(interval);*/
-  }, [router.isReady, props.queues]);
+  }, [router.isReady, props.queues])
 
   return (
     <>
@@ -228,10 +234,12 @@ const ImportQueue = (props) => {
             <Modal.Title>Upload Documents</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Select instanceId="documentTypeSelectId" 
-            options={documentTypes} 
-            onChange={documentTypeChangeHandler}
-            value={documentTypes.find(d => d.value == documentType)}/>
+            <Select
+              instanceId="documentTypeSelectId"
+              options={documentTypes}
+              onChange={documentTypeChangeHandler}
+              value={documentTypes.find((d) => d.value == documentType)}
+            />
             <ul className={styles.documentUploadUl}>
               {droppedFiles.map((droppedFile, droppedFileIndex) => {
                 return (
@@ -246,27 +254,36 @@ const ImportQueue = (props) => {
                       />
                     </div>
                   </li>
-                );
+                )
               })}
             </ul>
             <p>{droppedFiles.length} file(s) are found</p>
-            {uploadErrorMessages && uploadErrorMessages.length > 0 && uploadErrorMessages.map((uploadErrorMessage, uploadErrorMessageIndex) => {
-              return (
-                <p key={uploadErrorMessageIndex} style={{ color: "red" }}>{uploadErrorMessage}</p>
-              )
-            })}
+            {uploadErrorMessages &&
+              uploadErrorMessages.length > 0 &&
+              uploadErrorMessages.map(
+                (uploadErrorMessage, uploadErrorMessageIndex) => {
+                  return (
+                    <p key={uploadErrorMessageIndex} style={{ color: 'red' }}>
+                      {uploadErrorMessage}
+                    </p>
+                  )
+                }
+              )}
             <div className={styles.dragZone} {...getRootProps()}>
               <input {...getInputProps()} />
               {isDragActive ? (
                 <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here ...</p>
               ) : (
-                <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to upload...</p>
+                <p>
+                  Drag and drop the PDF/JPG/PNG/TIFF(s) here or click to
+                  upload...
+                </p>
               )}
             </div>
             {parser && (
               <Form>
                 {parser.rules.map((rule) => {
-                  if (rule.ruleType == "INPUT_TEXTFIELD") {
+                  if (rule.ruleType == 'INPUT_TEXTFIELD') {
                     return (
                       <Form.Group
                         className="mb-3"
@@ -282,8 +299,8 @@ const ImportQueue = (props) => {
                           }
                         />
                       </Form.Group>
-                    );
-                  } else if (rule.ruleType == "INPUT_DROPDOWN") {
+                    )
+                  } else if (rule.ruleType == 'INPUT_DROPDOWN') {
                     return (
                       <Form.Group
                         className="mb-3"
@@ -293,16 +310,14 @@ const ImportQueue = (props) => {
                         <Form.Label>{rule.name}</Form.Label>
                         <Select
                           options={rule.inputDropdownList
-                            .split("\n")
+                            .split('\n')
                             .map((o) => {
-                              return { value: o, label: o };
+                              return { value: o, label: o }
                             })}
-                          onChange={(e) =>
-                            txtInputChangeHandler(rule, e.value)
-                          }
+                          onChange={(e) => txtInputChangeHandler(rule, e.value)}
                         />
                       </Form.Group>
-                    );
+                    )
                   }
                 })}
               </Form>
@@ -335,7 +350,7 @@ const ImportQueue = (props) => {
             <thead>
               <tr>
                 <th>
-                  <Form.Check type="checkbox" label="" style={{padding: 0}}/>
+                  <Form.Check type="checkbox" label="" style={{ padding: 0 }} />
                 </th>
                 <th>Document Name</th>
                 <th>Document Type</th>
@@ -354,30 +369,30 @@ const ImportQueue = (props) => {
                           label=""
                           checked={queue.selected}
                           onChange={(e) => chkQueueChangeHandler(queueIndex, e)}
-                          style={{padding: 0}}
+                          style={{ padding: 0 }}
                         />
                       </td>
                       <td className={styles.tdGrow}>
                         {queue.document.filenameWithoutExtension +
-                          "." +
+                          '.' +
                           queue.document.extension}
                       </td>
                       <td>{queue.document.documentType}</td>
-                      <td>{queue.queueStatus.replace("_", " ")}</td>
+                      <td>{queue.queueStatus.replace('_', ' ')}</td>
                       <td className={styles.tdNoWrap}>
                         {moment(queue.document.lastModifiedAt).format(
-                          "YYYY-MM-DD hh:mm:ss a"
+                          'YYYY-MM-DD hh:mm:ss a'
                         )}
                       </td>
                     </tr>
-                  );
+                  )
                 })}
             </tbody>
           </Table>
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ImportQueue;
+export default ImportQueue

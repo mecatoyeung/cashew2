@@ -17,10 +17,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from django.http import StreamingHttpResponse
 from rest_framework.authentication import SessionAuthentication
-from django.contrib.auth.models import User
 
 import requests
 import json
+
+from django.contrib.auth.models import User
 
 from parsers.models.parser import Parser
 from parsers.models.rule import Rule
@@ -131,6 +132,8 @@ class ParserViewSet(viewsets.ModelViewSet):
             if self.request.user.is_superuser:
                 return ParserRetrieveSerializer
             else:
+                if self.request.user.is_superuser:
+                    return ParserRetrieveSerializer
                 if self.request.user.has_perm("parsers.cashew_parser_management"):
                     obj = self.get_object()
                     if obj.owner.id == self.request.user.id:

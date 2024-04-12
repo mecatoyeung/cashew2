@@ -28,9 +28,7 @@ class StreamViewSet(viewsets.ModelViewSet):
         """ Retrieve parsers for authenticated user. """
         queryset = self.queryset
 
-        return queryset.filter(
-            rule__parser__owner=self.request.user
-        ).order_by('id').distinct()
+        return queryset.order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """

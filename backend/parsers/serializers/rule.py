@@ -31,6 +31,8 @@ class RuleSerializer(serializers.ModelSerializer):
         required=False, allow_null=True, allow_blank=True)
     streams = StreamSerializer(
         many=True, required=False, allow_null=True)
+    depends_on = serializers.PrimaryKeyRelatedField(
+        many=False, allow_null=True, queryset=Rule.objects.all())
 
     class Meta:
         model = Rule
@@ -57,6 +59,7 @@ class RuleSerializer(serializers.ModelSerializer):
                   'anchor_document',
                   'anchor_page_num',
                   'acrobat_form_field',
+                  'depends_on',
                   'streams',
                   'last_modified_at']
         read_only_fields = ['id']

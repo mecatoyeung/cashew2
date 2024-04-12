@@ -45,7 +45,6 @@ export default function Profile() {
 
   const getUser = () => {
     service.get('/account/', (response) => {
-      console.log(response)
       setUserForm(
         produce((draft) => {
           ;(draft.email = response.data.email),

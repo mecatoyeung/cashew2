@@ -66,7 +66,6 @@ export default function _UserForm(props) {
     if (!userId) return
     if (userCountries.length == 0) return
     service.get(`/users/${userId}/`, (response) => {
-      console.log(response)
       setUserForm(
         produce((draft) => {
           draft.id = response.data.id
@@ -482,7 +481,6 @@ export default function _UserForm(props) {
             </Form.Group>
           </Row>
           <Row>
-            {console.log(userForm)}
             {props.type == 'edit' && (
               <Form.Group
                 as={Col}

@@ -14,6 +14,8 @@ import AdminHeader from './_adminHeader'
 
 import service from '../service'
 
+import hasPermission from '../helpers/hasPermission'
+
 import 'bootstrap-daterangepicker/daterangepicker.css'
 import adminStyles from '../styles/AdminLayout.module.css'
 
@@ -44,6 +46,56 @@ export default function WorkspaceLayout({ children }) {
       router.push('/')
     })
   }
+
+  const sourcesClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/sources')
+  }
+
+  const queuesClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/queues')
+  }
+
+  const preprocessingsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/preprocessings')
+  }
+
+  const ocrClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/ocr')
+  }
+
+  const aiChatClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/aichat')
+  }
+
+  const fieldsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/rules')
+  }
+
+  const splittingClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/splitting')
+  }
+
+  const postprocessingsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/postprocessings')
+  }
+
+  const integrationsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/integrations')
+  }
+
+  const statisticsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/statistics')
+  }
+
+  const settingsClickHandler = () => {
+    router.push('/admin/parsers/' + parserId + '/settings')
+  }
+
+  useEffect(() => {
+    if (!hasPermission('cashew_parser_management')) {
+      router.push('/workbench/parsers')
+    }
+  })
 
   useEffect(() => {
     getUserProfile()
@@ -96,53 +148,27 @@ export default function WorkspaceLayout({ children }) {
                           {parser.name}
                         </li>
                       )}
-                      <Link href={'/admin/parsers/' + parserId + '/sources'}>
-                        <li>Sources</li>
-                      </Link>
-                      <Link href={'/admin/parsers/' + parserId + '/queues'}>
-                        <li>Queues</li>
-                      </Link>
-                      <Link
-                        href={'/admin/parsers/' + parserId + '/preprocessings'}
-                      >
-                        <li>Pre-processings</li>
-                      </Link>
-                      <Link href={'/admin/parsers/' + parserId + '/ocr'}>
-                        <li>OCR</li>
-                      </Link>
+                      <li onClick={sourcesClickHandler}>Sources</li>
+                      <li onClick={queuesClickHandler}>Queues</li>
+                      <li onClick={preprocessingsClickHandler}>
+                        Pre-processings
+                      </li>
+                      <li onClick={ocrClickHandler}>OCR</li>
                       {parser.type == 'LAYOUT' && (
-                        <Link href={'/admin/parsers/' + parserId + '/aichat'}>
-                          <li>AI Chat</li>
-                        </Link>
+                        <li onClick={aiChatClickHandler}>AI Chat</li>
                       )}
-                      <Link href={'/admin/parsers/' + parserId + '/splitting'}>
-                        <li>Splitting</li>
-                      </Link>
-                      <Link href={'/admin/parsers/' + parserId + '/rules'}>
-                        <li>Fields</li>
-                      </Link>
+                      <li onClick={splittingClickHandler}>Splitting</li>
+                      <li onClick={fieldsClickHandler}>Fields</li>
                       {parser.type == 'LAYOUT' && (
-                        <Link
-                          href={
-                            '/admin/parsers/' + parserId + '/postprocessings'
-                          }
-                        >
-                          <li>Post-processings</li>
-                        </Link>
+                        <li onClick={postprocessingsClickHandler}>
+                          Post-processings
+                        </li>
                       )}
                       {parser.type == 'LAYOUT' && (
-                        <Link
-                          href={'/admin/parsers/' + parserId + '/integrations'}
-                        >
-                          <li>Integrations</li>
-                        </Link>
+                        <li onClick={integrationsClickHandler}>Integrations</li>
                       )}
-                      <Link href={'/admin/parsers/' + parserId + '/statistics'}>
-                        <li>Statistics</li>
-                      </Link>
-                      <Link href={'/admin/parsers/' + parserId + '/settings'}>
-                        <li>Settings</li>
-                      </Link>
+                      <li onClick={statisticsClickHandler}>Statistics</li>
+                      <li onClick={settingsClickHandler}>Settings</li>
                     </ul>
                   </div>
                 </div>

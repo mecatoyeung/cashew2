@@ -1,3 +1,5 @@
+import json
+
 from openai import AzureOpenAI
 
 from parsers.models.parser import Parser
@@ -5,7 +7,7 @@ from parsers.models.parser import Parser
 from parsers.helpers.stream_processors.base import StreamBase
 
 
-class OpenAITextStreamProcessor(StreamBase):
+class OpenAITableStreamProcessor(StreamBase):
 
     def __init__(self, stream):
         self.open_ai_question = stream.open_ai_question
@@ -17,16 +19,17 @@ class OpenAITextStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        output = []
-
         client = AzureOpenAI(
             azure_endpoint='https://' + self.resource_name + '.openai.azure.com/',
             api_key=self.api_key,
             api_version="2024-02-15-preview"
         )
 
-        open_ai_content = self.open_ai_question + \
-            "Please return in JSON format.\nInput: " + "\n".join(input)
+        json_data = str([input["header"]] + input["body"])
+
+        #open_ai_content = self.open_ai_question + \
+            #"Please return in JSON format.\nInput: " + "\n" + json_data
+        open_ai_content = self.open_ai_question + "Please return in JSON format." + "\nInput:\n" + json_data
         message_text = [{"role": "system", "content": open_ai_content}]
 
         try:
@@ -42,5 +45,7 @@ class OpenAITextStreamProcessor(StreamBase):
         except Exception as e:
             raise e
 
-        return completion.choices[0].message.content
+        output = completion.choices[0].message.content
+
+        return output
 

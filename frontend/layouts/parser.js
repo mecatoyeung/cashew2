@@ -22,7 +22,6 @@ export default function ParserLayout({ children }) {
 
   const getUser = () => {
     service.get('account/', (response) => {
-      console.log(response)
       setUser(response.data)
     })
   }
@@ -122,9 +121,11 @@ export default function ParserLayout({ children }) {
                         <Dropdown.Item href="/account/profile">
                           Account
                         </Dropdown.Item>
-                        <Dropdown.Item href="/settings/users">
-                          Settings
-                        </Dropdown.Item>
+                        {hasPermission('cashew_user_management') && (
+                          <Dropdown.Item href="/settings/users">
+                            User Management
+                          </Dropdown.Item>
+                        )}
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>
                           Logout
                         </Dropdown.Item>

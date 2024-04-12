@@ -1,227 +1,227 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import Image from "next/image";
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Image from 'next/image'
 
-import { produce } from "immer";
+import { produce } from 'immer'
 
-import { Form } from "react-bootstrap";
-import { Modal } from "react-bootstrap";
-import { Button } from "react-bootstrap";
-import Tab from "react-bootstrap/Tab";
-import Tabs from "react-bootstrap/Tabs";
+import { Form } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
+import Tab from 'react-bootstrap/Tab'
+import Tabs from 'react-bootstrap/Tabs'
 
-import ParserLayout from "../../../layouts/parser";
+import ParserLayout from '../../../layouts/parser'
 
-import service from "../../../service";
+import service from '../../../service'
 
-import parserStyles from "../../../styles/Parser.module.css";
+import parserStyles from '../../../styles/Parser.module.css'
 
 export default function Parsers() {
-  const router = useRouter();
+  const router = useRouter()
 
-  const [parsers, setParsers] = useState([]);
+  const [parsers, setParsers] = useState([])
 
   const [addLayoutForm, setAddLayoutForm] = useState({
     show: false,
-    name: "",
-  });
+    name: '',
+  })
 
   const [addDocumentClassificationForm, setAddDocumentClassificationForm] =
     useState({
       show: false,
-      name: "",
-    });
+      name: '',
+    })
 
   const [trashConfirmForm, setTrashConfirmForm] = useState({
     show: false,
     isValid: true,
-    name: "",
-    errorMessage: "",
-  });
+    name: '',
+    errorMessage: '',
+  })
 
   const [importModal, setImportModal] = useState({
     show: false,
     selectedFile: null,
-    parserName: "",
+    parserName: '',
     parserNameMatched: true,
-  });
+  })
 
   const getParsers = () => {
-    service.get("parsers/", (response) => {
-      setParsers(response.data);
-    });
-  };
+    service.get('parsers/', (response) => {
+      setParsers(response.data)
+    })
+  }
 
   const addParserBtnClickHandler = () => {
     setAddLayoutForm(
       produce((draft) => {
-        draft.show = true;
+        draft.show = true
       })
-    );
-  };
+    )
+  }
 
   const importParserBtnClickHandler = () => {
     setImportModal(
       produce((draft) => {
-        draft.show = true;
+        draft.show = true
       })
-    );
-  };
+    )
+  }
 
   const closeImportModalHandler = () => {
     setImportModal(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   const layoutNameChangeHandler = (e) => {
     setAddLayoutForm(
       produce((draft) => {
-        draft.name = e.target.value;
+        draft.name = e.target.value
       })
-    );
-  };
+    )
+  }
 
   const confirmAddLayoutBtnClickHandler = () => {
     service.post(
-      "parsers/",
+      'parsers/',
       {
-        type: "LAYOUT",
+        type: 'LAYOUT',
         name: addLayoutForm.name,
         ocr: {
-          ocrType: "NO_OCR",
-          googleVisionOcrApiKey: "",
+          ocrType: 'NO_OCR',
+          googleVisionOcrApiKey: '',
         },
         chatbot: {
-          chatbotType: "NO_CHATBOT",
-          openAiApiKey: "",
+          chatbotType: 'NO_CHATBOT',
+          openAiApiKey: '',
         },
         openAi: {
           enabled: false,
-          openAiApiKey: "",
+          openAiApiKey: '',
         },
       },
       () => {
-        getParsers();
+        getParsers()
         setAddLayoutForm(
           produce((draft) => {
-            draft.name = ""
-            draft.show = false;
+            draft.name = ''
+            draft.show = false
           })
-        );
+        )
       }
-    );
-  };
+    )
+  }
 
   const confirmAddDocumentClassificationBtnClickHandler = () => {
     service.post(
-      "parsers/",
+      'parsers/',
       {
-        type: "ROUTING",
+        type: 'ROUTING',
         name: addDocumentClassificationForm.name,
         ocr: {
-          ocrType: "NO_OCR",
-          googleVisionOcrApiKey: "",
+          ocrType: 'NO_OCR',
+          googleVisionOcrApiKey: '',
         },
         chatbot: {
-          chatbotType: "NO_CHATBOT",
-          openAiApiKey: "",
+          chatbotType: 'NO_CHATBOT',
+          openAiApiKey: '',
         },
         openAi: {
           enabled: false,
-          openAiApiKey: "",
+          openAiApiKey: '',
         },
       },
       () => {
-        getParsers();
+        getParsers()
         setAddDocumentClassificationForm(
           produce((draft) => {
-            draft.name = ""
-            draft.show = false;
+            draft.name = ''
+            draft.show = false
           })
-        );
+        )
       }
-    );
-  };
+    )
+  }
 
   const addDocumentClassificationBtnClickHandler = () => {
     setAddDocumentClassificationForm(
       produce((draft) => {
-        draft.show = true;
+        draft.show = true
       })
-    );
-  };
+    )
+  }
 
   const documentClassificationNameChangeHandler = (e) => {
     setAddDocumentClassificationForm(
       produce((draft) => {
-        draft.name = e.target.value;
+        draft.name = e.target.value
       })
-    );
-  };
+    )
+  }
 
   const importFileChangeHandler = (e) => {
     setImportModal({
       ...importModal,
       selectedFile: e.target.files[0],
-    });
-  };
+    })
+  }
 
   const confirmImportParserBtnClickHandler = () => {
-    const formData = new FormData();
+    const formData = new FormData()
 
     formData.append(
-      "importParsers.json",
+      'importParsers.json',
       importModal.selectedFile,
       importModal.selectedFile.name
-    );
+    )
 
-    service.post("parsers/import/", formData, (response) => {
+    service.post('parsers/import/', formData, (response) => {
       setImportModal({
         ...importModal,
         show: false,
-      });
-      getParsers();
-    });
-  };
+      })
+      getParsers()
+    })
+  }
 
   const trashLayoutNameChangeHandler = (e) => {
     setTrashConfirmForm(
       produce((draft) => {
-        draft.name = e.target.value;
+        draft.name = e.target.value
       })
-    );
-  };
+    )
+  }
 
   const closeLayoutBtnClickHandler = () => {
     setAddLayoutForm(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   const closeDocumentClassificationBtnClickHandler = () => {
     setAddDocumentClassificationForm(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   const trashClickHandler = (parserId) => {
     setTrashConfirmForm(
       produce((draft) => {
-        draft.show = true;
-        draft.parserId = parserId;
-        draft.name = ""
-        draft.isValid = true;
-        draft.errorMessage = "";
+        draft.show = true
+        draft.parserId = parserId
+        draft.name = ''
+        draft.isValid = true
+        draft.errorMessage = ''
       })
-    );
-  };
+    )
+  }
 
   const confirmTrashHandler = (parserId) => {
     if (
@@ -230,64 +230,65 @@ export default function Parsers() {
     ) {
       setTrashConfirmForm(
         produce((draft) => {
-          draft.name = ""
-          draft.isValid = false;
-          draft.errorMessage = "Parser name does not match.";
+          draft.name = ''
+          draft.isValid = false
+          draft.errorMessage = 'Parser name does not match.'
         })
-      );
-      return;
+      )
+      return
     } else {
       setTrashConfirmForm(
         produce((draft) => {
-          draft.name = ""
-          draft.isValid = true;
-          draft.errorMessage = "";
+          draft.name = ''
+          draft.isValid = true
+          draft.errorMessage = ''
         })
-      );
+      )
     }
-    service.delete("parsers/" + trashConfirmForm.parserId + "/", (response) => {
-      console.log(response)
-      if (response.status == 204) {
+    service.delete(
+      'parsers/' + trashConfirmForm.parserId + '/',
+      (response) => {
+        if (response.status == 204) {
+          setTrashConfirmForm(
+            produce((draft) => {
+              draft.show = false
+            })
+          )
+          getParsers()
+        } else {
+          setTrashConfirmForm(
+            produce((draft) => {
+              draft.isValid = false
+              draft.errorMessage =
+                'Delete parser failed. Please consult system administrator.'
+            })
+          )
+          return
+        }
+      },
+      (error) => {
         setTrashConfirmForm(
           produce((draft) => {
-            draft.show = false;
+            draft.isValid = false
+            draft.errorMessage = error.response.data
           })
-        );
-        getParsers();
-      } else {
-        setTrashConfirmForm(
-          produce((draft) => {
-            draft.isValid = false;
-            draft.errorMessage =
-              "Delete parser failed. Please consult system administrator.";
-          })
-        );
-        return;
+        )
+        return
       }
-    }, error => {
-      console.log(error)
-      setTrashConfirmForm(
-          produce((draft) => {
-            draft.isValid = false;
-            draft.errorMessage =
-              error.response.data
-          })
-        );
-        return;
-    });
-  };
+    )
+  }
 
   const closeTrashHandler = () => {
     setTrashConfirmForm(
       produce((draft) => {
-        draft.show = false;
+        draft.show = false
       })
-    );
-  };
+    )
+  }
 
   useEffect(() => {
-    getParsers();
-  }, []);
+    getParsers()
+  }, [])
 
   return (
     <ParserLayout>
@@ -353,7 +354,7 @@ export default function Parsers() {
               </li>
               <Modal show={importModal.show} onHide={closeImportModalHandler}>
                 <Modal.Header closeButton>
-                  <Modal.Title style={{ color: "red" }}>
+                  <Modal.Title style={{ color: 'red' }}>
                     Import Parsers (Please note that multiple parsers may be
                     created)
                   </Modal.Title>
@@ -382,15 +383,13 @@ export default function Parsers() {
               {parsers &&
                 parsers.length > 0 &&
                 parsers
-                  .filter((p) => p.type == "LAYOUT")
+                  .filter((p) => p.type == 'LAYOUT')
                   .map((parser) => (
                     <li key={parser.id}>
                       <div
                         className={parserStyles.parserName}
                         onClick={() =>
-                          router.push(
-                            "/admin/parsers/" + parser.id + "/rules"
-                          )
+                          router.push('/admin/parsers/' + parser.id + '/rules')
                         }
                       >
                         <span>{parser.name}</span>
@@ -501,15 +500,13 @@ export default function Parsers() {
               {parsers &&
                 parsers.length > 0 &&
                 parsers
-                  .filter((p) => p.type == "ROUTING")
+                  .filter((p) => p.type == 'ROUTING')
                   .map((parser) => (
                     <li key={parser.id}>
                       <div
                         className={parserStyles.parserName}
                         onClick={() =>
-                          router.push(
-                            "/admin/parsers/" + parser.id + "/rules"
-                          )
+                          router.push('/admin/parsers/' + parser.id + '/rules')
                         }
                       >
                         <span>{parser.name}</span>
@@ -527,5 +524,5 @@ export default function Parsers() {
         </Tabs>
       </div>
     </ParserLayout>
-  );
+  )
 }

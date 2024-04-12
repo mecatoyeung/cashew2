@@ -40,6 +40,8 @@ class Stream(models.Model):
         null=True, blank=True, max_length=1024, default="")
     unpivot_property_assign_char = models.TextField(
         null=True, blank=True, max_length=1024, default="")
+    json_extract_code = models.TextField(
+        null=True, blank=True, max_length=1024, default="")
 
     class Meta:
         db_table = 'streams'

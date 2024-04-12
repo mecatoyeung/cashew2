@@ -118,6 +118,7 @@ def process_single_preprocessing_queue(queue_job):
 
         # Update last modified at
         document.last_modified_at = datetime.now()
+        document.save()
 
         # Mark the job as preprocessing in progress
         updated_queue_job = Queue.objects.get(pk=queue_job.id)

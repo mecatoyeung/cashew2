@@ -1,6 +1,8 @@
 import os
 import io
 import uuid
+from datetime import datetime
+
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -108,6 +110,7 @@ class DocumentUploadSerializer(DocumentSerializer):
 
         validated_data["extension"] = "pdf"
         validated_data["document_extension"] = "PDF"
+        validated_data["last_modified_at"] = datetime.now()
         document = Document.objects.create(**validated_data)
 
         document.save()

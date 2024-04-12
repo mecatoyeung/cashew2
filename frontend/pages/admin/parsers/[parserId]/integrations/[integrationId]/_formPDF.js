@@ -1,28 +1,27 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react"
-import { useRouter } from "next/router"
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/router'
 
-import { produce } from "immer"
+import { produce } from 'immer'
 
-import { Form } from "react-bootstrap"
-import { Modal } from "react-bootstrap"
-import { Button } from "react-bootstrap"
-import { Dropdown } from "react-bootstrap"
-import { Accordion } from "react-bootstrap"
+import { Form } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
+import { Dropdown } from 'react-bootstrap'
+import { Accordion } from 'react-bootstrap'
 
-import Select from "react-select"
+import Select from 'react-select'
 
-import { AgGridReact } from "ag-grid-react"
+import { AgGridReact } from 'ag-grid-react'
 
-import IntegrationEdtior from "../../../../../../components/integrationEditor";
+import IntegrationEdtior from '../../../../../../components/integrationEditor'
 
-import WorkspaceLayout from "../../../../../../layouts/admin"
+import WorkspaceLayout from '../../../../../../layouts/admin'
 
-import service from "../../../../../../service"
+import service from '../../../../../../service'
 
-import rulesStyles from "../../../../../../styles/Sources.module.css"
+import rulesStyles from '../../../../../../styles/Sources.module.css'
 
 export default function Parsers(props) {
-
   const router = useRouter()
 
   const { parserId, integrationId } = router.query
@@ -33,83 +32,88 @@ export default function Parsers(props) {
 
   const getRules = () => {
     if (!parserId) return
-    service.get(`rules/?parserId=${parserId}`, response => {
-      console.log(response.data)
+    service.get(`rules/?parserId=${parserId}`, (response) => {
       setRules(response.data)
     })
   }
 
   let pdfIntegrationTypeOptions = [
     {
-      label: "Source",
-      value: "SOURCE"
+      label: 'Source',
+      value: 'SOURCE',
     },
     {
-      label: "Pre Processing",
-      value: "PRE_PROCESSING"
+      label: 'Pre Processing',
+      value: 'PRE_PROCESSING',
     },
     {
-      label: "OCR",
-      value: "OCR"
+      label: 'OCR',
+      value: 'OCR',
     },
     {
-      label: "Post Processing",
-      value: "POST_PROCESSING"
+      label: 'Post Processing',
+      value: 'POST_PROCESSING',
     },
   ]
 
   const [form, setForm] = useState({
-    name: "",
+    name: '',
     parser: parserId,
-    integrationType: "PDF_INTEGRATION",
-    pdfIntegrationType: "SOURCE",
+    integrationType: 'PDF_INTEGRATION',
+    pdfIntegrationType: 'SOURCE',
     preProcessing: null,
     postProcessing: null,
-    pdfPath: "",
+    pdfPath: '',
     intervalSeconds: 15,
     activated: true,
-    errorMessage: "",
+    errorMessage: '',
   })
 
   const [preProcessings, setPreProcessings] = useState([])
   const [postProcessings, setPostProcessings] = useState([])
 
   const selectPdfIntegrationTypeChangeHandler = (e) => {
-    setForm(produce((draft) => {
-      draft.pdfIntegrationType = e.value
-    }))
+    setForm(
+      produce((draft) => {
+        draft.pdfIntegrationType = e.value
+      })
+    )
   }
 
   const selectPreProcessingChangeHandler = (e) => {
-    setForm(produce((draft) => {
-      draft.preProcessing = e.value
-    }))
+    setForm(
+      produce((draft) => {
+        draft.preProcessing = e.value
+      })
+    )
   }
 
   const selectPostProcessingChangeHandler = (e) => {
-    setForm(produce((draft) => {
-      draft.postProcessing = e.value
-    }))
+    setForm(
+      produce((draft) => {
+        draft.postProcessing = e.value
+      })
+    )
   }
 
   const addBtnClickHandler = () => {
-    let errorMessage = "";
-    if (form.name.trim() == "") {
-      errorMessage = "Integration Name should not be empty."
+    let errorMessage = ''
+    if (form.name.trim() == '') {
+      errorMessage = 'Integration Name should not be empty.'
     }
-    if (form.pdfPath.trim() == "") {
-      errorMessage = "PDF Path should not be empty."
+    if (form.pdfPath.trim() == '') {
+      errorMessage = 'PDF Path should not be empty.'
     }
     setForm(
       produce((draft) => {
-        draft.errorMessage = errorMessage;
+        draft.errorMessage = errorMessage
       })
-    );
+    )
     if (errorMessage) {
-      return;
+      return
     }
     service.post(
-      "/integrations/",
+      '/integrations/',
       {
         name: form.name,
         parser: parserId,
@@ -122,18 +126,18 @@ export default function Parsers(props) {
         activated: form.activated,
       },
       (response) => {
-        router.push("/admin/parsers/" + parserId + "/integrations/")
+        router.push('/admin/parsers/' + parserId + '/integrations/')
       }
-    );
-  };
+    )
+  }
 
   const backBtnClickHandler = () => {
-    router.push("/admin/parsers/" + parserId + "/integrations/")
-  };
+    router.push('/admin/parsers/' + parserId + '/integrations/')
+  }
 
   const saveBtnClickHandler = () => {
     service.put(
-      "/integrations/" + integrationId + "/",
+      '/integrations/' + integrationId + '/',
       {
         name: form.name,
         parser: parserId,
@@ -146,15 +150,14 @@ export default function Parsers(props) {
         activated: form.activated,
       },
       (response) => {
-        router.push("/admin/parsers/" + parserId + "/integrations/")
+        router.push('/admin/parsers/' + parserId + '/integrations/')
       }
     )
   }
 
   const getIntegration = () => {
     if (!integrationId) return
-    service.get("/integrations/" + integrationId + "/", (response) => {
-      console.log(response)
+    service.get('/integrations/' + integrationId + '/', (response) => {
       setForm(
         produce((draft) => {
           draft.name = response.data.name
@@ -173,30 +176,30 @@ export default function Parsers(props) {
 
   const getPreProcessings = () => {
     if (!parserId) return
-    service.get("/preprocessings?parserId=" + parserId , (response) => {
+    service.get('/preprocessings?parserId=' + parserId, (response) => {
       setPreProcessings(response.data)
     })
   }
 
   const getPostProcessings = () => {
     if (!parserId) return
-    service.get("/postprocessings?parserId=" + parserId , (response) => {
+    service.get('/postprocessings?parserId=' + parserId, (response) => {
       setPostProcessings(response.data)
     })
   }
 
   const pdfPathChangeHandler = (e) => {
     setPdfPathSelectionStart(0)
-    e.target.value = e.target.value.replace(/[\r\n]+/g, " ");
+    e.target.value = e.target.value.replace(/[\r\n]+/g, ' ')
     setForm(
       produce((draft) => {
         draft.pdfPath = e.target.value
       })
     )
   }
-  
+
   useEffect(() => {
-    if (props.type == "edit") {
+    if (props.type == 'edit') {
       getIntegration()
     }
     getPreProcessings()
@@ -207,10 +210,10 @@ export default function Parsers(props) {
   return (
     <WorkspaceLayout>
       <div className={rulesStyles.wrapper}>
-        {props.type == "add" && (
+        {props.type == 'add' && (
           <h1 className={rulesStyles.h1}>Add PDF Integration</h1>
         )}
-        {props.type == "edit" && (
+        {props.type == 'edit' && (
           <h1 className={rulesStyles.h1}>Edit PDF Integration</h1>
         )}
         <Accordion defaultActiveKey="0" style={{ padding: 10 }}>
@@ -227,74 +230,95 @@ export default function Parsers(props) {
                     onChange={(e) => {
                       setForm(
                         produce((draft) => {
-                          draft.name = e.target.value;
+                          draft.name = e.target.value
                         })
-                      );
+                      )
                     }}
                   />
                 </Form.Group>
-                <Form.Group className="col-12" controlId="addForm.pdfIntegrationType">
+                <Form.Group
+                  className="col-12"
+                  controlId="addForm.pdfIntegrationType"
+                >
                   <Form.Label>PDF Integration Type</Form.Label>
                   <Select
                     classNamePrefix="react-select"
                     options={pdfIntegrationTypeOptions}
-                    value={pdfIntegrationTypeOptions.find(o => o.value == form.pdfIntegrationType)}
+                    value={pdfIntegrationTypeOptions.find(
+                      (o) => o.value == form.pdfIntegrationType
+                    )}
                     onChange={(e) => selectPdfIntegrationTypeChangeHandler(e)}
                     menuPlacement="auto"
-                    menuPosition="fixed" />
+                    menuPosition="fixed"
+                  />
                 </Form.Group>
-                {form.pdfIntegrationType == "PRE_PROCESSING" && preProcessings && (
-                  <Form.Group className="col-12" controlId="addForm.preProcessingId">
-                    <Form.Label>Pre-processing</Form.Label>
-                    <Select
-                      classNamePrefix="react-select"
-                      options={preProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      })}
-                      value={preProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      }).find(o => o.value == form.preProcessing)}
-                      onChange={(e) => selectPreProcessingChangeHandler(e)}
-                      menuPlacement="auto"
-                      menuPosition="fixed" />
-                  </Form.Group>
-                )}
-                {form.pdfIntegrationType == "POST_PROCESSING" && postProcessings && (
-                  <Form.Group className="col-12" controlId="addForm.postProcessingId">
-                    <Form.Label>Post-processing</Form.Label>
-                    <Select
-                      classNamePrefix="react-select"
-                      options={postProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      })}
-                      value={postProcessings.map(pp => {
-                        return {
-                          label: pp.name,
-                          value: pp.id
-                        }
-                      }).find(o => o.value == form.postProcessing)}
-                      onChange={selectPostProcessingChangeHandler}
-                      menuPlacement="auto"
-                      menuPosition="fixed" />
-                  </Form.Group>
-                )}
+                {form.pdfIntegrationType == 'PRE_PROCESSING' &&
+                  preProcessings && (
+                    <Form.Group
+                      className="col-12"
+                      controlId="addForm.preProcessingId"
+                    >
+                      <Form.Label>Pre-processing</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={preProcessings.map((pp) => {
+                          return {
+                            label: pp.name,
+                            value: pp.id,
+                          }
+                        })}
+                        value={preProcessings
+                          .map((pp) => {
+                            return {
+                              label: pp.name,
+                              value: pp.id,
+                            }
+                          })
+                          .find((o) => o.value == form.preProcessing)}
+                        onChange={(e) => selectPreProcessingChangeHandler(e)}
+                        menuPlacement="auto"
+                        menuPosition="fixed"
+                      />
+                    </Form.Group>
+                  )}
+                {form.pdfIntegrationType == 'POST_PROCESSING' &&
+                  postProcessings && (
+                    <Form.Group
+                      className="col-12"
+                      controlId="addForm.postProcessingId"
+                    >
+                      <Form.Label>Post-processing</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={postProcessings.map((pp) => {
+                          return {
+                            label: pp.name,
+                            value: pp.id,
+                          }
+                        })}
+                        value={postProcessings
+                          .map((pp) => {
+                            return {
+                              label: pp.name,
+                              value: pp.id,
+                            }
+                          })
+                          .find((o) => o.value == form.postProcessing)}
+                        onChange={selectPostProcessingChangeHandler}
+                        menuPlacement="auto"
+                        menuPosition="fixed"
+                      />
+                    </Form.Group>
+                  )}
                 {rules && (
-                  <IntegrationEdtior 
-                    editorId="pdfPath" 
-                    displayName="PDF Output Path" 
+                  <IntegrationEdtior
+                    editorId="pdfPath"
+                    displayName="PDF Output Path"
                     rules={rules}
                     value={form.pdfPath}
                     placeholder="Please enter PDF path"
-                    onChange={pdfPathChangeHandler}/>
+                    onChange={pdfPathChangeHandler}
+                  />
                 )}
                 <Form.Group
                   className="col-12"
@@ -308,9 +332,9 @@ export default function Parsers(props) {
                     onChange={(e) => {
                       setForm(
                         produce((draft) => {
-                          draft.intervalSeconds = e.target.value;
+                          draft.intervalSeconds = e.target.value
                         })
-                      );
+                      )
                     }}
                   />
                 </Form.Group>
@@ -323,16 +347,16 @@ export default function Parsers(props) {
                     onChange={(e) => {
                       setForm(
                         produce((draft) => {
-                          draft.activated = e.target.checked;
+                          draft.activated = e.target.checked
                         })
-                      );
+                      )
                     }}
                   />
                 </Form.Group>
                 {form.errorMessage && (
                   <p class="errorMessage">{form.errorMessage}</p>
                 )}
-                {props.type == "add" && (
+                {props.type == 'add' && (
                   <Button
                     onClick={addBtnClickHandler}
                     style={{ marginRight: 10 }}
@@ -340,7 +364,7 @@ export default function Parsers(props) {
                     Add PDF Integration
                   </Button>
                 )}
-                {props.type == "edit" && (
+                {props.type == 'edit' && (
                   <Button
                     onClick={saveBtnClickHandler}
                     style={{ marginRight: 10 }}
@@ -357,5 +381,5 @@ export default function Parsers(props) {
         </Accordion>
       </div>
     </WorkspaceLayout>
-  );
+  )
 }

@@ -1,27 +1,33 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
+import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
 
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useRouter } from 'next/router'
+import { useState, useEffect } from 'react'
 
-import { Nav } from "react-bootstrap";
-import { Button } from "react-bootstrap";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
+import { Nav } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
 
-import AdminHeader from "./_adminHeader";
+import AdminHeader from './_adminHeader'
 
-import service from "../service";
+import service from '../service'
 
-import settingsStyles from "../styles/Settings.module.css";
+import settingsStyles from '../styles/Settings.module.css'
+
+import hasPermission from '../helpers/hasPermission'
 
 export default function AccountLayout({ children }) {
-  const router = useRouter();
+  const router = useRouter()
 
-  let {} = router.query;
+  let {} = router.query
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (!hasPermission('cashew_user_management')) {
+      router.push('/workbench/parsers')
+    }
+  }, [])
 
   return (
     <>
@@ -34,65 +40,69 @@ export default function AccountLayout({ children }) {
         ></meta>
         <link rel="icon" href="/static/favicon.ico" />
       </Head>
-      <div className={settingsStyles.wrapper}>
-        <AdminHeader />
-        <hr className={settingsStyles.headerHr} />
-        <main className={settingsStyles.main + " d-flex flex-column"}>
-          <div
-            className={
-              settingsStyles.sideNavContainerDiv + " d-flex flex-grow-1"
-            }
-          >
+      {hasPermission('cashew_user_management') && (
+        <div className={settingsStyles.wrapper}>
+          <AdminHeader />
+          <hr className={settingsStyles.headerHr} />
+          <main className={settingsStyles.main + ' d-flex flex-column'}>
             <div
-              className="row d-flex flex-grow-1"
-              style={{ padding: 0, margin: 0, flexDirection: "row" }}
+              className={
+                settingsStyles.sideNavContainerDiv + ' d-flex flex-grow-1'
+              }
             >
               <div
-                className="col-12 col-md-2 d-flex"
-                style={{ paddingLeft: 0, paddingRight: 0, width: 200 }}
+                className="row d-flex flex-grow-1"
+                style={{ padding: 0, margin: 0, flexDirection: 'row' }}
               >
                 <div
-                  className={settingsStyles.sideNavDiv + " d-flex flex-grow-1"}
+                  className="col-12 col-md-2 d-flex"
+                  style={{ paddingLeft: 0, paddingRight: 0, width: 200 }}
                 >
-                  <ul className={settingsStyles.sideNavUl}>
-                    <Link href={"/settings/users"}>
-                      <li>Users</li>
-                    </Link>
-                    <Link href={"/settings/groups"}>
-                      <li>User Groups</li>
-                    </Link>
-                  </ul>
+                  <div
+                    className={
+                      settingsStyles.sideNavDiv + ' d-flex flex-grow-1'
+                    }
+                  >
+                    <ul className={settingsStyles.sideNavUl}>
+                      <Link href={'/settings/users'}>
+                        <li>Users</li>
+                      </Link>
+                      <Link href={'/settings/groups'}>
+                        <li>User Groups</li>
+                      </Link>
+                    </ul>
+                  </div>
                 </div>
-              </div>
-              <div
-                className="col-12 col-md-10 flex-grow-1"
-                style={{
-                  paddingLeft: 0,
-                  paddingRight: 0,
-                  paddingBottom: 10,
-                  minHeight: "480px",
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "calc(100% - 200px)",
-                }}
-              >
-                {children}
-              </div>
-            </div>
-          </div>
-        </main>
-        <footer className={settingsStyles.footer}>
-          <div style={{ width: "100%", padding: "0 10px" }}>
-            <div className="row" style={{ padding: "0 10px" }}>
-              <div className="col-sm" style={{ padding: "10px" }}>
-                <div className={settingsStyles.copyright}>
-                  2023. All rights reserved.
+                <div
+                  className="col-12 col-md-10 flex-grow-1"
+                  style={{
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    paddingBottom: 10,
+                    minHeight: '480px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: 'calc(100% - 200px)',
+                  }}
+                >
+                  {children}
                 </div>
               </div>
             </div>
-          </div>
-        </footer>
-      </div>
+          </main>
+          <footer className={settingsStyles.footer}>
+            <div style={{ width: '100%', padding: '0 10px' }}>
+              <div className="row" style={{ padding: '0 10px' }}>
+                <div className="col-sm" style={{ padding: '10px' }}>
+                  <div className={settingsStyles.copyright}>
+                    2023. All rights reserved.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
+      )}
     </>
-  );
+  )
 }

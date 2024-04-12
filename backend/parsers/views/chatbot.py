@@ -16,11 +16,13 @@ from drf_spectacular.utils import (
 import requests
 import json
 
+from django.contrib.auth.models import User
+
 from parsers.models.parser import Parser
 from parsers.models.document import Document
 from parsers.models.chatbot import ChatBot
 
-from parsers.serializers.chatbot import ChatBotSerializer
+from parsers.serializers.chatbot import ChatBotSerializer, ProtectedChatBotSerializer
 
 from parsers.helpers.document_parser import DocumentParser
 
@@ -45,7 +47,7 @@ class ChatBotViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
-        queryset = self.queryset
+        queryset = self.queryset.select_related("parser")
 
         parser_id = int(self.request.query_params.get("parserId"))
 
@@ -59,7 +61,21 @@ class ChatBotViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return ChatBotSerializer
         elif self.action == 'retrieve':
-            return ChatBotSerializer
+            if self.request.user.is_superuser:
+                return ChatBotSerializer
+            if self.request.user.has_perm("parsers.cashew_parser_management"):
+                obj = self.get_object()
+                if obj.parser.owner.id == self.request.user.id:
+                    return ChatBotSerializer
+                for permitted_user in obj.parser.permitted_users.all():
+                    if permitted_user.id == self.request.user.id:
+                        return ChatBotSerializer
+                for permitted_group in obj.parser.permitted_groups.all():
+                    users = User.objects.filter(groups__id=permitted_group.id)
+                    for user in users:
+                        if user.id == self.request.user.id:
+                            return ChatBotSerializer
+            return ProtectedChatBotSerializer
         elif self.action == 'update':
             return ChatBotSerializer
         elif self.action == 'list':

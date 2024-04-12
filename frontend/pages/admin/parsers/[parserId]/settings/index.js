@@ -60,7 +60,6 @@ const Settings = () => {
 
   const getParser = () => {
     service.get('parsers/' + parserId + '/', (response) => {
-      console.log(response.data)
       setParser(response.data)
     })
   }
@@ -94,7 +93,6 @@ const Settings = () => {
 
   const getGroups = () => {
     service.get('groups/', (response) => {
-      console.log(response.data)
       setGroups(
         response.data.map((u) => {
           return {
@@ -340,7 +338,6 @@ const Settings = () => {
   }
 
   const openAIMetricsTenantIdChangeHandler = (e) => {
-    console.log(e.target.value)
     let updatedOpenAiMetricsKey = { ...parser.openAiMetricsKey }
     updatedOpenAiMetricsKey.openAiMetricsTenantId = e.target.value
     setParser({
@@ -406,7 +403,6 @@ const Settings = () => {
         setUpdatedParser(!updatedParser)
       },
       (errorResponse) => {
-        console.log(errorResponse)
         if (errorResponse.response.status == 403) {
         }
       }

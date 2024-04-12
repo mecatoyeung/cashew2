@@ -35,3 +35,11 @@ class OpenAIMetricsKeySerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class ProtectedOpenAIMetricsKeySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OpenAIMetricsKey
+        fields = ['id',]
+        read_only_fields = ['id', 'parser']

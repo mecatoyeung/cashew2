@@ -52,6 +52,7 @@ def process_import_queue_job():
 
         # Update last modified at
         document.last_modified_at = datetime.now()
+        document.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.PRE_PROCESSING.value

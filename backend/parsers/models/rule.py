@@ -1,4 +1,5 @@
 import uuid
+import pytz
 
 from django.db import models
 from django.utils import timezone
@@ -40,6 +41,8 @@ class Rule(models.Model):
         "Document", null=True, related_name='rule', on_delete=models.CASCADE)
     anchor_page_num = models.IntegerField(null=True)
     acrobat_form_field = models.CharField(max_length=255, null=True, default="")
+    depends_on = models.ForeignKey(
+        "Rule", null=True, related_name='depending_rules', on_delete=models.CASCADE)
     last_modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

@@ -133,7 +133,7 @@ export default function AdminHeader({ children }) {
                           Account
                         </Dropdown.Item>
                         <Dropdown.Item href="/settings/users">
-                          Settings
+                          User Management
                         </Dropdown.Item>
                         <Dropdown.Item href="#" onClick={logoutBtnClickHandler}>
                           Logout

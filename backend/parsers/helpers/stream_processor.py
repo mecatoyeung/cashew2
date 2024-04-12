@@ -1,5 +1,6 @@
 import copy
 import traceback
+import json
 
 from django.db.models import Prefetch
 from django.core import serializers
@@ -10,29 +11,33 @@ from ..models.rule_type import RuleType
 from ..models.rule import Rule
 from ..models.stream import Stream
 from .rule_extractor import RuleExtractor
-from .stream_processors.textfield.extract_first_n_lines import ExtractFirstNLinesStreamProcessor
-from .stream_processors.textfield.extract_nth_lines import ExtractNthLinesStreamProcessor
-from .stream_processors.textfield.regex_extract import RegexExtractStreamProcessor
-from .stream_processors.textfield.regex_replace import RegexReplaceStreamProcessor
-from .stream_processors.textfield.join_all_rows import JoinAllRowsStreamProcessor
-from .stream_processors.textfield.trim_space import TrimSpaceStreamProcessor
-from .stream_processors.textfield.remove_text_before_start_of_text import RemoveTextBeforeStartOfTextStreamProcessor
-from .stream_processors.textfield.remove_text_before_end_of_text import RemoveTextBeforeEndOfTextStreamProcessor
-from .stream_processors.textfield.remove_text_after_start_of_text import RemoveTextAfterStartOfTextStreamProcessor
-from .stream_processors.textfield.remove_text_after_end_of_text import RemoveTextAfterEndOfTextStreamProcessor
-from .stream_processors.textfield.convert_to_table_by_specify_header import ConvertToTableBySpecifyHeaderStreamProcessor
-from .stream_processors.textfield.remove_empty_lines import RemoveEmptyLinesStreamProcessor
-from parsers.helpers.stream_processors.textfield.openai import OpenAIStreamProcessor
-from .stream_processors.table.combine_first_n_lines import CombineFirstNLinesStreamProcessor
-from .stream_processors.table.get_chars_from_next_col_if_regex_not_match import GetCharsFromNextColIfRegexNotMatchStreamProcessor
-from .stream_processors.table.trim_space import TrimSpaceTableStreamProcessor
-from .stream_processors.table.remove_rows_with_conditions import RemoveRowsWithConditionsStreamProcessor
-from .stream_processors.table.merge_rows_with_conditions import MergeRowsWithConditionsStreamProcessor
-from .stream_processors.table.merge_rows_with_same_columns import MergeRowsWithSameColumnsStreamProcessor
-from .stream_processors.table.remove_rows_before_row_with_conditions import RemoveRowsBeforeRowWithConditionsStreamProcessor
-from .stream_processors.table.remove_rows_after_row_with_conditions import RemoveRowsAfterRowWithConditionsStreamProcessor
-from .stream_processors.table.unpivot_column import UnpivotColumnStreamProcessor
-from .stream_processors.table.make_first_row_to_be_header import MakeFirstRowToBeHeaderStreamProcessor
+from parsers.helpers.stream_processors.textfield.extract_first_n_lines import ExtractFirstNLinesStreamProcessor
+from parsers.helpers.stream_processors.textfield.extract_nth_lines import ExtractNthLinesStreamProcessor
+from parsers.helpers.stream_processors.textfield.regex_extract import RegexExtractStreamProcessor
+from parsers.helpers.stream_processors.textfield.regex_replace import RegexReplaceStreamProcessor
+from parsers.helpers.stream_processors.textfield.join_all_rows import JoinAllRowsStreamProcessor
+from parsers.helpers.stream_processors.textfield.trim_space import TrimSpaceStreamProcessor
+from parsers.helpers.stream_processors.textfield.remove_text_before_start_of_text import RemoveTextBeforeStartOfTextStreamProcessor
+from parsers.helpers.stream_processors.textfield.remove_text_before_end_of_text import RemoveTextBeforeEndOfTextStreamProcessor
+from parsers.helpers.stream_processors.textfield.remove_text_after_start_of_text import RemoveTextAfterStartOfTextStreamProcessor
+from parsers.helpers.stream_processors.textfield.remove_text_after_end_of_text import RemoveTextAfterEndOfTextStreamProcessor
+from parsers.helpers.stream_processors.textfield.convert_to_table_by_specify_header import ConvertToTableBySpecifyHeaderStreamProcessor
+from parsers.helpers.stream_processors.textfield.remove_empty_lines import RemoveEmptyLinesStreamProcessor
+from parsers.helpers.stream_processors.textfield.openai import OpenAITextStreamProcessor
+
+from parsers.helpers.stream_processors.table.combine_first_n_lines import CombineFirstNLinesStreamProcessor
+from parsers.helpers.stream_processors.table.get_chars_from_next_col_if_regex_not_match import GetCharsFromNextColIfRegexNotMatchStreamProcessor
+from parsers.helpers.stream_processors.table.trim_space import TrimSpaceTableStreamProcessor
+from parsers.helpers.stream_processors.table.remove_rows_with_conditions import RemoveRowsWithConditionsStreamProcessor
+from parsers.helpers.stream_processors.table.merge_rows_with_conditions import MergeRowsWithConditionsStreamProcessor
+from parsers.helpers.stream_processors.table.merge_rows_with_same_columns import MergeRowsWithSameColumnsStreamProcessor
+from parsers.helpers.stream_processors.table.remove_rows_before_row_with_conditions import RemoveRowsBeforeRowWithConditionsStreamProcessor
+from parsers.helpers.stream_processors.table.remove_rows_after_row_with_conditions import RemoveRowsAfterRowWithConditionsStreamProcessor
+from parsers.helpers.stream_processors.table.unpivot_column import UnpivotColumnStreamProcessor
+from parsers.helpers.stream_processors.table.make_first_row_to_be_header import MakeFirstRowToBeHeaderStreamProcessor
+from parsers.helpers.stream_processors.json.extract_json_as_text import ExtractJSONAsTextStreamProcessor
+from parsers.helpers.stream_processors.json.extract_json_as_table import ExtractJSONAsTableStreamProcessor
+from parsers.helpers.stream_processors.table.openai import OpenAITableStreamProcessor
 
 STREAM_PROCESSOR_MAPPING = {
     "EXTRACT_FIRST_N_LINES": ExtractFirstNLinesStreamProcessor,
@@ -43,7 +48,7 @@ STREAM_PROCESSOR_MAPPING = {
     "TRIM_SPACE": TrimSpaceStreamProcessor,
     "TRIM_SPACE_FOR_ALL_ROWS_AND_COLS": TrimSpaceTableStreamProcessor,
     "REMOVE_EMPTY_LINES": RemoveEmptyLinesStreamProcessor,
-    "OPEN_AI": OpenAIStreamProcessor,
+    "OPEN_AI_TEXT": OpenAITextStreamProcessor,
     "REMOVE_TEXT_BEFORE_START_OF_TEXT": RemoveTextBeforeStartOfTextStreamProcessor,
     "REMOVE_TEXT_BEFORE_END_OF_TEXT": RemoveTextBeforeEndOfTextStreamProcessor,
     "REMOVE_TEXT_AFTER_START_OF_TEXT": RemoveTextAfterStartOfTextStreamProcessor,
@@ -57,7 +62,10 @@ STREAM_PROCESSOR_MAPPING = {
     "REMOVE_ROWS_BEFORE_ROW_WITH_CONDITIONS": RemoveRowsBeforeRowWithConditionsStreamProcessor,
     "REMOVE_ROWS_AFTER_ROW_WITH_CONDITIONS": RemoveRowsAfterRowWithConditionsStreamProcessor,
     "UNPIVOT_TABLE": UnpivotColumnStreamProcessor,
-    "MAKE_FIRST_ROW_TO_BE_HEADER": MakeFirstRowToBeHeaderStreamProcessor
+    "MAKE_FIRST_ROW_TO_BE_HEADER": MakeFirstRowToBeHeaderStreamProcessor,
+    "OPEN_AI_TABLE": OpenAITableStreamProcessor,
+    "EXTRACT_JSON_AS_TEXT": ExtractJSONAsTextStreamProcessor,
+    "EXTRACT_JSON_AS_TABLE": ExtractJSONAsTableStreamProcessor
 }
 
 
@@ -79,9 +87,19 @@ class StreamProcessor:
         inputStream = rule_raw_result
 
         processedStreams = []
+
+        if self.rule.rule_type == RuleType.DEPENDENT_RULE.value:
+            try:
+                json.loads(inputStream)
+            except ValueError:
+                inputStream = "Dependent rules only works with streamed result in JSON format."
+            type = "JSON"
+        else:
+            type = self.rule.rule_type
+
         processedStreams.append({
             "step": 0,
-            "type": self.rule.rule_type,
+            "type": type,
             "data": inputStream
         })
 
@@ -96,10 +114,17 @@ class StreamProcessor:
             if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
                 streams[streamIndex].type = "TABLE"
 
-            if streams[streamIndex].stream_class == "OPEN_AI":
-                pass
+            if streams[streamIndex].stream_class == "OPEN_AI_TEXT":
+                streams[streamIndex].type = "JSON"
 
-                # streams[streamIndex].set_openai_api_key()
+            if streams[streamIndex].stream_class == "OPEN_AI_TABLE":
+                streams[streamIndex].type = "JSON"
+
+            if streams[streamIndex].stream_class == "EXTRACT_JSON_AS_TEXT":
+                streams[streamIndex].type = "TEXTFIELD"
+
+            if streams[streamIndex].stream_class == "EXTRACT_JSON_AS_TABLE":
+                streams[streamIndex].type = "TABLE"
 
             if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
                 processedStreams.append({
@@ -124,6 +149,7 @@ class StreamProcessor:
                     "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
+                    "json_extract_code": streams[streamIndex].json_extract_code
                 })
                 continue
 
@@ -150,14 +176,16 @@ class StreamProcessor:
                     "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
+                    "json_extract_code": streams[streamIndex].json_extract_code,
                     "data": result
                 })
                 inputStream = result
             except Exception as e:
-                tb = traceback.format_exc()
+                print(traceback.format_exc())
                 processedStreams.append({
                     "status": "error",
-                    "error_message": tb,
+                    "error_message": str(e),
+                    "data": [str(e)],
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
                     "type": streams[streamIndex].type,
@@ -177,6 +205,7 @@ class StreamProcessor:
                     "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
+                    "json_extract_code": streams[streamIndex].json_extract_code
                 })
 
         return processedStreams

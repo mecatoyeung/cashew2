@@ -8,10 +8,7 @@ from parsers.models.rule_type import RuleType
 
 from parsers.helpers.get_document_nos_from_range import get_document_nos_from_range
 from parsers.helpers.rule_extractor import RuleExtractor
-
-#SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-#ASSUMED_TEXT_WIDTH = Decimal(0.5)
-#ASSUMED_TEXT_HEIGHT = Decimal(1.0)
+from parsers.helpers.stream_processor import StreamProcessor
 
 
 class DocumentParser:
@@ -45,15 +42,18 @@ class DocumentParser:
                 page_num)
 
         return textlines_in_all_pages
-
-    def extract(self, rule):
+    
+    def extract(self, rule, parsed_result=[]):
         # Add to xml page if not yet initialized
         # if rule.anchor_page_num == None:
         #    pages = rule.pages
         # else:
         #    pages = rule.pages + "," + str(rule.anchor_page_num)
-        page_nums = get_document_nos_from_range(
-            rule.pages[:], 1, self.document.total_page_num)
+        if rule.rule_type == RuleType.DEPENDENT_RULE.value:
+            page_nums = list(range(1, self.document.total_page_num + 1))
+        else:
+            page_nums = get_document_nos_from_range(
+                rule.pages[:], 1, self.document.total_page_num)
 
         if self.document.document_pages.filter(ocred=False, page_num__in=page_nums).count() > 0:
             if rule.rule_type == RuleType.TABLE.value:
@@ -71,33 +71,28 @@ class DocumentParser:
 
         if rule.rule_type == RuleType.TEXTFIELD.value:
 
-            result = self.extract_textfield(
-                rule, self.xml_pages, self.parsed_result)
-            self.parsed_result.append(result)
+            extracted = self.extract_textfield(
+                rule, self.xml_pages, parsed_result)
 
         elif rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value:
 
-            result = self.extract_anchored_textfield(
-                rule, self.xml_pages, self.parsed_result)
-            self.parsed_result.append(result)
+            extracted = self.extract_anchored_textfield(
+                rule, self.xml_pages, parsed_result)
 
         elif rule.rule_type == RuleType.TABLE.value:
 
-            result = self.extract_table(
-                rule, self.xml_pages, self.parsed_result)
-            self.parsed_result.append(result)
+            extracted = self.extract_table(
+                rule, self.xml_pages, parsed_result)
 
         elif rule.rule_type == RuleType.BARCODE.value:
 
-            result = self.extract_barcode(
-                rule, self.xml_pages, self.parsed_result)
-            self.parsed_result.append(result)
+            extracted = self.extract_barcode(
+                rule, self.xml_pages, parsed_result)
 
         elif rule.rule_type == RuleType.ACROBAT_FORM.value:
 
-            result = self.extract_acrobat_form(
-                rule, self.xml_pages, self.parsed_result)
-            self.parsed_result.append(result)
+            extracted = self.extract_acrobat_form(
+                rule, self.xml_pages, parsed_result)
 
         elif rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
 
@@ -106,8 +101,54 @@ class DocumentParser:
         elif rule.rule_type == RuleType.INPUT_DROPDOWN.value:
 
             return ""
+        
+        elif rule.rule_type == RuleType.DEPENDENT_RULE.value:
+
+            extracted = self.extract_dependent_rule(
+                rule, self.xml_pages, parsed_result
+            )
+
+        return extracted
+
+    def extract_and_stream(self, rule, parsed_result=[], with_processed_stream=False):
+        extracted = self.extract(rule, parsed_result=parsed_result)
+
+        stream_processor = StreamProcessor(rule)
+        processed_streams = stream_processor.process(extracted)
+        
+        result = {
+            "rule": {
+                "id": rule.id,
+                "name": rule.name,
+                "type": processed_streams[-1]["type"]
+            },
+            "extracted": extracted,
+            "streamed": processed_streams[-1]["data"]
+        }
+
+        if with_processed_stream:
+            result["processed_streams"] = processed_streams
+
+        #parsed_result.append(result)
 
         return result
+    
+    def extract_dependent_rule(self, rule, xml_pages, parsed_result=[]):
+
+        depends_on_rule_exists_in_parsed_result = False
+        for single_parsed_result in parsed_result:
+            if single_parsed_result["rule"]["id"] == rule.depends_on.id:
+                result = single_parsed_result
+                streamed = result["streamed"]
+                depends_on_rule_exists_in_parsed_result = True
+                break
+
+        if not depends_on_rule_exists_in_parsed_result:
+            depends_on_rule = Rule.objects.get(pk=rule.depends_on.id)
+            result = self.extract_and_stream(depends_on_rule, parsed_result)
+            streamed = result["streamed"]
+
+        return streamed
 
     def extract_textfield(self, rule, xml_pages, parsed_result=[]):
 

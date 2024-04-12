@@ -20,6 +20,7 @@ from pdfminer.pdftypes import resolve1
 from pdfminer.psparser import PSLiteral, PSKeyword
 from pdfminer.utils import decode_text
 
+from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
 from parsers.models.pre_processing import PreProcessing
 
@@ -120,10 +121,6 @@ class RuleExtractor:
                 if toppest_textline == None:
                     toppest_textline = textlines_within_area[0]
                     toppest_textline_index = 0
-                    
-
-                if '存入' in toppest_textline.text:
-                    luck = 1
 
                 for textline_index in range(0, len(textlines_within_area) - 1):
 
@@ -147,9 +144,6 @@ class RuleExtractor:
                 textline_index = 0
 
                 while textline_index < len(textlines_within_area):
-
-                    if 'Date' in toppest_textline.text and '日期' in textlines_within_area[textline_index].text:
-                        luck = 1
 
                     if textlines_within_area[textline_index].region.y2 < toppest_textline.region.y1:
                         break

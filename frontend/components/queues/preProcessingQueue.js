@@ -21,23 +21,25 @@ import every from 'lodash/every'
 
 import moment from 'moment'
 
-import service from "../../service"
+import service from '../../service'
 
 import sharedStyles from '../../styles/Queue.module.css'
 import styles from '../../styles/ParsingQueue.module.css'
 import { LayoutCssClasses } from 'ag-grid-community'
 
 const PreProcessingQueue = (props) => {
-
   const router = useRouter()
 
   const [parser, setParser] = useState(null)
   const [queues, setQueues] = useState([])
   const [selectedQueueIds, setSelectedQueueIds] = useState([])
 
-  const [showUploadDocumentsModal, setShowUploadDocumentsModal] = useState(false)
-  const closeUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(false);
-  const openUploadDocumentsModalHandler = () => setShowUploadDocumentsModal(true);
+  const [showUploadDocumentsModal, setShowUploadDocumentsModal] =
+    useState(false)
+  const closeUploadDocumentsModalHandler = () =>
+    setShowUploadDocumentsModal(false)
+  const openUploadDocumentsModalHandler = () =>
+    setShowUploadDocumentsModal(true)
 
   const uploadDocumentsBtnClickHandler = () => {
     setDroppedFiles([])
@@ -46,33 +48,34 @@ const PreProcessingQueue = (props) => {
 
   const getParser = () => {
     if (!props.parserId) return
-    service.get("parsers/" + props.parserId + "/", response => {
+    service.get('parsers/' + props.parserId + '/', (response) => {
       setParser(response.data)
     })
   }
 
   const txtInputChangeHandler = (rule, value) => {
-    let updatedInputData = {...inputData}
+    let updatedInputData = { ...inputData }
     updatedInputData[rule.name] = value
-    console.log(updatedInputData)
     setInputData(updatedInputData)
   }
 
   const getQueues = () => {
     if (!props.parserId) return
-    service.get("(queues/?parserId=" + props.parserId + "&queueClass=PRE_PROCESSING", response => {
-      console.log(response.data)
-      setSelectedIds([])
-      setQueues(response.data)
-    })
+    service.get(
+      '(queues/?parserId=' + props.parserId + '&queueClass=PRE_PROCESSING',
+      (response) => {
+        setSelectedIds([])
+        setQueues(response.data)
+      }
+    )
   }
 
   const stopPrePocessessingClickHandler = async () => {
-    for (let i=0; i<selectedQueueIds.length; i++) {
-      let queue = queues.find(q => q.id == selectedQueueIds[i])
-      queue.queueClass = "PRE_PROCESSING"
-      queue.queueStatus = "STOPPED"
-      await service.put("queues/" + selectedQueueIds[i] + "/", queue)
+    for (let i = 0; i < selectedQueueIds.length; i++) {
+      let queue = queues.find((q) => q.id == selectedQueueIds[i])
+      queue.queueClass = 'PRE_PROCESSING'
+      queue.queueStatus = 'STOPPED'
+      await service.put('queues/' + selectedQueueIds[i] + '/', queue)
     }
   }
 
@@ -84,14 +87,14 @@ const PreProcessingQueue = (props) => {
       }
     } else {
       let updatedSelectedQueueIds = [...selectedQueueIds]
-      let index = updatedSelectedQueueIds.indexOf(queue.id);
+      let index = updatedSelectedQueueIds.indexOf(queue.id)
       if (index !== -1) {
-        updatedSelectedQueueIds.splice(index, 1);
+        updatedSelectedQueueIds.splice(index, 1)
       }
     }
     let filteredSelectedQueueIds = []
-    for (let i=0; i<updatedSelectedQueueIds.length; i++) {
-      if (queues.filter(q => q.id == updatedSelectedQueueIds[i]).length > 0) {
+    for (let i = 0; i < updatedSelectedQueueIds.length; i++) {
+      if (queues.filter((q) => q.id == updatedSelectedQueueIds[i]).length > 0) {
         filteredSelectedQueueIds.push(updatedSelectedQueueIds[i])
       }
     }
@@ -101,7 +104,7 @@ const PreProcessingQueue = (props) => {
   const chkAllChangeHandler = (e) => {
     if (e.target.checked) {
       let updatedSelectedQueueIds = []
-      for (let i=0; i<queues.length; i++) {
+      for (let i = 0; i < queues.length; i++) {
         updatedSelectedQueueIds.push(queues[i].id)
       }
       setSelectedQueueIds(updatedSelectedQueueIds)
@@ -113,15 +116,23 @@ const PreProcessingQueue = (props) => {
   useEffect(() => {
     getParser()
     let queues = props.queues
-    queues = queues.filter(q => q.queueStatus != "STOPPED")
-    for (let i=0; i<queues.length; i++) {
+    queues = queues.filter((q) => q.queueStatus != 'STOPPED')
+    for (let i = 0; i < queues.length; i++) {
       let queue = queues[i]
       let preprocessedCount = 0
-      for (let j=0; j<queue.document.documentPages.length; j++) {
+      for (let j = 0; j < queue.document.documentPages.length; j++) {
         let documentPage = queue.document.documentPages[j]
         if (documentPage.preprocessed) preprocessedCount++
-      } 
-      queue.document.description = queue.document.filenameWithoutExtension + "." + queue.document.extension + " (Pre-processed " + preprocessedCount + " of " + queue.document.documentPages.length + ")"
+      }
+      queue.document.description =
+        queue.document.filenameWithoutExtension +
+        '.' +
+        queue.document.extension +
+        ' (Pre-processed ' +
+        preprocessedCount +
+        ' of ' +
+        queue.document.documentPages.length +
+        ')'
     }
     setQueues(queues)
   }, [router.isReady, props.queues])
@@ -131,10 +142,16 @@ const PreProcessingQueue = (props) => {
       <div className={sharedStyles.actionsDiv}>
         <DropdownButton
           title="Perform Action"
-          className={styles.performActionDropdown}>
-          <Dropdown.Item onClick={() => stopPrePocessessingClickHandler()}>Stop Pre-processing and Move to Processed Queue</Dropdown.Item>
+          className={styles.performActionDropdown}
+        >
+          <Dropdown.Item onClick={() => stopPrePocessessingClickHandler()}>
+            Stop Pre-processing and Move to Processed Queue
+          </Dropdown.Item>
         </DropdownButton>
-        <Form.Control className={styles.searchTxt} placeholder="Search by filename..." />
+        <Form.Control
+          className={styles.searchTxt}
+          placeholder="Search by filename..."
+        />
         <Button variant="secondary">Search</Button>
       </div>
       {queues && queues.length == 0 && (
@@ -152,7 +169,7 @@ const PreProcessingQueue = (props) => {
                     type="checkbox"
                     label=""
                     onChange={chkAllChangeHandler}
-                    style={{padding: 0}}
+                    style={{ padding: 0 }}
                   />
                 </th>
                 <th>Document Name</th>
@@ -162,25 +179,35 @@ const PreProcessingQueue = (props) => {
               </tr>
             </thead>
             <tbody>
-              {queues && queues.map((queue, queueIndex) => {
-                return (
-                  <tr key={queueIndex}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        label=""
-                        checked={selectedQueueIds.filter(x => x == queue.id).length > 0}
-                        onChange={(e) => chkQueueChangeHandler(e, queue)}
-                        style={{padding: 0}}
-                      />
-                    </td>
-                    <td className={styles.tdGrow}>{queue.document.description}</td>
-                    <td>{queue.document.documentType}</td>
-                    <td>{queue.queueStatus.replace("_", " ")}</td>
-                    <td className={styles.tdNoWrap}>{moment(queue.document.lastModified_at).format('YYYY-MM-DD hh:mm:ss a')}</td>
-                  </tr>
-                )
-              })}
+              {queues &&
+                queues.map((queue, queueIndex) => {
+                  return (
+                    <tr key={queueIndex}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          label=""
+                          checked={
+                            selectedQueueIds.filter((x) => x == queue.id)
+                              .length > 0
+                          }
+                          onChange={(e) => chkQueueChangeHandler(e, queue)}
+                          style={{ padding: 0 }}
+                        />
+                      </td>
+                      <td className={styles.tdGrow}>
+                        {queue.document.description}
+                      </td>
+                      <td>{queue.document.documentType}</td>
+                      <td>{queue.queueStatus.replace('_', ' ')}</td>
+                      <td className={styles.tdNoWrap}>
+                        {moment(queue.document.lastModified_at).format(
+                          'YYYY-MM-DD hh:mm:ss a'
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
             </tbody>
           </Table>
         </div>

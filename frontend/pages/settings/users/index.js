@@ -79,7 +79,6 @@ export default function Users() {
 
   const getUsers = () => {
     service.get(`users/`, (response) => {
-      console.log(response.data)
       setRowData(response.data)
     })
   }

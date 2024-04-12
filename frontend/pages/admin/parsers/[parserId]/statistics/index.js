@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/router'
 
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import Container from 'react-bootstrap/Container'
+import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 
-import axios from "axios";
+import axios from 'axios'
 
-import moment from "moment";
+import moment from 'moment'
 
-import DateRangePicker from 'react-bootstrap-daterangepicker';
+import DateRangePicker from 'react-bootstrap-daterangepicker'
 
 import {
   LineChart,
@@ -23,8 +23,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
-
+} from 'recharts'
 
 import AdminLayout from '../../../../../layouts/admin'
 
@@ -33,7 +32,6 @@ import service from '../../../../../service'
 import styles from '../../../../../styles/Statistics.module.css'
 
 const Statistics = () => {
-
   const router = useRouter()
 
   const { parserId } = router.query
@@ -44,45 +42,54 @@ const Statistics = () => {
 
   const [form, setForm] = useState({
     startDate: moment().subtract(1, 'months'),
-    endDate: moment()
+    endDate: moment(),
   })
 
   const getMetrics = () => {
     if (parserId == null) return
-    console.log("open_ai_metrics/?parser_id=" + parserId + "&start_date=" + form.startDate.format("YYYY-MM-DD") + "&end_date=" + form.endDate.format("YYYY-MM-DD"))
-    service.get("open_ai_metrics/?parser_id=" + parserId + "&start_date=" + form.startDate.format("YYYY-MM-DD") + "&end_date=" + form.endDate.format("YYYY-MM-DD"), response => {
+    service.get(
+      'open_ai_metrics/?parser_id=' +
+        parserId +
+        '&start_date=' +
+        form.startDate.format('YYYY-MM-DD') +
+        '&end_date=' +
+        form.endDate.format('YYYY-MM-DD'),
+      (response) => {
+        for (let i = 0; i < response.data.length; i++) {
+          response.data[i].date = moment(
+            response.data[i].date,
+            'YYYY-MM-DDThh:mm:ssZ'
+          ).format('YYYY-MM-DD')
+        }
 
-      for (let i = 0; i < response.data.length; i++) {
-        response.data[i].date = moment(
-          response.data[i].date,
-          "YYYY-MM-DDThh:mm:ssZ"
-        ).format("YYYY-MM-DD");
+        setData(response.data)
       }
-      
-      setData(response.data)
-    })
+    )
   }
 
   const dateEventHandler = (e, p) => {
-    let updatedForm = {...form}
+    let updatedForm = { ...form }
     updatedForm.startDate = p.startDate
     updatedForm.endDate = p.endDate
     setForm(updatedForm)
   }
 
   const getParser = () => {
-    if (!parserId) return;
-    service.get("parsers/" + parserId + "/", (response) => {
-      console.log(response.data)
+    if (!parserId) return
+    service.get('parsers/' + parserId + '/', (response) => {
       setParser(response.data)
     })
   }
 
   const updateParserStatistics = () => {
-    if (!parserId) return;
-    service.post("parsers/" + parserId + "/update_statistics/", {}, (response) => {
-      getMetrics()
-    })
+    if (!parserId) return
+    service.post(
+      'parsers/' + parserId + '/update_statistics/',
+      {},
+      (response) => {
+        getMetrics()
+      }
+    )
   }
 
   useEffect(() => {
@@ -97,18 +104,27 @@ const Statistics = () => {
         <h1>Statistics</h1>
         {parser && (
           <div className={styles.procesedPages}>
-            <h2>Total Number of Pages Processed: {parser.totalNumOfPagesProcessed}</h2>
+            <h2>
+              Total Number of Pages Processed: {parser.totalNumOfPagesProcessed}
+            </h2>
           </div>
         )}
         <h2>Azure Open AI Service Statistic</h2>
-        <br/>
-        <Button style={{ marginLeft: 10, marginBottom: 10 }}
-          onClick={updateParserStatistics}><i class="bi bi-arrow-clockwise"></i> Real-time update</Button>
+        <br />
+        <Button
+          style={{ marginLeft: 10, marginBottom: 10 }}
+          onClick={updateParserStatistics}
+        >
+          <i class="bi bi-arrow-clockwise"></i> Real-time update
+        </Button>
         <div className="Form">
           <Container>
             <Form>
               <DateRangePicker
-                initialSettings={{ startDate: form.startDate, endDate: form.endDate }}
+                initialSettings={{
+                  startDate: form.startDate,
+                  endDate: form.endDate,
+                }}
                 onEvent={dateEventHandler}
               >
                 <input type="text" className="form-control col-4" />

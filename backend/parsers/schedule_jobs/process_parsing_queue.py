@@ -5,6 +5,7 @@ import json
 import traceback
 from datetime import datetime
 from django.db.models import Prefetch
+from django.db.models import Q
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events
@@ -46,37 +47,41 @@ def process_single_parsing_queue(queue_job):
 
         # Do the job
         rules = Rule.objects.filter(parser_id=parser.id)
+        dependent_rules = rules.filter(rule_type=RuleType.DEPENDENT_RULE.value)
+        rules = rules.exclude(rule_type=RuleType.DEPENDENT_RULE.value)
         parsed_result = []
         document_parser = DocumentParser(parser, document)
         for rule in rules:
-            extracted = document_parser.extract(rule)
-            stream_processor = StreamProcessor(rule)
-            processed_streams = stream_processor.process(extracted)
+            result = document_parser.extract_and_stream(rule, parsed_result=parsed_result)
 
-            if rule.rule_type == RuleType.TEXTFIELD.value or \
-                rule.rule_type == RuleType.ANCHORED_TEXTFIELD.value or \
-                rule.rule_type == RuleType.BARCODE.value or \
-                    rule.rule_type == RuleType.ACROBAT_FORM.value:
-                if processed_streams[-1]["data"] == None:
-                    processed_streams[-1]["data"] = ""
+            if result["rule"]["type"] == "JSON":
+                pass
+            elif result["rule"]["type"] == "TEXTFIELD":
+                if result["streamed"] == None:
+                    result["streamed"] = ""
                 else:
-                    processed_streams[-1]["data"] = " ".join(
-                        processed_streams[-1]["data"])
+                    result["streamed"] = " ".join(result["streamed"])
 
-            parsed_result.append({
-                "rule": {
-                    "id": rule.id,
-                    "name": rule.name,
-                    "type": processed_streams[-1]["type"]
-                },
-                "extracted": extracted,
-                "streamed": processed_streams[-1]["data"]
-            })
+            parsed_result.append(result)
+
+        for rule in dependent_rules:
+            result = document_parser.extract_and_stream(rule, parsed_result=parsed_result)
+
+            if result["rule"]["type"] == "JSON":
+                pass
+            elif result["rule"]["type"] == "TEXTFIELD":
+                if result["streamed"] == None:
+                    result["streamed"] = ""
+                else:
+                    result["streamed"] = " ".join(result["streamed"])
+
+            parsed_result.append(result)
 
         queue_job.parsed_result = json.dumps(parsed_result)
 
         # Update last modified at
         document.last_modified_at = datetime.now()
+        document.save()
 
         # Mark the job as preprocessing in progress
         queue_job.queue_class = QueueClass.POST_PROCESSING.value
@@ -90,6 +95,16 @@ def process_single_parsing_queue(queue_job):
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
         traceback.print_exc()
+
+def process_stopped_parsing_queue_job():
+
+    all_stopped_parsing_queue_jobs = Queue.objects.filter(
+        queue_class=QueueClass.PARSING.value, queue_status=QueueStatus.STOPPED.value)
+
+    for queue_job in all_stopped_parsing_queue_jobs:
+        queue_job.queue_class = QueueClass.PROCESSED.value
+        queue_job.queue_status = QueueStatus.COMPLETED.value
+        queue_job.save()
 
 def process_parsing_queue_job():
 
@@ -114,6 +129,7 @@ def parsing_queue_scheduler_start():
     # scheduler.add_jobstore(DjangoJobStore(), "parsing_queue_job_store")
     # run this job every 60 seconds
     scheduler.add_job(process_parsing_queue_job, 'interval', seconds=5)
+    scheduler.add_job(process_stopped_parsing_queue_job, 'interval', seconds=5)
     # register_events(scheduler)
     scheduler.start()
     print("Processing Parsing Queue", file=sys.stdout)
