@@ -80,23 +80,23 @@ def process_single_integration_queue(queue_job):
 
         updated_parsed_result = {}
         for single_parsed_result in parsed_result:
-            if single_parsed_result["rule"]["type"] == "TEXTFIELD" or \
-                    single_parsed_result["rule"]["type"] == "ANCHORED_TEXTFIELD" or \
-                    single_parsed_result["rule"]["type"] == "BARCODE":
-                if type(single_parsed_result["streamed"]) == list:
-                    single_parsed_result["streamed"] = " ".join(single_parsed_result["streamed"])
+            if single_parsed_result["streamed"]["type"] == "TEXTFIELD":
+                value_result = " ".join(single_parsed_result["streamed"]["value"])
                 updated_parsed_result[single_parsed_result["rule"]
-                                      ["name"]] = single_parsed_result["streamed"]
+                                      ["name"]] = value_result
             elif single_parsed_result["rule"]["type"] == "TABLE":
-                flattened_parsed_result = []
-                for s in single_parsed_result["streamed"]:
-                    for ss in s:
-                        flattened_parsed_result.append(ss)
+                value_result = []
+                for row in single_parsed_result["streamed"]["value"]["body"]:
+                    row_result = {}
+                    for sIndex, sName in enumerate(single_parsed_result["streamed"]["value"]["header"]):
+                        row_result[str(sIndex)] = row[sIndex]
+                        row_result[str(sName)] = row[sIndex]
+                    value_result.append(row_result)
                 updated_parsed_result[single_parsed_result["rule"]
-                                      ["name"]] = " ".join(flattened_parsed_result)
-            else:
+                                      ["name"]] = value_result
+            elif single_parsed_result["rule"]["type"] == "JSON":
                 updated_parsed_result[single_parsed_result["rule"]
-                                      ["name"]] = "Unknwon Rule Type"
+                                      ["name"]] = "Parse value is in JSON format. Please correct it by add streams to convert the JSON to Textfield or Table."
 
         # Do the job
         integrations = Integration.objects.filter(parser_id=parser.id)

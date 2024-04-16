@@ -4,6 +4,8 @@ from parsers.models.parser import Parser
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class OpenAITextStreamProcessor(StreamBase):
 
@@ -17,8 +19,6 @@ class OpenAITextStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        output = []
-
         client = AzureOpenAI(
             azure_endpoint='https://' + self.resource_name + '.openai.azure.com/',
             api_key=self.api_key,
@@ -26,7 +26,7 @@ class OpenAITextStreamProcessor(StreamBase):
         )
 
         open_ai_content = self.open_ai_question + \
-            "Please return in JSON format.\nInput: " + "\n".join(input)
+            "Please return in JSON format.\nInput: " + "\n".join(input["value"])
         message_text = [{"role": "system", "content": open_ai_content}]
 
         try:
@@ -42,5 +42,8 @@ class OpenAITextStreamProcessor(StreamBase):
         except Exception as e:
             raise e
 
-        return completion.choices[0].message.content
+        return {
+            "type": StreamType.JSON.value,
+            "value": completion.choices[0].message.content
+        }
 

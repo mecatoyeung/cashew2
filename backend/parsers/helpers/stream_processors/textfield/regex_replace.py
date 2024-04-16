@@ -2,6 +2,8 @@ import re
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class RegexReplaceStreamProcessor(StreamBase):
 
@@ -9,16 +11,19 @@ class RegexReplaceStreamProcessor(StreamBase):
         self.regex = stream.regex
         self.text = stream.text
 
-    def process(self, streamed_data):
+    def process(self, input):
 
-        output = []
+        new_value = []
 
-        if len(streamed_data) == 0:
-            output = [""]
+        if len(input["value"]) == 0:
+            new_value = [""]
         else:
-            for line in streamed_data:
-                output.append(re.sub(self.regex, self.text, line))
+            for line in input["value"]:
+                new_value.append(re.sub(self.regex, self.text, line))
 
-        return output
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": new_value
+        }
     
     

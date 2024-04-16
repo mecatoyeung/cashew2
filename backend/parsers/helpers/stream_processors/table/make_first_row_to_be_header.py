@@ -1,4 +1,5 @@
 from parsers.helpers.stream_processors.base import StreamBase
+from parsers.models.stream_type import StreamType
 
 
 class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
@@ -7,21 +8,24 @@ class MakeFirstRowToBeHeaderStreamProcessor(StreamBase):
         pass
 
     def process(self, input):
-        if len(input["body"]) == 0:
+        if len(input["value"]["body"]) == 0:
             return [[""]]
 
-        output_header = []
-        output_body = input["body"]
+        new_value_header = []
+        new_value_body = input["value"]["body"]
 
-        for l in range(0, len(output_body[0])):
-            output_header.append(output_body[0][l])
+        for l in range(0, len(new_value_body[0])):
+            new_value_header.append(new_value_body[0][l])
 
-        output_body = output_body[1:]
+        new_value_body = new_value_body[1:]
 
-        output = {
-            'header': output_header,
-            'body': output_body
+        new_value = {
+            'header': new_value_header,
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
 

@@ -167,6 +167,7 @@ const StreamEditor = () => {
         </div>
       </div>
       <div className={styles.streamEditorWrapper}>
+        {console.log(processedStreams)}
         {processedStreams &&
           processedStreams.map((processedStream) => (
             <div key={processedStream.step}>
@@ -180,11 +181,8 @@ const StreamEditor = () => {
               )}
               {processedStream.step != 0 && (
                 <div>
-                  {(processedStream.type == 'TEXTFIELD' ||
-                    processedStream.type == 'ANCHORED_TEXTFIELD' ||
-                    processedStream.type == 'BARCODE' ||
-                    processedStream.type == 'ACROBAT_FORM') && (
-                    <>
+                  {processedStream.type == 'TEXTFIELD' && (
+                    <div>
                       {processedStream.class == 'EXTRACT_FIRST_N_LINES' && (
                         <div className={styles.streamDescription}>
                           Extract first n lines:{' '}
@@ -264,8 +262,10 @@ const StreamEditor = () => {
                           Delete
                         </Button>
                       </div>
-                      <StreamTable stream={processedStream} />
-                    </>
+                      <div className={styles.streamTableDiv}>
+                        <StreamTable stream={processedStream} />
+                      </div>
+                    </div>
                   )}
                   {processedStream.type == 'TABLE' && (
                     <>
@@ -311,6 +311,7 @@ const StreamEditor = () => {
                           </div>
                         </>
                       )}
+                      {console.log(processedStream)}
                       {processedStream.class ==
                         'REMOVE_ROWS_WITH_CONDITIONS' && (
                         <>
@@ -682,13 +683,14 @@ const StreamEditor = () => {
                           </div>
                         </>
                       )}
+                      {console.log(processedStream)}
                       {processedStream.status != 'error' &&
-                        processedStream.data && (
+                        processedStream.data.value && (
                           <div className={styles.streamTableDiv}>
                             <table className={styles.streamTable}>
                               <thead>
                                 <tr>
-                                  {processedStream.data.header.map(
+                                  {processedStream.data.value.header.map(
                                     (header, headerIndex) => {
                                       if (typeof header == 'number') {
                                         return (
@@ -706,7 +708,7 @@ const StreamEditor = () => {
                                 </tr>
                               </thead>
                               <tbody>
-                                {processedStream.data.body.map(
+                                {processedStream.data.value.body.map(
                                   (row, rowIndex) => {
                                     return (
                                       <tr key={rowIndex}>
@@ -727,6 +729,7 @@ const StreamEditor = () => {
                         )}
                     </>
                   )}
+                  {console.log(processedStream)}
                   {processedStream.type == 'JSON' && (
                     <>
                       {processedStream.class == 'OPEN_AI_TEXT' && (

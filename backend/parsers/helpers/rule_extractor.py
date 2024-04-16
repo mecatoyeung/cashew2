@@ -22,6 +22,7 @@ from pdfminer.utils import decode_text
 
 from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
+from parsers.models.stream_type import StreamType
 from parsers.models.pre_processing import PreProcessing
 
 from parsers.helpers.xml_helpers import XMLPage, XMLRegion, XMLRule, XMLTextLine, XMLText
@@ -31,11 +32,8 @@ from parsers.helpers.get_document_nos_from_range import get_document_nos_from_ra
 from parsers.helpers.check_chinese_characters import check_chinese_characters
 from parsers.helpers.calculate_separator_regions import calculate_separator_regions
 
-from django.conf import settings
 
-#SAME_LINE_ACCEPTANCE_RANGE = Decimal(0.0)
-#ASSUMED_TEXT_WIDTH = Decimal(0.5)
-#ASSUMED_TEXT_HEIGHT = Decimal(1.0)
+from django.conf import settings
 
 
 class RuleExtractor:
@@ -258,7 +256,10 @@ class RuleExtractor:
         if len(textlines_in_all_pages) == 0:
             textlines_in_all_pages = [""]
 
-        return textlines_in_all_pages
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": textlines_in_all_pages
+        }
 
     def get_anchor_relative_region(self, parsed_result=[]):
 
@@ -316,7 +317,7 @@ class RuleExtractor:
         anchor_region.y1 = self.rule.anchor_y1
         anchor_region.y2 = self.rule.anchor_y2
 
-        result = [""]
+        extracted = [""]
 
         for textline in xml_page.textlines:
 
@@ -406,9 +407,12 @@ class RuleExtractor:
 
                     previous_textline = current_textline
 
-                result = textlines_in_rows
+                extracted = textlines_in_rows
 
-        return result
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": extracted
+        }
 
     def extract_acrobat_form(self, parsed_result=[]):
 
@@ -466,7 +470,10 @@ class RuleExtractor:
                     break
                 # data.append(name + ": " + values)
 
-        return data
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": data
+        }
 
     def extract_table(self, parsed_result=[]):
 
@@ -711,17 +718,20 @@ class RuleExtractor:
 
         header = []
         for header_index in range(len(separator_regions)):
-            header.append(header_index + 1)
+            header.append(header_index)
 
         if len(text_in_rows) == 0:
             text_in_rows = [[""]]
 
-        response = {
+        value = {
             "header": header,
             "body": text_in_rows
         }
 
-        return response
+        return {
+            "type": StreamType.TABLE.value,
+            "value": value
+        }
 
     def extract_barcode(self, parsed_result=[]):
 
@@ -781,4 +791,7 @@ class RuleExtractor:
         if len(detectedBarcodes) == 0:
             return [""]
 
-        return detectedBarcodes
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": detectedBarcodes
+        }

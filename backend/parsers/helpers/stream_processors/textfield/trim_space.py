@@ -1,5 +1,7 @@
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class TrimSpaceStreamProcessor(StreamBase):
 
@@ -8,14 +10,17 @@ class TrimSpaceStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        output = []
+        new_value = []
 
-        for line in input:
-            output.append(line.strip())
+        for line in input["value"]:
+            new_value.append(line.strip())
 
-        if len(output) == 0:
-            output = [""]
+        if len(new_value) == 0:
+            new_value = [""]
 
-        return output
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": new_value
+        }
     
     

@@ -28,6 +28,16 @@ from parsers.schedule_jobs.process_postprocessing_queue import process_single_po
 from ..helpers.rule_extractor import RuleExtractor
 from ..helpers.stream_processor import StreamProcessor
 
+def sort_rules_for_depending_rules(rules, parent_id=None, sorted_rules=[]):
+    children_rules = rules.filter(depends_on_id=parent_id)
+    remaining_rules = rules.exclude(depends_on_id=parent_id) 
+    for r in children_rules:
+        sorted_rules.append(r)
+        remaining_rules = remaining_rules.exclude(id=r.id)
+        sort_rules_for_depending_rules(remaining_rules, r.id, sorted_rules=sorted_rules)
+    return sorted_rules
+
+
 def process_single_parsing_queue(queue_job):
     
     all_in_process_parsing_queue_jobs = Queue.objects.filter(
@@ -47,33 +57,17 @@ def process_single_parsing_queue(queue_job):
 
         # Do the job
         rules = Rule.objects.filter(parser_id=parser.id)
-        dependent_rules = rules.filter(rule_type=RuleType.DEPENDENT_RULE.value)
-        rules = rules.exclude(rule_type=RuleType.DEPENDENT_RULE.value)
         parsed_result = []
         document_parser = DocumentParser(parser, document)
-        for rule in rules:
+
+        # Calculate the sequence to parse rules considering dependent rules
+        sorted_rules = sort_rules_for_depending_rules(rules, parent_id=None)
+
+        for rule in sorted_rules:
             result = document_parser.extract_and_stream(rule, parsed_result=parsed_result)
 
-            if result["rule"]["type"] == "JSON":
-                pass
-            elif result["rule"]["type"] == "TEXTFIELD":
-                if result["streamed"] == None:
-                    result["streamed"] = ""
-                else:
-                    result["streamed"] = " ".join(result["streamed"])
-
-            parsed_result.append(result)
-
-        for rule in dependent_rules:
-            result = document_parser.extract_and_stream(rule, parsed_result=parsed_result)
-
-            if result["rule"]["type"] == "JSON":
-                pass
-            elif result["rule"]["type"] == "TEXTFIELD":
-                if result["streamed"] == None:
-                    result["streamed"] = ""
-                else:
-                    result["streamed"] = " ".join(result["streamed"])
+            if result["streamed"]["value"] == None:
+                result["streamed"]["value"] = [""]
 
             parsed_result.append(result)
 

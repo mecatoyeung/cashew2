@@ -37,6 +37,7 @@ from parsers.models.splitting_rule import SplittingRule
 from parsers.models.splitting_rule_type import SplittingRuleType
 from parsers.models.consecutive_page_splitting_rule import ConsecutivePageSplittingRule
 from parsers.models.last_page_splitting_rule import LastPageSplittingRule
+from parsers.models.last_page_splitting_rule_type import LastPageSplittingRuleType
 from parsers.models.rule import Rule
 from parsers.models.splitting_operator_type import SplittingOperatorType
 
@@ -181,45 +182,88 @@ def process_single_splitting_queue(queue_job):
 
                             any_last_page_rules_passed = False
                             for last_page_splitting_rule in first_page_splitting_rule.last_page_splitting_rules.all():
-                                last_page_conditions_passed = True
-                                for splitting_condition in last_page_splitting_rule.last_page_splitting_conditions.all():
-                                    streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, parsed_result))
-                                    if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
-                                        if not splitting_condition.value in streamed_rule_value:
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
-                                        if splitting_condition.value in streamed_rule_value:
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
-                                        if not splitting_condition.value == streamed_rule_value:
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                                        if not re.match(splitting_condition.value, streamed_rule_value):
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                                        if re.match(splitting_condition.value, streamed_rule_value):
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
-                                        if not streamed_rule_value.strip() == "":
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
-                                        if streamed_rule_value.strip() == "":
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
-                                        if page_num == 1:
-                                            continue
-                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                        if streamed_rule_value == previous_streamed_rule_value:
-                                            last_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
-                                        if page_num == 1:
-                                            continue
-                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                        if not streamed_rule_value == previous_streamed_rule_value:
-                                            last_page_conditions_passed = False
+                                if last_page_splitting_rule.last_page_splitting_rule_type == LastPageSplittingRuleType.BY_CONDITIONS.value:
+                                    last_page_conditions_passed = True
+                                    for splitting_condition in last_page_splitting_rule.last_page_splitting_conditions.all():
+                                        streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, parsed_result))
+                                        if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                            if not splitting_condition.value in streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                            if splitting_condition.value in streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                            if not splitting_condition.value == streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                            if not re.match(splitting_condition.value, streamed_rule_value):
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                            if re.match(splitting_condition.value, streamed_rule_value):
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                            if not streamed_rule_value.strip() == "":
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                            if streamed_rule_value.strip() == "":
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if streamed_rule_value == previous_streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if not streamed_rule_value == previous_streamed_rule_value:
+                                                last_page_conditions_passed = False
+                                elif last_page_splitting_rule.last_page_splitting_rule_type == LastPageSplittingRuleType.WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_MATCH.value:
+                                    for first_page_splitting_rule in splitting.splitting_rules.exclude(pk=last_page_splitting_rule.parent_splitting_rule.id).all():
+                                        last_page_conditions_passed = True
+                                        for splitting_condition in first_page_splitting_rule.splitting_conditions.all():
+                                            streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, parsed_result))
+                                            if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                                if not splitting_condition.value in streamed_rule_value:
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                                if splitting_condition.value in streamed_rule_value:
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                                if not splitting_condition.value == streamed_rule_value:
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                                if not re.match(splitting_condition.value, streamed_rule_value):
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                                if re.match(splitting_condition.value, streamed_rule_value):
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                                if not streamed_rule_value.strip() == "":
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                                if streamed_rule_value.strip() == "":
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                                if page_num == 1:
+                                                    continue
+                                                previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                    splitting_condition.rule.id,
+                                                    previous_pages_parsed_result[page_num - 1]))
+                                                if streamed_rule_value == previous_streamed_rule_value:
+                                                    last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                                if page_num == 1:
+                                                    continue
+                                                previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                    splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                                if not streamed_rule_value == previous_streamed_rule_value:
+                                                    last_page_conditions_passed = False
 
                                 if last_page_conditions_passed:
 

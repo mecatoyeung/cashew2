@@ -1,6 +1,7 @@
 import re
 
 from parsers.helpers.stream_processors.base import StreamBase
+from parsers.models.stream_type import StreamType
 
 
 def convert_to_table_by_specify_headers_map(object):
@@ -11,13 +12,13 @@ class ConvertToTableBySpecifyHeaderStreamProcessor(StreamBase):
     def __init__(self, stream):
         self.convert_to_table_by_specify_headers = stream.convert_to_table_by_specify_headers
 
-    def process(self, streamed_data):
+    def process(self, input):
 
         output_body = []
 
         headers = self.convert_to_table_by_specify_headers.split("|")
 
-        headers_row = streamed_data[0]
+        headers_row = input["value"][0]
         headers_xs_ranges = []
         for header_index, header in enumerate(headers):
             if header_index == 0:
@@ -36,10 +37,10 @@ class ConvertToTableBySpecifyHeaderStreamProcessor(StreamBase):
                 continue
             headers_xs_ranges.append([start_index, end_index])
 
-        for streamed_data_row in streamed_data:
+        for input_value_row in input["value"]:
             row = []
             for headers_xs_range in headers_xs_ranges:
-                row.append(streamed_data_row[headers_xs_range[0]:headers_xs_range[1]])
+                row.append(input_value_row[headers_xs_range[0]:headers_xs_range[1]])
             output_body.append(row)
 
         if len(output_body) == 0:
@@ -54,6 +55,8 @@ class ConvertToTableBySpecifyHeaderStreamProcessor(StreamBase):
             'body': output_body
         }
 
-        return output
-    
+        return {
+            "type": StreamType.TABLE.value,
+            "value": output
+        }
     

@@ -201,10 +201,11 @@ const jsonStreamOptions = [
 ]
 
 const StreamModal = (props) => {
+  console.log(props.stream)
   const [stream, setStream] = useState({
     step: props.stream.step + 1,
     rule: props.rule.id,
-    type: props.stream.type,
+    type: props.stream.data.type,
     streamClass: '',
     extractFirstNLines: 1,
     extractNthLines: 1,
@@ -272,7 +273,11 @@ const StreamModal = (props) => {
 
   const txtGetCharsFromNextColIfRegexNotMatchColIndexChangeHandler = (e) => {
     let updatedStream = { ...stream }
-    updatedStream.colIndex = parseInt(e.target.value)
+    let parsed = parseInt(e.target.value)
+    if (isNaN(parsed)) {
+      parsed = ''
+    }
+    updatedStream.colIndex = parsed
     setStream(updatedStream)
   }
 
@@ -320,7 +325,7 @@ const StreamModal = (props) => {
 
   const updateUnpivotTableRowConditionsHandler = (conditions) => {
     let updatedStream = { ...stream }
-    updatedStream.unpivotTableConditions = conditions
+    updatedStream.streamConditions = conditions
     setStream(updatedStream)
   }
 
@@ -366,10 +371,8 @@ const StreamModal = (props) => {
           <Form.Control value={stream.step} readOnly />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formStreamClass">
-          {(stream.type == 'TEXTFIELD' ||
-            stream.type == 'ANCHORED_TEXTFIELD' ||
-            stream.type == 'ACROBAT_FORM' ||
-            stream.type == 'BARCODE') && (
+          {console.log(stream)}
+          {stream.type == 'TEXTFIELD' && (
             <Select
               options={textfieldStreamOptions}
               value={stream.streamClass}
@@ -611,14 +614,14 @@ const StreamModal = (props) => {
             <Form.Group className="mb-3" controlId="formUnpivotColIndex">
               <Form.Label>Column index: </Form.Label>
               <Form.Control
-                value={JSON.parse(stream.unpivotTable).unpivotColumnIndex}
+                value={stream.unpivotColumnIndex}
                 onChange={txtUnpivotColIndexChangeHandler}
               />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formUnpivotNewLineChar">
               <Form.Label>New line character: </Form.Label>
               <Form.Control
-                value={JSON.parse(stream.unpivotTable).newlineChar}
+                value={stream.newlineChar}
                 onChange={txtUnpivotNewLineCharChangeHandler}
               />
             </Form.Group>
@@ -628,12 +631,12 @@ const StreamModal = (props) => {
             >
               <Form.Label>Property assign character: </Form.Label>
               <Form.Control
-                value={JSON.parse(stream.unpivotTable).propertyAssignChar}
+                value={stream.propertyAssignChar}
                 onChange={txtUnpivotPropertyAssignCharChangeHandler}
               />
             </Form.Group>
             <StreamConditions
-              conditions={stream.unpivotTableConditions}
+              conditions={stream.streamConditions}
               onUpdateConditions={(conditions) =>
                 updateUnpivotTableRowConditionsHandler(conditions)
               }

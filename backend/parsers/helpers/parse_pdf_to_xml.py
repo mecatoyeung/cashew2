@@ -121,33 +121,6 @@ def parse_pdf_to_xml(document):
             page_idx += 1
 
         document.save()
-
-        """for page_idx in range(0, document.total_page_num):
-
-            queue = Queue.objects.get(
-                document_id=document.id
-            )
-            if queue.queue_status == QueueStatus.STOPPED.value:
-                queue.queue_class = QueueClass.PROCESSED.value
-                queue.queue_status = QueueStatus.COMPLETED.value
-                queue.save()
-                break
-
-            page_num = page_idx + 1
-            document_page = DocumentPage.objects.get(
-                document_id=document.id, page_num=page_num)
-            if document_page.ocred == True:
-                continue
-
-            xml = convert_pdf_to_xml(
-                path=source_file_path,
-                pagenos=[page_idx]
-            )
-            document_page.xml = xml
-
-            document_page.ocred = True
-            document_page.save()
-
-        document.save()"""
+        
     except Exception as e:
         raise e

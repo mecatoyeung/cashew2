@@ -12,11 +12,11 @@ import styles from '../../styles/Editor.module.css'
 const StreamTable = (props) => {
   return (
     <>
-      {props.stream.type == 'TEXTFIELD' && (
+      {props.stream.data.type == 'TEXTFIELD' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
-              {props.stream.data.map((row, rowIndex) => {
+              {props.stream.data.value.map((row, rowIndex) => {
                 return (
                   <tr key={rowIndex}>
                     <td>{row.toString().replace(/ /g, '\u00a0')}</td>
@@ -27,11 +27,11 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
-      {props.stream.type == 'ANCHORED_TEXTFIELD' && (
+      {props.stream.data.type == 'ANCHORED_TEXTFIELD' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
-              {props.stream.data.map((row, rowIndex) => {
+              {props.stream.data.value.map((row, rowIndex) => {
                 return (
                   <tr key={rowIndex}>
                     <td>{row.replace(/ /g, '\u00a0')}</td>
@@ -42,11 +42,11 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
-      {props.stream.type == 'BARCODE' && (
+      {props.stream.data.type == 'BARCODE' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
-              {props.stream.data.map((row, rowIndex) => {
+              {props.stream.data.value.map((row, rowIndex) => {
                 return (
                   <tr key={rowIndex}>
                     <td>{row.replace(/ /g, '\u00a0')}</td>
@@ -57,11 +57,11 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
-      {props.stream.type == 'ACROBAT_FORM' && (
+      {props.stream.data.type == 'ACROBAT_FORM' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
-              {props.stream.data.map((row, rowIndex) => {
+              {props.stream.data.value.map((row, rowIndex) => {
                 return (
                   <tr key={rowIndex}>
                     <td>{row.replace(/ /g, '\u00a0')}</td>
@@ -72,11 +72,11 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
-      {props.stream.type == 'TABLE' && (
+      {props.stream.data.type == 'TABLE' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
-              {props.stream.data.body.map((row, rowIndex) => {
+              {props.stream.data.value.body.map((row, rowIndex) => {
                 return (
                   <tr key={rowIndex}>
                     {row.map((col, colIndex) => {
@@ -91,13 +91,13 @@ const StreamTable = (props) => {
           </table>
         </div>
       )}
-      {props.stream.type == 'JSON' && (
+      {props.stream.data.type == 'JSON' && (
         <div className={styles.streamTableDiv}>
           <table className={styles.streamTable}>
             <tbody>
               <CodeEditor
                 id={'json-editor'}
-                value={props.stream.data}
+                value={props.stream.data.value}
                 language="js"
                 padding={15}
                 style={{

@@ -1,4 +1,5 @@
 from parsers.helpers.stream_processors.base import StreamBase
+from parsers.models.stream_type import StreamType
 
 
 class ExtractFirstNLinesStreamProcessor(StreamBase):
@@ -6,13 +7,16 @@ class ExtractFirstNLinesStreamProcessor(StreamBase):
     def __init__(self, stream):
         self.n = stream.extract_first_n_lines
 
-    def process(self, streamed_data):
+    def process(self, input):
 
-        if len(streamed_data) == 0:
-            output = [""]
+        if len(input) == 0:
+            new_value = [""]
         else:
-            output = streamed_data[:int(self.n)]
+            new_value = input["value"][:int(self.n)]
 
-        return output
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": new_value
+        }
     
     

@@ -26,15 +26,15 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG') == 'true'
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(",")
+ALLOWED_HOSTS = ["*"]
 
 # CORS Policy
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = ["*"]
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost",
-    "https://cashew.catoyeung.com"
-]
+#CORS_ORIGIN_WHITELIST = [
+#    "http://localhost",
+#    "https://cashew.catoyeung.com"
+#]
 
 # Application definition
 
@@ -155,7 +155,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'HongKong'
 
 USE_I18N = True
 
@@ -172,6 +172,9 @@ REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': (
@@ -200,9 +203,7 @@ REST_REGISTRATION = {
     },
 }
 
-REST_AUTH_SERIALIZERS = {
-    'PASSWORD_CHANGE_SERIALIZER ': 'user.serializers.MyPasswordChangeSerializer',
-}
+OLD_PASSWORD_FIELD_ENABLED = True
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

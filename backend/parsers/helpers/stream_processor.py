@@ -78,30 +78,25 @@ class StreamProcessor:
     def __init__(self, rule):
         self.rule = rule
 
-    def process(self, rule_raw_result):
+    def process(self, extracted):
 
         streams = Stream.objects.filter(rule_id=self.rule.id) \
             .prefetch_related('streamcondition_set') \
             .order_by('step')
 
-        inputStream = rule_raw_result
-
         processedStreams = []
-
-        if self.rule.rule_type == RuleType.DEPENDENT_RULE.value:
-            try:
-                json.loads(inputStream)
-            except ValueError:
-                inputStream = "Dependent rules only works with streamed result in JSON format."
-            type = "JSON"
-        else:
-            type = self.rule.rule_type
 
         processedStreams.append({
             "step": 0,
-            "type": type,
-            "data": inputStream
+            "type": extracted["type"],
+            "data": {
+                "type":extracted["type"],
+                "value": extracted["value"]
+            }
         })
+
+        last_processed_data = extracted
+        has_error = False
 
         for streamIndex in range(len(streams)):
 
@@ -111,7 +106,7 @@ class StreamProcessor:
             else:
                 raise Exception("No such stream")
 
-            if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
+            """if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
                 streams[streamIndex].type = "TABLE"
 
             if streams[streamIndex].stream_class == "OPEN_AI_TEXT":
@@ -124,9 +119,9 @@ class StreamProcessor:
                 streams[streamIndex].type = "TEXTFIELD"
 
             if streams[streamIndex].stream_class == "EXTRACT_JSON_AS_TABLE":
-                streams[streamIndex].type = "TABLE"
+                streams[streamIndex].type = "TABLE"""
 
-            if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
+            """if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
                 processedStreams.append({
                     "status": "error",
                     "error_message": "Please correct the error in the above step first.",
@@ -151,15 +146,18 @@ class StreamProcessor:
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                     "json_extract_code": streams[streamIndex].json_extract_code
                 })
-                continue
+                continue"""
 
             try:
-                result = sp.process(inputStream)
+                if not has_error:
+                    processed_data = sp.process(last_processed_data)
+                else:
+                    processed_data = last_processed_data
                 processedStreams.append({
                     "status": "success",
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].type,
+                    "type": processed_data["type"],
                     "class": streams[streamIndex].stream_class,
                     "col_index": streams[streamIndex].col_index,
                     "col_indexes": streams[streamIndex].col_indexes,
@@ -177,9 +175,9 @@ class StreamProcessor:
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                     "json_extract_code": streams[streamIndex].json_extract_code,
-                    "data": result
+                    "data": processed_data
                 })
-                inputStream = result
+                last_processed_data = processed_data
             except Exception as e:
                 print(traceback.format_exc())
                 processedStreams.append({
@@ -188,7 +186,7 @@ class StreamProcessor:
                     "data": [str(e)],
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].type,
+                    "type": last_processed_data["type"],
                     "class": streams[streamIndex].stream_class,
                     "col_index": streams[streamIndex].col_index,
                     "col_indexes": streams[streamIndex].col_indexes,
@@ -207,5 +205,6 @@ class StreamProcessor:
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                     "json_extract_code": streams[streamIndex].json_extract_code
                 })
+                has_error = True
 
         return processedStreams

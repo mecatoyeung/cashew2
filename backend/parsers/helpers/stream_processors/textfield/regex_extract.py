@@ -2,27 +2,32 @@ import re
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class RegexExtractStreamProcessor(StreamBase):
 
     def __init__(self, stream):
         self.regex = stream.regex
 
-    def process(self, streamed_data):
+    def process(self, input):
 
-        output = [""]
+        new_value = [""]
 
         found_any = False
 
-        for line in streamed_data:
+        for line in input["value"]:
             found = re.findall(self.regex, line)
             if len(found) > 0:
                 if not found_any:
                     found_any = True
-                    output = [(" ".join(found))]
+                    new_value = [(" ".join(found))]
                 else:
-                    output.append(" ".join(found))
+                    new_value.append(" ".join(found))
 
-        return output
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": new_value
+        }
     
     

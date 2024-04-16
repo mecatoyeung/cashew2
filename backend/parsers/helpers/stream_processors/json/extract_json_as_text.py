@@ -4,7 +4,7 @@ import ast
 
 from munch import DefaultMunch
 
-from parsers.models.parser import Parser
+from parsers.models.stream_type import StreamType
 
 from parsers.helpers.stream_processors.base import StreamBase
 
@@ -40,7 +40,7 @@ class ExtractJSONAsTextStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        input_obj = DefaultMunch.fromDict(json.loads(input))
+        input_obj = DefaultMunch.fromDict(json.loads(input["value"]))
 
         if not is_valid_python(self.json_extract_code):
             raise Exception("Extract code format is not correct. Please verify your input or contact system administrator.")
@@ -55,7 +55,10 @@ class ExtractJSONAsTextStreamProcessor(StreamBase):
         if not isinstance(extracted, primitives):
             raise Exception("The variable is not string, integer, float, or boolean.")
 
-        output = [extracted]
+        new_value = [extracted]
 
-        return output
+        return {
+            "type": StreamType.TEXTFIELD.value,
+            "value": new_value
+        }
 

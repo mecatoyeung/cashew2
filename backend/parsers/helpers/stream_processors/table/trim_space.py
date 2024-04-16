@@ -1,5 +1,7 @@
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class TrimSpaceTableStreamProcessor(StreamBase):
 
@@ -8,22 +10,25 @@ class TrimSpaceTableStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        output_body = []
+        new_value_body = []
 
-        for row in input["body"]:
+        for row in input["value"]["body"]:
             new_row = []
             for col in row:
                 new_row.append(col.strip())
-            output_body.append(new_row)
+            new_value_body.append(new_row)
 
-        if len(output_body) == 0:
-            output_body = [[""]]
+        if len(new_value_body) == 0:
+            new_value_body = [[""]]
 
-        output = {
-            'header': input["header"],
-            'body': output_body
+        new_value = {
+            'header': input["value"]["header"],
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
     
     

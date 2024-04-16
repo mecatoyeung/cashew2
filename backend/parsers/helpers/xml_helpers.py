@@ -19,8 +19,11 @@ class XMLPage:
         self.document_parser = document_parser
         self.page_num = page_num
         self.region = XMLRegion()
-        self.xml = document_parser.document.document_pages.get(
-            page_num=page_num).xml
+        try:
+            self.xml = document_parser.document.document_pages.get(
+                page_num=page_num).xml
+        except:
+            self.xml = "<?xml version='1.0' encoding='utf-8'?><pages></pages>"
         root = ET.fromstring(self.xml.replace('\n', ''))
 
         page_el = root.find('.//page')
@@ -33,10 +36,14 @@ class XMLPage:
             self.width = Decimal(page_bbox_search.group(3))
             self.height = Decimal(page_bbox_search.group(4))
         else:
-            self.width = document_parser.document.document_pages.get(
-                page_num=page_num).width
-            self.height = document_parser.document.document_pages.get(
-                page_num=page_num).height
+            try:
+                self.width = document_parser.document.document_pages.get(
+                    page_num=page_num).width
+                self.height = document_parser.document.document_pages.get(
+                    page_num=page_num).height
+            except:
+                self.width = 2481
+                self.height = 3508
         self.text_widths = []
         self.text_heights = []
         self.median_of_text_widths = self.document_parser.parser.assumed_text_width * self.width / Decimal(1000.00)
@@ -281,9 +288,6 @@ class XMLPage:
             for i in range(len(text_elements)):
                 text_el = text_elements[i]
 
-                if text_el.text == '(':
-                    luck = 1
-
                 if len(prev_text_els) > 0:
                     if text_el.region.x1 >= prev_text_el.region.x2 + Decimal(0.5):
 
@@ -386,14 +390,10 @@ class XMLPage:
                     arr[j+1] = arr[j]  # Shift elements to the right
                     j -= 1
                 arr[j+1] = key
-                luck = 1
 
             return arr
 
         def compare(a, b):
-
-            if 'Date' in a.text and '日期' in b.text:
-                luck = 1
 
             if a.region.x1 == None or a.region.x2 == None or a.region.y1 == None or a.region.y2 == None:
                 return 0

@@ -6,6 +6,8 @@ from parsers.models.parser import Parser
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class OpenAITableStreamProcessor(StreamBase):
 
@@ -25,7 +27,7 @@ class OpenAITableStreamProcessor(StreamBase):
             api_version="2024-02-15-preview"
         )
 
-        json_data = str([input["header"]] + input["body"])
+        json_data = str([input["value"]["header"]] + input["value"]["body"])
 
         #open_ai_content = self.open_ai_question + \
             #"Please return in JSON format.\nInput: " + "\n" + json_data
@@ -45,7 +47,10 @@ class OpenAITableStreamProcessor(StreamBase):
         except Exception as e:
             raise e
 
-        output = completion.choices[0].message.content
+        new_value = completion.choices[0].message.content
 
-        return output
+        return {
+            "type": StreamType.JSON.value,
+            "value": new_value
+        }
 

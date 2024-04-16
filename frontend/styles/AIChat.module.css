@@ -1,60 +1,60 @@
 .parsersH1 {
-    padding: 10px 0 0 0;
-    text-align: center;
-    text-decoration: underline;
+  padding: 10px 0 0 0;
+  text-align: center;
+  text-decoration: underline;
 }
 
 .parsersUl {
-    padding: 10px 10px;
-    margin: 0;
+  padding: 10px 10px;
+  margin: 0;
 }
 
 .parsersUl li {
-    border: 3px solid #E31A2F;
-    border-radius: 6px;
-    margin: 10px 0;
-    width: 100%;
-    height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    list-style: none;
-    vertical-align: middle;
-    float: left;
-    position: relative;
+  border: 3px solid #e31a2f;
+  border-radius: 6px;
+  margin: 10px 0;
+  width: 100%;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  vertical-align: middle;
+  float: left;
+  position: relative;
 }
 
 .parsersUl li:hover {
-    border: 3px solid #E31A2F;
+  border: 3px solid #e31a2f;
 }
 
 .parsersUl li.addParserLi {
-    border: 3px dotted #E31A2F;
+  border: 3px dotted #e31a2f;
 }
 
 .parserName {
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    line-height: 114px;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  line-height: 114px;
 }
 
 .parserName span {
-    line-height: 24px;
-    display: inline-block;
-    vertical-align: middle;
+  line-height: 24px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .parserSettingActions {
-    position: absolute;
-    right: 5px;
-    top: 5px;
+  position: absolute;
+  right: 5px;
+  top: 5px;
 }
 
 .parserActions {
-    position: absolute;
-    right: 5px;
-    bottom: 5px;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
 }
 
 .parserActions button {
@@ -63,12 +63,12 @@
 }
 
 .documentsQueueTabWrapper {
-    width: 100%;
+  width: 100%;
 }
 
 .parsersIcon {
   display: inline-block;
-  color: #E31A2F;
+  color: #e31a2f;
   line-height: 52px;
   vertical-align: top;
   margin-left: 10px;
@@ -82,7 +82,7 @@
 .uploadBox {
   width: 100%;
   padding: 10px;
-  border: 3px dotted #E31A2F;
+  border: 3px dotted #e31a2f;
   border-radius: 6px;
   text-align: center;
   position: relative;
@@ -131,7 +131,7 @@
 }
 
 .nav {
-  float: right
+  float: right;
 }
 
 .nav ul {
@@ -162,13 +162,13 @@
 .headerHr {
   border-top: 3px solid #000;
   margin: 0 0 0 0;
-  opacity: 1.0;
+  opacity: 1;
 }
 
 .tools {
   width: 100%;
   position: fixed;
-  z-index: 1000;;
+  z-index: 1000;
 }
 
 .toolsBtn {
@@ -192,7 +192,7 @@
 .main {
   flex-grow: 1;
   display: flex;
-  height: calc(100vh - 122px)
+  height: calc(100vh - 122px);
 }
 
 .pageText {
@@ -206,6 +206,7 @@
 
 .streamTableDiv {
   width: 100%;
+  overflow-x: auto;
 }
 
 .streamTable {
@@ -245,12 +246,12 @@
 }
 
 .talkBubble {
-	margin: 20px;
+  margin: 20px;
   display: inline-block;
   position: relative;
-	width: 80%;
-	height: auto;
-	background-color: lightyellow;
+  width: 80%;
+  height: auto;
+  background-color: lightyellow;
 }
 
 .talkKeyToValue {
@@ -268,13 +269,13 @@
   bottom: 10px;
 }
 
-.border{
+.border {
   border: 3px solid #666;
 }
 
 .talktext {
   padding: 1em;
-	text-align: left;
+  text-align: left;
   line-height: 1.5em;
   min-height: 40px;
 }
@@ -284,53 +285,53 @@
 }
 
 .triRight.border.btmLeft:before {
-	content: ' ';
-	position: absolute;
-	width: 0;
-	height: 0;
-	left: 15px;
+  content: ' ';
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: 15px;
   right: auto;
   top: auto;
-	bottom: -40px;
-	border: 10px solid;
-	border-color: #666 transparent transparent #666;
+  bottom: -40px;
+  border: 10px solid;
+  border-color: #666 transparent transparent #666;
 }
 
-.triRight.btmLeft:after{
-	content: ' ';
-	position: absolute;
-	width: 0;
-	height: 0;
-	left: 13px;
+.triRight.btmLeft:after {
+  content: ' ';
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: 13px;
   right: auto;
   top: auto;
-	bottom: -20px;
-	border: 10px solid;
-	border-color: lightyellow transparent transparent lightyellow;
+  bottom: -20px;
+  border: 10px solid;
+  border-color: lightyellow transparent transparent lightyellow;
 }
 
 .triRight.border.btmRightIn:before {
-	content: ' ';
-	position: absolute;
-	width: 0;
-	height: 0;
+  content: ' ';
+  position: absolute;
+  width: 0;
+  height: 0;
   left: auto;
-	right: 15px;
-	bottom: -20px;
-	border: 10px solid;
-	border-color: #666 #666 transparent transparent;
+  right: 15px;
+  bottom: -20px;
+  border: 10px solid;
+  border-color: #666 #666 transparent transparent;
 }
 
 .triRight.btmRightIn:after {
-	content: ' ';
-	position: absolute;
-	width: 0;
-	height: 0;
+  content: ' ';
+  position: absolute;
+  width: 0;
+  height: 0;
   left: auto;
-	right: 15px;
-	bottom: -20px;
-	border: 10px solid;
-	border-color: #666 #666 transparent transparent;
+  right: 15px;
+  bottom: -20px;
+  border: 10px solid;
+  border-color: #666 #666 transparent transparent;
 }
 
 .actions {
@@ -369,4 +370,3 @@
   width: 8px;
   background: #000;
 }
-

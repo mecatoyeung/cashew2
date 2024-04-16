@@ -44,11 +44,6 @@ class DocumentParser:
         return textlines_in_all_pages
     
     def extract(self, rule, parsed_result=[]):
-        # Add to xml page if not yet initialized
-        # if rule.anchor_page_num == None:
-        #    pages = rule.pages
-        # else:
-        #    pages = rule.pages + "," + str(rule.anchor_page_num)
         if rule.rule_type == RuleType.DEPENDENT_RULE.value:
             page_nums = list(range(1, self.document.total_page_num + 1))
         else:
@@ -120,7 +115,7 @@ class DocumentParser:
             "rule": {
                 "id": rule.id,
                 "name": rule.name,
-                "type": processed_streams[-1]["type"]
+                "type": rule.rule_type
             },
             "extracted": extracted,
             "streamed": processed_streams[-1]["data"]

@@ -349,7 +349,7 @@ export default function Parsers() {
                 onClick={() => importParserBtnClickHandler()}
               >
                 <div className={parserStyles.parserName}>
-                  <span>Import Parser</span>
+                  <span>Import Layout</span>
                 </div>
               </li>
               <Modal show={importModal.show} onHide={closeImportModalHandler}>
@@ -497,6 +497,14 @@ export default function Parsers() {
                   </Button>
                 </Modal.Footer>
               </Modal>
+              <li
+                className={parserStyles.addParserLi}
+                onClick={() => importParserBtnClickHandler()}
+              >
+                <div className={parserStyles.parserName}>
+                  <span>Import Classification</span>
+                </div>
+              </li>
               {parsers &&
                 parsers.length > 0 &&
                 parsers

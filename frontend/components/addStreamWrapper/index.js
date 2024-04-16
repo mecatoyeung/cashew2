@@ -196,14 +196,16 @@ const AddStreamWrapper = (props) => {
       <Button variant="primary" onClick={addStreamButtonClickHandler}>
         Add Stream
       </Button>
-      <StreamModal
-        rule={props.rule}
-        stream={props.stream}
-        show={showAddStreamModal}
-        hideHandler={() => setShowAddStreamModal(false)}
-        streamAddHandler={streamAddHandler}
-        onClose={() => streamAddHandler()}
-      />
+      {props.rule && (
+        <StreamModal
+          rule={props.rule}
+          stream={props.stream}
+          show={showAddStreamModal}
+          hideHandler={() => setShowAddStreamModal(false)}
+          streamAddHandler={streamAddHandler}
+          onClose={() => streamAddHandler()}
+        />
+      )}
     </div>
   )
 }

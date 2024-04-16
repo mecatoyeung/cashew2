@@ -89,6 +89,11 @@ class StreamPostSerializer(StreamSerializer):
 
         stream_conditions = validated_data.pop('stream_conditions', [])
 
+        streams_that_are_after_created_stream = Stream.objects.filter(rule__id=validated_data["rule"].id, step__gte=validated_data["step"])
+        for s in streams_that_are_after_created_stream:
+            s.step = s.step + 1
+            s.save()
+
         instance = Stream.objects.create(**validated_data)
 
         self._get_or_create_stream_conditions(stream_conditions, instance)

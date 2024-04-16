@@ -1,4 +1,5 @@
 from parsers.helpers.stream_processors.base import StreamBase
+from parsers.models.stream_type import StreamType
 
 
 class CombineFirstNLinesStreamProcessor(StreamBase):
@@ -7,23 +8,26 @@ class CombineFirstNLinesStreamProcessor(StreamBase):
         self.n = stream.combine_first_n_lines
 
     def process(self, input):
-        if len(input["body"]) == 0:
+        if len(input["value"]["body"]) == 0:
             return [""]
-        combinedRow = [ "" for _ in range(len(input["body"][0])) ]
+        combinedRow = [ "" for _ in range(len(input["value"]["body"][0])) ]
         for i in range(0, int(self.n)):
-            for j in range(0, len(input["body"][i])):
+            for j in range(0, len(input["value"]["body"][i])):
                 if (i == (int(self.n) - 1)):
-                    combinedRow[j] += str(input["body"][i][j])
+                    combinedRow[j] += str(input["value"]["body"][i][j])
                 else:
-                    combinedRow[j] += str(input["body"][i][j])
+                    combinedRow[j] += str(input["value"]["body"][i][j])
 
-        output_body = input["body"][int(self.n):]
-        output_body.insert(0, combinedRow)
+        new_value_body = input["value"]["body"][int(self.n):]
+        new_value_body.insert(0, combinedRow)
 
-        output = {
-            'header': input["header"],
-            'body': output_body
+        new_value = {
+            'header': input["value"]["header"],
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
     

@@ -3,6 +3,8 @@ import json
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
 
 class UnpivotColumnStreamProcessor(StreamBase):
 
@@ -11,10 +13,10 @@ class UnpivotColumnStreamProcessor(StreamBase):
         self.unpivot_table_conditions = unpivot_table_conditions
 
     def process(self, input):
-        if len(input["body"]) == 0:
+        if len(input["value"]["body"]) == 0:
             return [[""]]
 
-        output_body = []
+        new_value_body = []
 
         unpivot_table = json.loads(self.unpivot_table)
         unpivot_column_index = int(unpivot_table['unpivot_column_index'])
@@ -27,41 +29,41 @@ class UnpivotColumnStreamProcessor(StreamBase):
         conditions = json.loads(self.unpivot_table_conditions)
 
         # deep copy
-        output_header = input["header"][:]
-        output_body = [row[:] for row in input["body"]]
+        new_value_header = input["value"]["header"][:]
+        new_value_body = [row[:] for row in input["value"]["body"]]
 
         columns_to_add = []
 
         insert_col_at = unpivot_column_index + 1
 
-        for i in range(0, len(input["body"])):
+        for i in range(0, len(input["value"]["body"])):
             matched = True
             for condition in conditions:
                 column = int(condition['column'])
                 if column < 0:
                     break
-                if column >= len(input["body"][i]):
+                if column >= len(input["value"]["body"][i]):
                     break
                 if (condition['operator'] == 'equals'):
-                    if not input["body"][i][column] == condition['value']:
+                    if not input["value"]["body"][i][column] == condition['value']:
                         matched = False
                 elif (condition['operator'] == 'regex'):
-                    if not re.match(condition['value'], input["body"][i][column]):
+                    if not re.match(condition['value'], input["value"]["body"][i][column]):
                         matched = False
                 elif (condition['operator'] == 'contains'):
-                    if not condition['value'] in input["body"][i][column]:
+                    if not condition['value'] in input["value"]["body"][i][column]:
                         matched = False
                 elif (condition['operator'] == 'isEmpty'):
-                    if not input["body"][i][column] == "":
+                    if not input["value"]["body"][i][column] == "":
                         matched = False
                 elif (condition['operator'] == 'isNotEmpty'):
-                    if not input["body"][i][column] != "":
+                    if not input["value"]["body"][i][column] != "":
                         matched = False
 
             if matched == False:
                 continue
 
-            textlines = input["body"][i][unpivot_column_index].split(newline_char)
+            textlines = input["value"]["body"][i][unpivot_column_index].split(newline_char)
 
             if textlines[0] == '':
                 textlines.pop(0)
@@ -74,22 +76,22 @@ class UnpivotColumnStreamProcessor(StreamBase):
 
                     if not matched_col_name in columns_to_add:
                         # insert header
-                        output_header.insert(insert_col_at, matched_col_name)
-                        for l in range(insert_col_at + 1, len(output_header)):
-                            output_header[l] += 1
+                        new_value_header.insert(insert_col_at, matched_col_name)
+                        for l in range(insert_col_at + 1, len(new_value_header)):
+                            new_value_header[l] += 1
                         # insert col to output
-                        for k in range(0, len(output_body)):
-                            output_body[k].insert(insert_col_at, "")
+                        for k in range(0, len(new_value_body)):
+                            new_value_body[k].insert(insert_col_at, "")
 
                         insert_col_at += 1
 
                         columns_to_add.append(matched_col_name)
 
-                    output_body[i][unpivot_column_index+columns_to_add.index(matched_col_name)+1] = matched_data
+                    new_value_body[i][unpivot_column_index+columns_to_add.index(matched_col_name)+1] = matched_data
                 else:
                     try:
                         matched_col_name
-                        output_body[i][unpivot_column_index+columns_to_add.index(matched_col_name)+1] += " " + textlines[0]
+                        new_value_body[i][unpivot_column_index+columns_to_add.index(matched_col_name)+1] += " " + textlines[0]
                     except:
                         textlines.pop(0)
                         continue
@@ -97,16 +99,19 @@ class UnpivotColumnStreamProcessor(StreamBase):
                 textlines.pop(0)
 
         for i in range(0, len(columns_to_add)):
-            output_body[0][unpivot_column_index+i+1] = columns_to_add[i]
+            new_value_body[0][unpivot_column_index+i+1] = columns_to_add[i]
 
-        if len(output_body) == 0:
-            output_body = [[""]]
+        if len(new_value_body) == 0:
+            new_value_body = [[""]]
 
-        output = {
-            'header': output_header,
-            'body': output_body
+        new_value = {
+            'header': new_value_header,
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
     
     

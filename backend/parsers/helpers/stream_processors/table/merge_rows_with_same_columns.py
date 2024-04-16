@@ -2,54 +2,60 @@ import copy
 
 from parsers.helpers.stream_processors.base import StreamBase
 
+from parsers.models.stream_type import StreamType
+
+
 class MergeRowsWithSameColumnsStreamProcessor(StreamBase):
 
     def __init__(self, stream):
         self.columns = stream.col_indexes
 
     def process(self, input):
-        if len(input["body"]) == 0:
+        if len(input["value"]["body"]) == 0:
             return [[""]]
 
-        input["body"] = [row[:] for row in input["body"]]
-        output_body = []
+        input["value"]["body"] = [row[:] for row in input["value"]["body"]]
+        new_value_body = []
 
-        previousLine = copy.deepcopy(input["body"][0])
+        previousLine = copy.deepcopy(input["value"]["body"][0])
         columns_array = list(map(int, self.columns.split(",")))
-        for i in range(1, (len(input["body"]))):
+        for i in range(1, (len(input["value"]["body"]))):
             matched = True
             for column in columns_array:
-                if previousLine[column] != input["body"][i][column]:
+                if previousLine[column] != input["value"]["body"][i][column]:
                     matched = False
 
             if matched == True:
                 if len(previousLine) == 0:
-                    previousLine = copy.deepcopy(input["body"][i])
+                    previousLine = copy.deepcopy(input["value"]["body"][i])
                 else:
-                    for j in range(0, (len(input["body"][i]))):
-                        if (previousLine[j] == "" or input["body"][i][j] == ""):
+                    for j in range(0, (len(input["value"]["body"][i]))):
+                        if (previousLine[j] == "" or input["value"]["body"][i][j] == ""):
                             continue
                         if j in columns_array:
                             continue
-                        if previousLine[j] == input["body"][i][j]:
+                        if previousLine[j] == input["value"]["body"][i][j]:
                             continue
                         previousLine[j] = str(
-                            previousLine[j]) + "\n" + str(input["body"][i][j])
+                            previousLine[j]) + "\n" + str(input["value"]["body"][i][j])
 
             else:
-                output_body.append(previousLine)
-                previousLine = copy.deepcopy(input["body"][i])
+                new_value_body.append(previousLine)
+                previousLine = copy.deepcopy(input["value"]["body"][i])
 
         # append last line
-        output_body.append(previousLine)
+        new_value_body.append(previousLine)
 
-        if len(output_body) == 0:
-            output_body = [[""]]
+        if len(new_value_body) == 0:
+            new_value_body = [[""]]
 
-        output = {
-            'header': input["header"],
-            'body': output_body
+        new_value = {
+            'header': input["value"]["header"],
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
 

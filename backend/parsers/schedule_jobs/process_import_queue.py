@@ -38,8 +38,6 @@ def process_import_queue_job():
         # Do the job
 
         # Mark the job as completed
-        # queue_job.queue_status = QueueStatus.COMPLETED.value
-        # queue_job.save()
         document = Document.objects.prefetch_related(Prefetch("document_pages", queryset=DocumentPage.objects.order_by('page_num'))).get(pk=queue_job.document_id)
         parser.total_num_of_pages_processed += document.total_page_num
         parser.save()

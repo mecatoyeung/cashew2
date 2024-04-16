@@ -4,6 +4,8 @@ import Link from 'next/link'
 
 import cn from 'classnames'
 
+import { produce } from 'immer'
+
 import Dropdown from 'react-bootstrap/Dropdown'
 import Button from 'react-bootstrap/Button'
 import Table from 'react-bootstrap/Table'
@@ -11,6 +13,7 @@ import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 import ToastContainer from 'react-bootstrap/ToastContainer'
 import Toast from 'react-bootstrap/Toast'
+import Select from 'react-select'
 
 import * as _ from 'lodash'
 
@@ -31,6 +34,8 @@ const RuleProperties = () => {
     pageNum = 1,
   } = router.query
 
+  const [rules, setRules] = useState([])
+
   const [rule, setRule] = useState(null)
 
   const [toast, setToast] = useState({
@@ -41,8 +46,23 @@ const RuleProperties = () => {
 
   useEffect(() => {
     if (!router.isReady) return
+    getRules()
     getRule()
   }, [router.isReady, ruleId])
+
+  const getRules = () => {
+    if (!parserId) return
+    service.get(`rules/?parserId=${parserId}`, (response) => {
+      setRules(
+        response.data.map((r) => {
+          return {
+            value: r.id,
+            label: r.name,
+          }
+        })
+      )
+    })
+  }
 
   const getRule = () => {
     service.get('rules/' + ruleId + '/', (response) => {
@@ -121,6 +141,14 @@ const RuleProperties = () => {
     )
   }
 
+  const dependsOnChangeHandler = (e) => {
+    setRule(
+      produce((draft) => {
+        draft.dependsOn = e.value
+      })
+    )
+  }
+
   return (
     <EditorLayout>
       <div className={styles.workbenchHeader}>
@@ -146,6 +174,17 @@ const RuleProperties = () => {
                   rows={8}
                   onChange={(e) => setRuleInputDropDown(e)}
                   value={rule.inputDropdownList}
+                />
+              </Form.Group>
+            )}
+            {rules && rules.length > 0 && rule.ruleType == 'DEPENDENT_RULE' && (
+              <Form.Group className="mb-3" controlId="ruleTypeControlInput">
+                <Form.Label>Depends on</Form.Label>
+                <Select
+                  instanceId="dependsOnSelectId"
+                  options={rules.filter((r) => r.value != ruleId)}
+                  onChange={dependsOnChangeHandler}
+                  value={rules.find((r) => r.value == rule.dependsOn)}
                 />
               </Form.Group>
             )}

@@ -50,9 +50,9 @@ class ParserSerializer(serializers.ModelSerializer):
         many=False, queryset=User.objects.all(),
         default=None)
     permitted_users = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all())
+        many=True, queryset=User.objects.all(), allow_null=True, required=False)
     permitted_groups = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Group.objects.all())
+        many=True, queryset=Group.objects.all(), allow_null=True, required=False)
 
     class Meta:
         model = Parser
@@ -180,7 +180,16 @@ class ParserSerializer(serializers.ModelSerializer):
 
 class ParserCreateSerializer(ParserSerializer):
 
-    pass
+    class Meta:
+        model = Parser
+        fields = ['id', 'type', 'guid', 'name', 'sources', 'preprocessings',
+                  'rules', 'ocr', 'splitting', 'chatbot', 'open_ai', 'open_ai_metrics_key',
+                  'postprocessings', 'integrations', 'total_num_of_pages_processed', 
+                  'pdf_to_image_dpi',
+                  'assumed_text_height', 'assumed_text_width', 'same_column_acceptance_range', 'same_line_acceptance_range',
+                  'owner',
+                  'last_modified_at']
+        read_only_fields = ['id']
 
 class ParserRetrieveSerializer(ParserSerializer):
 

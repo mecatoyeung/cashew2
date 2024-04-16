@@ -4,7 +4,7 @@ import ast
 
 from munch import DefaultMunch
 
-from parsers.models.parser import Parser
+from parsers.models.stream_type import StreamType
 
 from parsers.helpers.stream_processors.base import StreamBase
 
@@ -40,7 +40,7 @@ class ExtractJSONAsTableStreamProcessor(StreamBase):
 
     def process(self, input):
 
-        input_obj = DefaultMunch.fromDict(json.loads(input))
+        input_obj = DefaultMunch.fromDict(json.loads(input["value"]))
 
         if not is_valid_python(self.json_extract_code):
             raise Exception("Extract code format is not correct. Please verify your input or contact system administrator.")
@@ -60,24 +60,27 @@ class ExtractJSONAsTableStreamProcessor(StreamBase):
                 col_names.append(col_name)
         col_names = list(dict.fromkeys(col_names))
             
-        output_body = []
+        new_value_body = []
 
         for row in extracted:
             row_data = []
             col_index = 0
             for col_name in col_names:
-                if hasattr(row, col_name):
+                try:
                     row_data.append(str(row[col_name]))
-                else:
+                except KeyError:
                     row_data.append("")
                 col_index += 1
 
-            output_body.append(row_data)
+            new_value_body.append(row_data)
 
-        output = {
+        new_value = {
             'header': list(range(0, len(col_names))),
-            'body': output_body
+            'body': new_value_body
         }
 
-        return output
+        return {
+            "type": StreamType.TABLE.value,
+            "value": new_value
+        }
 
