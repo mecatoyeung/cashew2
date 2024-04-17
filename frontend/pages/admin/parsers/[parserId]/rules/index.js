@@ -252,6 +252,7 @@ export default function Parsers() {
 
   useEffect(() => {
     if (!router.isReady) return
+    if (!router.query.parserId) return
   }, [router.isReady])
 
   useEffect(() => {

@@ -74,6 +74,17 @@ const ProcessedQueue = (props) => {
     setSelectedQueueIds([])
   }
 
+  const moveToParsingQueueClickHandler = async () => {
+    for (let i = 0; i < selectedQueueIds.length; i++) {
+      let queue = queues.find((q) => q.id == selectedQueueIds[i])
+      queue.queueClass = 'PARSING'
+      queue.queueStatus = 'READY'
+      await service.put('queues/' + selectedQueueIds[i] + '/', queue)
+    }
+    getQueues()
+    setSelectedQueueIds([])
+  }
+
   const chkQueueChangeHandler = (e, queue) => {
     if (e.target.checked) {
       if (!selectedQueueIds.includes(queue.id)) {
@@ -137,6 +148,9 @@ const ProcessedQueue = (props) => {
         >
           <Dropdown.Item href="#" onClick={moveToImportQueueClickHandler}>
             Move to Import Queue
+          </Dropdown.Item>
+          <Dropdown.Item href="#" onClick={moveToParsingQueueClickHandler}>
+            Move to Parsing Queue
           </Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item href="#" onClick={deleteQueueClickHandler}>
@@ -223,14 +237,12 @@ const ProcessedQueue = (props) => {
                           </Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
-                          {console.log(parsedResultForm)}
                           {parsedResultForm.parsedResult != '' &&
                             parsedResultForm.parsedResult != '{}' && (
                               <CodeEditor
                                 value={JSON.parse(
                                   parsedResultForm.parsedResult
                                 ).map((pr) => {
-                                  console.log(pr)
                                   let vars = {}
                                   if (pr['streamed']['type'] == 'TEXTFIELD') {
                                     vars[pr['rule']['name']] =

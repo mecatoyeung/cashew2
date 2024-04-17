@@ -117,6 +117,14 @@ class QueueSerializer(serializers.ModelSerializer):
                     document_page.ocred = False
                     document_page.postprocessed = False
                     document_page.save()
+            if attr == "queue_class" and value == QueueClass.PARSING.value:
+                document_pages = DocumentPage.objects.filter(
+                    document__queue__id=instance.pk)
+                for document_page in document_pages:
+                    document_page.preprocessed = False
+                    document_page.ocred = False
+                    document_page.postprocessed = False
+                    document_page.save()
             if attr == "queue_class" and value == QueueClass.POST_PROCESSING.value:
                 document_pages = DocumentPage.objects.filter(
                     document__queue__id=instance.pk)

@@ -17,7 +17,7 @@ class ConsecutivePageSplittingRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConsecutivePageSplittingRule
         fields = ['id',
-                  'sort_order', "consecutive_page_splitting_conditions"]
+                  'sort_order', "consecutive_page_splitting_rule_type", "consecutive_page_splitting_conditions"]
         read_only_fields = ['id']
 
     def _get_or_create_consecutive_page_splitting_conditions(self, consecutive_page_splitting_conditions, splitting_rule):

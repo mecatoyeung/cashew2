@@ -8,32 +8,27 @@ from django.db.models import Prefetch
 from django.db.models import Q
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
-from django.utils import timezone
-from django_apscheduler.models import DjangoJobExecution
-from django_apscheduler.jobstores import register_job
+
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.queue_class import QueueClass
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.ocr import OCR
-from parsers.models.ocr_type import OCRType
 from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
 from parsers.helpers.document_parser import DocumentParser
 
 from parsers.schedule_jobs.process_postprocessing_queue import process_single_postprocessing_queue
 
-from ..helpers.rule_extractor import RuleExtractor
-from ..helpers.stream_processor import StreamProcessor
 
 def sort_rules_for_depending_rules(rules, parent_id=None, sorted_rules=[]):
+    if (len(rules) == 0):
+        return sorted_rules
     children_rules = rules.filter(depends_on_id=parent_id)
     remaining_rules = rules.exclude(depends_on_id=parent_id) 
     for r in children_rules:
         sorted_rules.append(r)
-        remaining_rules = remaining_rules.exclude(id=r.id)
         sort_rules_for_depending_rules(remaining_rules, r.id, sorted_rules=sorted_rules)
     return sorted_rules
 
@@ -61,7 +56,7 @@ def process_single_parsing_queue(queue_job):
         document_parser = DocumentParser(parser, document)
 
         # Calculate the sequence to parse rules considering dependent rules
-        sorted_rules = sort_rules_for_depending_rules(rules, parent_id=None)
+        sorted_rules = sort_rules_for_depending_rules(rules, parent_id=None, sorted_rules=[])
 
         for rule in sorted_rules:
             result = document_parser.extract_and_stream(rule, parsed_result=parsed_result)
@@ -88,7 +83,7 @@ def process_single_parsing_queue(queue_job):
         queue_job.queue_class = QueueClass.PARSING.value
         queue_job.queue_status = QueueStatus.READY.value
         queue_job.save()
-        traceback.print_exc()
+        print(traceback.print_exc())
 
 def process_stopped_parsing_queue_job():
 

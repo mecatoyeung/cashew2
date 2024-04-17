@@ -34,6 +34,7 @@ from parsers.models.ocr_type import OCRType
 from parsers.models.splitting import Splitting
 from parsers.models.splitting_operator_type import SplittingOperatorType
 from parsers.models.last_page_splitting_rule_type import LastPageSplittingRuleType
+from parsers.models.consecutive_page_splitting_rule_type import ConsecutivePageSplittingRuleType
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
 from parsers.models.document_extension import DocumentExtension
@@ -119,7 +120,7 @@ def element_coordinates(element):
 def get_streamed_by_rule(rule_id, parsed_result):
     for r in parsed_result:
         if r["rule"]["id"] == rule_id:
-            return r["streamed"]
+            return r["streamed"]["value"]
     raise Exception("Cannot find streamed by rule from parsed result.")
 
 
@@ -568,9 +569,9 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
 
                                 elif last_page_splitting_rule.last_page_splitting_rule_type == LastPageSplittingRuleType.WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_MATCH.value:
 
-                                    for first_page_splitting_rule in splitting.splitting_rules.exclude(pk=last_page_splitting_rule.parent_splitting_rule.id).all():
+                                    for first_page_splitting_rule_in_last_rule in splitting.splitting_rules.exclude(pk=last_page_splitting_rule.parent_splitting_rule.id).all():
                                         last_page_conditions_passed = True
-                                        for splitting_condition in first_page_splitting_rule.splitting_conditions.all():
+                                        for splitting_condition in first_page_splitting_rule_in_last_rule.splitting_conditions.all():
                                             streamed_rule_value = ' '.join(get_streamed_by_rule(
                                                 splitting_condition.rule.id, parsed_result))
                                             if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
@@ -610,10 +611,10 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                                                 if not streamed_rule_value == previous_streamed_rule_value:
                                                     last_page_conditions_passed = False
 
-                                if last_page_conditions_passed:
+                                        if last_page_conditions_passed:
 
-                                    any_last_page_rules_passed = True
-                                    break
+                                            any_last_page_rules_passed = True
+                                            break
 
                             if any_last_page_rules_passed:
 
@@ -621,69 +622,128 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                                 page_num = document_page_index + 1
                                 break
 
-                            any_consecutive_page_rules_passed = False
                             for consecutive_page_splitting_rule in first_page_splitting_rule.consecutive_page_splitting_rules.all():
-                                consecutive_page_conditions_passed = True
-                                for splitting_condition in consecutive_page_splitting_rule.consecutive_page_splitting_conditions.all():
-                                    streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                        splitting_condition.rule.id, parsed_result))
-                                    if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
-                                        if not splitting_condition.value in streamed_rule_value:
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
-                                        if splitting_condition.value in streamed_rule_value:
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
-                                        if not splitting_condition.value == streamed_rule_value:
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                                        if not re.match(splitting_condition.value, streamed_rule_value):
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                                        if re.match(splitting_condition.value, streamed_rule_value):
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
-                                        if not streamed_rule_value.strip() == "":
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
-                                        if streamed_rule_value.strip() == "":
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
-                                        if page_num == 1:
-                                            continue
-                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                        if streamed_rule_value == previous_streamed_rule_value:
-                                            consecutive_page_conditions_passed = False
-                                    elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
-                                        if page_num == 1:
-                                            continue
-                                        previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
-                                            splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
-                                        if not streamed_rule_value == previous_streamed_rule_value:
-                                            consecutive_page_conditions_passed = False
+                                any_consecutive_page_rules_passed = False
+                                if consecutive_page_splitting_rule.consecutive_page_splitting_rule_type == ConsecutivePageSplittingRuleType.BY_CONDITIONS.value:
+                                    consecutive_page_conditions_passed = True
+                                    for splitting_condition in consecutive_page_splitting_rule.consecutive_page_splitting_conditions.all():
+                                        streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                            splitting_condition.rule.id, parsed_result))
+                                        if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                            if not splitting_condition.value in streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                            if splitting_condition.value in streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                            if not splitting_condition.value == streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                            if not re.match(splitting_condition.value, streamed_rule_value):
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                            if re.match(splitting_condition.value, streamed_rule_value):
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                            if not streamed_rule_value.strip() == "":
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                            if streamed_rule_value.strip() == "":
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if streamed_rule_value == previous_streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                            if page_num == 1:
+                                                continue
+                                            previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                            if not streamed_rule_value == previous_streamed_rule_value:
+                                                consecutive_page_conditions_passed = False
 
-                                if consecutive_page_conditions_passed:
+                                        if consecutive_page_conditions_passed:
 
-                                    any_consecutive_page_rules_passed = True
-                                    break
+                                            any_consecutive_page_rules_passed = True
+                                            break
 
-                            if any_consecutive_page_rules_passed:
+                                    if any_consecutive_page_rules_passed:
 
-                                accumulated_page_nums.append(page_num)
+                                        accumulated_page_nums.append(page_num)
 
-                            # if no consecutive_page passed, decrement page_index, and restart finding accumulated pages
-                            else:
+                                    # if no consecutive_page passed, decrement page_index, and restart finding accumulated pages
+                                    else:
 
-                                document_page_index -= 1
-                                page_num = document_page_index + 1
-                                break
+                                        document_page_index -= 1
+                                        page_num = document_page_index + 1
+                                        break
+
+                                elif consecutive_page_splitting_rule.consecutive_page_splitting_rule_type == ConsecutivePageSplittingRuleType.WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_DO_NOT_MATCH.value:
+                                    any_consecutive_page_rules_passed = False
+                                    for first_page_splitting_rule_in_consecutive_rule in splitting.splitting_rules.exclude(pk=consecutive_page_splitting_rule.parent_splitting_rule.id).all():
+                                        consecutive_page_conditions_passed = True
+                                        for splitting_condition in first_page_splitting_rule_in_consecutive_rule.splitting_conditions.all():
+                                            streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                splitting_condition.rule.id, parsed_result))
+                                            if splitting_condition.operator == SplittingOperatorType.CONTAINS.value:
+                                                if not splitting_condition.value in streamed_rule_value:
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.DOES_NOT_CONTAINS.value:
+                                                if splitting_condition.value in streamed_rule_value:
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.EQUALS.value:
+                                                if not splitting_condition.value == streamed_rule_value:
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
+                                                if not re.match(splitting_condition.value, streamed_rule_value):
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
+                                                if re.match(splitting_condition.value, streamed_rule_value):
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
+                                                if not streamed_rule_value.strip() == "":
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.IS_NOT_EMPTY.value:
+                                                if streamed_rule_value.strip() == "":
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.CHANGED.value:
+                                                if page_num == 1:
+                                                    continue
+                                                previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                    splitting_condition.rule.id,
+                                                    previous_pages_parsed_result[page_num - 1]))
+                                                if streamed_rule_value == previous_streamed_rule_value:
+                                                    consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.NOT_CHANGED.value:
+                                                if page_num == 1:
+                                                    continue
+                                                previous_streamed_rule_value = ' '.join(get_streamed_by_rule(
+                                                    splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
+                                                if not streamed_rule_value == previous_streamed_rule_value:
+                                                    consecutive_page_conditions_passed = False
+
+                                        if consecutive_page_conditions_passed:
+
+                                            any_consecutive_page_rules_passed = True
+                                            break
+
+                                    if not any_consecutive_page_rules_passed:
+
+                                        accumulated_page_nums.append(page_num)
+
+                                    # if no consecutive_page passed, decrement page_index, and restart finding accumulated pages
+                                    else:
+
+                                        document_page_index -= 1
+                                        page_num = document_page_index + 1
+                                        break
+
+                            
 
                     if first_page_conditions_passed:
-
-                        """document_upload_serializer_data = {}"""
-
-                        searchable_pdf_path = ocred_pdf_path(document)
 
                         new_document = Document()
                         new_document.document_type = document.document_type
@@ -884,9 +944,9 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                             pdf.showPage()
                         pdf.save()
 
-                        # End of generating OCR document
-
                         new_document.save()
+
+                        # End of generating OCR document
 
                         new_document_page_num_counter = 0
                         for accumulated_page_num in accumulated_page_nums:
@@ -900,10 +960,7 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                             new_document_page.xml = document_page.xml
                             new_document_page.document_id = new_document.id
                             new_document_page.preprocessed = False
-                            if new_parser_ocr.ocr_type == OCRType.NO_OCR.value:
-                                new_document_page.ocred = True
-                            else:
-                                new_document_page.ocred = False
+                            new_document_page.ocred = True
                             new_document_page.postprocessed = False
                             new_document_page.chatbot_completed = False
 
@@ -955,7 +1012,11 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                         # Create queue object in database
                         q = Queue()
                         q.queue_status = QueueStatus.READY.value
-                        q.parser = parser
+                        if parser.type == ParserType.LAYOUT.value:
+                            q.parser_id = parser.id
+                        elif parser.type == ParserType.ROUTING.value:
+                            route_to_parser_id = first_page_splitting_rule.route_to_parser_id
+                            q.parser_id = route_to_parser_id
                         q.document = new_document
                         # if pre_processings.count() > 0:
                         q.queue_class = QueueClass.OCR.value
@@ -966,11 +1027,10 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                         #process_ocr_queue.process_single_ocr_queue(q)
 
                         accumulated_page_nums = []
-
                         break
 
-            document_page_index += 1
-            page_num = document_page_index + 1
+                document_page_index = document_page_index + 1
+                page_num = document_page_index + 1
 
     if is_searchable and ocr.detect_searchable:
 

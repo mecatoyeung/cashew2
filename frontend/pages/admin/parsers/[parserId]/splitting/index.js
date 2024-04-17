@@ -100,6 +100,7 @@ const Splitting = () => {
     addOrEdit: 'ADD',
     firstPageSplittingRuleIndex: 0,
     consecutivePageSplittingRuleIndex: 0,
+    consecutivePageSplittingRuleType: 'BY_CONDITIONS',
     lastPageSplittingRuleIndex: 0,
     conditions: [],
     parentSplittingRule: 0,
@@ -165,7 +166,18 @@ const Splitting = () => {
         draft.type = 'CONSECUTIVE_PAGE'
         draft.addOrEdit = 'ADD'
         draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
+        draft.consecutivePageSplittingRuleType = 'BY_CONDITIONS'
+        draft.lastPageSplittingRuleType = ''
         draft.routeToParser = parserId
+      })
+    )
+  }
+
+  const consecutivePageSplittingRuleTypeChangeHandler = (e) => {
+    console.log(e)
+    setSplittingModal(
+      produce((draft) => {
+        draft.consecutivePageSplittingRuleType = e.target.value
       })
     )
   }
@@ -187,6 +199,13 @@ const Splitting = () => {
           ].consecutivePageSplittingRules[
             consecutivePageIndex
           ].consecutivePageSplittingConditions
+        draft.consecutivePageSplittingRuleType =
+          splitting.splittingRules[
+            firstPageIndex
+          ].consecutivePageSplittingRules[
+            consecutivePageIndex
+          ].consecutivePageSplittingRuleType
+        draft.lastPageSplittingRuleType = ''
         draft.parentSplittingRule = null
       })
     )
@@ -197,8 +216,20 @@ const Splitting = () => {
       produce((draft) => {
         draft.show = true
         draft.type = 'LAST_PAGE'
+        draft.addOrEdit = 'ADD'
         draft.firstPageSplittingRuleIndex = firstPageSplittingRuleIndex
+        draft.consecutivePageSplittingRuleType = ''
+        draft.lastPageSplittingRuleType = 'BY_CONDITIONS'
         draft.routeToParser = parserId
+      })
+    )
+  }
+
+  const lastPageSplittingRuleTypeChangeHandler = (e) => {
+    console.log(e)
+    setSplittingModal(
+      produce((draft) => {
+        draft.lastPageSplittingRuleType = e.target.value
       })
     )
   }
@@ -215,6 +246,11 @@ const Splitting = () => {
           splitting.splittingRules[firstPageIndex].lastPageSplittingRules[
             lastPageIndex
           ].lastPageSplittingConditions
+        draft.consecutivePageSplittingRuleType = ''
+        draft.lastPageSplittingRuleType =
+          splitting.splittingRules[firstPageIndex].lastPageSplittingRules[
+            lastPageIndex
+          ].lastPageSplittingRuleType
         draft.parentSplittingRule = null
       })
     )
@@ -425,6 +461,8 @@ const Splitting = () => {
           ].consecutivePageSplittingRules.push({
             splittingRuleType: 'CONSECUTIVE_PAGE',
             parentSplittingRule: splittingModal.parentSplittingRule,
+            consecutivePageSplittingRuleType:
+              splittingModal.consecutivePageSplittingRuleType,
             splitting: splitting.id,
             routeToParser: splittingModal.routeToParser,
             consecutivePageSplittingConditions: splittingModal.conditions,
@@ -435,11 +473,14 @@ const Splitting = () => {
           ].consecutivePageSplittingRules[consecutivePageSplittingRuleIndex] = {
             splittingRuleType: 'CONSECUTIVE_PAGE',
             parentSplittingRule: splittingModal.parentSplittingRule,
+            consecutivePageSplittingRuleType:
+              splittingModal.consecutivePageSplittingRuleType,
             splitting: splitting.id,
             routeToParser: splittingModal.routeToParser,
             consecutivePageSplittingConditions: splittingModal.conditions,
           }
         }
+        console.log(draft)
       })
     )
     setSplittingModal(
@@ -462,11 +503,13 @@ const Splitting = () => {
               splittingModal.firstPageSplittingRuleIndex
             ].lastPageSplittingRules = []
           }
+          console.log(splittingModal)
           draft.splittingRules[
             splittingModal.firstPageSplittingRuleIndex
           ].lastPageSplittingRules.push({
             splittingRuleType: 'LAST_PAGE',
             parentSplittingRule: splittingModal.parentSplittingRule,
+            lastPageSplittingRuleType: splittingModal.lastPageSplittingRuleType,
             splitting: splitting.id,
             routeToParser: splittingModal.routeToParser,
             lastPageSplittingConditions: splittingModal.conditions,
@@ -477,6 +520,7 @@ const Splitting = () => {
           ].lastPageSplittingRules[lastPageSplittingRuleIndex] = {
             splittingRuleType: 'LAST_PAGE',
             parentSplittingRule: splittingModal.parentSplittingRule,
+            lastPageSplittingRuleType: splittingModal.lastPageSplittingRuleType,
             splitting: splitting.id,
             routeToParser: splittingModal.routeToParser,
             lastPageSplittingConditions: splittingModal.conditions,
@@ -827,165 +871,175 @@ const Splitting = () => {
                                                 styles.consecutivePageSplitting
                                               }
                                             >
-                                              <div
-                                                className={
-                                                  styles.consecutivePageSplittingConditions
-                                                }
-                                              >
-                                                {consecutivePageSplittingRule &&
-                                                  consecutivePageSplittingRule.consecutivePageSplittingConditions.map(
-                                                    (
-                                                      consecutivePageSplittingCondition,
-                                                      consecutiveSplittingConditionIndex
-                                                    ) => {
-                                                      if (
-                                                        consecutiveSplittingConditionIndex ==
-                                                        0
-                                                      ) {
-                                                        return (
-                                                          <div
-                                                            key={
-                                                              consecutiveSplittingConditionIndex
-                                                            }
-                                                          >
-                                                            <div
-                                                              className={
-                                                                styles.consecutivePageSplittingCondition
-                                                              }
-                                                            >
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingIf
-                                                                }
-                                                              >
-                                                                If
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingRuleName
-                                                                }
-                                                              >
-                                                                {
-                                                                  rules.find(
-                                                                    (r) =>
-                                                                      r.id ==
-                                                                      consecutivePageSplittingCondition.rule
-                                                                  ).name
-                                                                }
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingOperator
-                                                                }
-                                                              >
-                                                                {
-                                                                  conditionOperators.find(
-                                                                    (o) =>
-                                                                      o.value ==
-                                                                      consecutivePageSplittingCondition.operator
-                                                                  ).label
-                                                                }
-                                                              </span>
-                                                              {(consecutivePageSplittingCondition.operator ==
-                                                                'CONTAINS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'DOES_NOT_CONTAINS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'EQUALS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'REGEX' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'NOT_REGEX') && (
-                                                                <span
-                                                                  className={
-                                                                    styles.consecutivePageSplittingValue
-                                                                  }
-                                                                >
-                                                                  {
-                                                                    consecutivePageSplittingCondition.value
-                                                                  }
-                                                                </span>
-                                                              )}
-                                                            </div>
-                                                            <br />
-                                                          </div>
-                                                        )
-                                                      } else {
-                                                        return (
-                                                          <>
-                                                            <div
-                                                              className={
-                                                                styles.consecutivePageSplittingCondition
-                                                              }
-                                                            >
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingAnd
-                                                                }
-                                                              >
-                                                                and
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingRuleName
-                                                                }
-                                                              >
-                                                                {
-                                                                  rules.find(
-                                                                    (r) =>
-                                                                      r.id ==
-                                                                      consecutivePageSplittingCondition.rule
-                                                                  ).name
-                                                                }
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.consecutivePageSplittingOperator
-                                                                }
-                                                              >
-                                                                {
-                                                                  conditionOperators.find(
-                                                                    (o) =>
-                                                                      o.value ==
-                                                                      consecutivePageSplittingCondition.operator
-                                                                  ).label
-                                                                }
-                                                              </span>
-                                                              {(consecutivePageSplittingCondition.operator ==
-                                                                'CONTAINS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'DOES_NOT_CONTAINS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'EQUALS' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'REGEX' ||
-                                                                consecutivePageSplittingCondition.operator ==
-                                                                  'NOT_REGEX') && (
-                                                                <span
-                                                                  className={
-                                                                    styles.consecutivePageSplittingValue
-                                                                  }
-                                                                >
-                                                                  {
-                                                                    consecutivePageSplittingCondition.value
-                                                                  }
-                                                                </span>
-                                                              )}
-                                                            </div>
-                                                          </>
-                                                        )
-                                                      }
+                                              {consecutivePageSplittingRule &&
+                                                consecutivePageSplittingRule.consecutivePageSplittingRuleType ==
+                                                  'BY_CONDITIONS' && (
+                                                  <div
+                                                    className={
+                                                      styles.consecutivePageSplittingConditions
                                                     }
-                                                  )}
-
-                                                <span
-                                                  className={
-                                                    styles.consecutivePageSplittingThen
-                                                  }
-                                                >
-                                                  Then
-                                                </span>
-                                              </div>
+                                                  >
+                                                    {consecutivePageSplittingRule.consecutivePageSplittingConditions.map(
+                                                      (
+                                                        consecutivePageSplittingCondition,
+                                                        consecutiveSplittingConditionIndex
+                                                      ) => {
+                                                        if (
+                                                          consecutiveSplittingConditionIndex ==
+                                                          0
+                                                        ) {
+                                                          return (
+                                                            <div
+                                                              key={
+                                                                consecutiveSplittingConditionIndex
+                                                              }
+                                                            >
+                                                              <div
+                                                                className={
+                                                                  styles.consecutivePageSplittingCondition
+                                                                }
+                                                              >
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingIf
+                                                                  }
+                                                                >
+                                                                  If
+                                                                </span>
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingRuleName
+                                                                  }
+                                                                >
+                                                                  {
+                                                                    rules.find(
+                                                                      (r) =>
+                                                                        r.id ==
+                                                                        consecutivePageSplittingCondition.rule
+                                                                    ).name
+                                                                  }
+                                                                </span>
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingOperator
+                                                                  }
+                                                                >
+                                                                  {
+                                                                    conditionOperators.find(
+                                                                      (o) =>
+                                                                        o.value ==
+                                                                        consecutivePageSplittingCondition.operator
+                                                                    ).label
+                                                                  }
+                                                                </span>
+                                                                {(consecutivePageSplittingCondition.operator ==
+                                                                  'CONTAINS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'DOES_NOT_CONTAINS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'EQUALS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'REGEX' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'NOT_REGEX') && (
+                                                                  <span
+                                                                    className={
+                                                                      styles.consecutivePageSplittingValue
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      consecutivePageSplittingCondition.value
+                                                                    }
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                              <br />
+                                                            </div>
+                                                          )
+                                                        } else {
+                                                          return (
+                                                            <>
+                                                              <div
+                                                                className={
+                                                                  styles.consecutivePageSplittingCondition
+                                                                }
+                                                              >
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingAnd
+                                                                  }
+                                                                >
+                                                                  and
+                                                                </span>
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingRuleName
+                                                                  }
+                                                                >
+                                                                  {
+                                                                    rules.find(
+                                                                      (r) =>
+                                                                        r.id ==
+                                                                        consecutivePageSplittingCondition.rule
+                                                                    ).name
+                                                                  }
+                                                                </span>
+                                                                <span
+                                                                  className={
+                                                                    styles.consecutivePageSplittingOperator
+                                                                  }
+                                                                >
+                                                                  {
+                                                                    conditionOperators.find(
+                                                                      (o) =>
+                                                                        o.value ==
+                                                                        consecutivePageSplittingCondition.operator
+                                                                    ).label
+                                                                  }
+                                                                </span>
+                                                                {(consecutivePageSplittingCondition.operator ==
+                                                                  'CONTAINS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'DOES_NOT_CONTAINS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'EQUALS' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'REGEX' ||
+                                                                  consecutivePageSplittingCondition.operator ==
+                                                                    'NOT_REGEX') && (
+                                                                  <span
+                                                                    className={
+                                                                      styles.consecutivePageSplittingValue
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      consecutivePageSplittingCondition.value
+                                                                    }
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                            </>
+                                                          )
+                                                        }
+                                                      }
+                                                    )}
+                                                    <span
+                                                      className={
+                                                        styles.consecutivePageSplittingThen
+                                                      }
+                                                    >
+                                                      Then
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              {consecutivePageSplittingRule &&
+                                                consecutivePageSplittingRule.consecutivePageSplittingRuleType ==
+                                                  'WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_DO_NOT_MATCH' && (
+                                                  <>
+                                                    When other first page
+                                                    splitting rules do not match
+                                                  </>
+                                                )}
                                               <div
                                                 className={
                                                   styles.consecutivePageSplittingRouter
@@ -1151,165 +1205,177 @@ const Splitting = () => {
                                                 styles.lastPageSplitting
                                               }
                                             >
-                                              <div
-                                                className={
-                                                  styles.lastPageSplittingConditions
-                                                }
-                                              >
-                                                {lastPageSplittingRule &&
-                                                  lastPageSplittingRule.lastPageSplittingConditions.map(
-                                                    (
-                                                      lastPageSplittingCondition,
-                                                      lastSplittingConditionIndex
-                                                    ) => {
-                                                      if (
-                                                        lastSplittingConditionIndex ==
-                                                        0
-                                                      ) {
-                                                        return (
-                                                          <div
-                                                            key={
-                                                              lastSplittingConditionIndex
-                                                            }
-                                                          >
-                                                            <div
-                                                              className={
-                                                                styles.lastPageSplittingCondition
-                                                              }
-                                                            >
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingIf
-                                                                }
-                                                              >
-                                                                If
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingRuleName
-                                                                }
-                                                              >
-                                                                {
-                                                                  rules.find(
-                                                                    (r) =>
-                                                                      r.id ==
-                                                                      lastPageSplittingCondition.rule
-                                                                  ).name
-                                                                }
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingOperator
-                                                                }
-                                                              >
-                                                                {
-                                                                  conditionOperators.find(
-                                                                    (o) =>
-                                                                      o.value ==
-                                                                      lastPageSplittingCondition.operator
-                                                                  ).label
-                                                                }
-                                                              </span>
-                                                              {(lastPageSplittingCondition.operator ==
-                                                                'CONTAINS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'DOES_NOT_CONTAINS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'EQUALS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'REGEX' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'NOT_REGEX') && (
-                                                                <span
-                                                                  className={
-                                                                    styles.lastPageSplittingValue
-                                                                  }
-                                                                >
-                                                                  {
-                                                                    lastPageSplittingCondition.value
-                                                                  }
-                                                                </span>
-                                                              )}
-                                                            </div>
-                                                            <br />
-                                                          </div>
-                                                        )
-                                                      } else {
-                                                        return (
-                                                          <>
-                                                            <div
-                                                              className={
-                                                                styles.lastPageSplittingCondition
-                                                              }
-                                                            >
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingAnd
-                                                                }
-                                                              >
-                                                                and
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingRuleName
-                                                                }
-                                                              >
-                                                                {
-                                                                  rules.find(
-                                                                    (r) =>
-                                                                      r.id ==
-                                                                      lastPageSplittingCondition.rule
-                                                                  ).name
-                                                                }
-                                                              </span>
-                                                              <span
-                                                                className={
-                                                                  styles.lastPageSplittingOperator
-                                                                }
-                                                              >
-                                                                {
-                                                                  conditionOperators.find(
-                                                                    (o) =>
-                                                                      o.value ==
-                                                                      lastPageSplittingCondition.operator
-                                                                  ).label
-                                                                }
-                                                              </span>
-                                                              {(lastPageSplittingCondition.operator ==
-                                                                'CONTAINS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'DOES_NOT_CONTAINS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'EQUALS' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'REGEX' ||
-                                                                lastPageSplittingCondition.operator ==
-                                                                  'NOT_REGEX') && (
-                                                                <span
-                                                                  className={
-                                                                    styles.lastPageSplittingValue
-                                                                  }
-                                                                >
-                                                                  {
-                                                                    lastPageSplittingCondition.value
-                                                                  }
-                                                                </span>
-                                                              )}
-                                                            </div>
-                                                          </>
-                                                        )
-                                                      }
+                                              {lastPageSplittingRule &&
+                                                lastPageSplittingRule.lastPageSplittingRuleType ==
+                                                  'BY_CONDITIONS' && (
+                                                  <div
+                                                    className={
+                                                      styles.lastPageSplittingConditions
                                                     }
-                                                  )}
+                                                  >
+                                                    {lastPageSplittingRule &&
+                                                      lastPageSplittingRule.lastPageSplittingConditions.map(
+                                                        (
+                                                          lastPageSplittingCondition,
+                                                          lastSplittingConditionIndex
+                                                        ) => {
+                                                          if (
+                                                            lastSplittingConditionIndex ==
+                                                            0
+                                                          ) {
+                                                            return (
+                                                              <div
+                                                                key={
+                                                                  lastSplittingConditionIndex
+                                                                }
+                                                              >
+                                                                <div
+                                                                  className={
+                                                                    styles.lastPageSplittingCondition
+                                                                  }
+                                                                >
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingIf
+                                                                    }
+                                                                  >
+                                                                    If
+                                                                  </span>
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingRuleName
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      rules.find(
+                                                                        (r) =>
+                                                                          r.id ==
+                                                                          lastPageSplittingCondition.rule
+                                                                      ).name
+                                                                    }
+                                                                  </span>
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingOperator
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      conditionOperators.find(
+                                                                        (o) =>
+                                                                          o.value ==
+                                                                          lastPageSplittingCondition.operator
+                                                                      ).label
+                                                                    }
+                                                                  </span>
+                                                                  {(lastPageSplittingCondition.operator ==
+                                                                    'CONTAINS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'DOES_NOT_CONTAINS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'EQUALS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'REGEX' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'NOT_REGEX') && (
+                                                                    <span
+                                                                      className={
+                                                                        styles.lastPageSplittingValue
+                                                                      }
+                                                                    >
+                                                                      {
+                                                                        lastPageSplittingCondition.value
+                                                                      }
+                                                                    </span>
+                                                                  )}
+                                                                </div>
+                                                                <br />
+                                                              </div>
+                                                            )
+                                                          } else {
+                                                            return (
+                                                              <>
+                                                                <div
+                                                                  className={
+                                                                    styles.lastPageSplittingCondition
+                                                                  }
+                                                                >
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingAnd
+                                                                    }
+                                                                  >
+                                                                    and
+                                                                  </span>
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingRuleName
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      rules.find(
+                                                                        (r) =>
+                                                                          r.id ==
+                                                                          lastPageSplittingCondition.rule
+                                                                      ).name
+                                                                    }
+                                                                  </span>
+                                                                  <span
+                                                                    className={
+                                                                      styles.lastPageSplittingOperator
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      conditionOperators.find(
+                                                                        (o) =>
+                                                                          o.value ==
+                                                                          lastPageSplittingCondition.operator
+                                                                      ).label
+                                                                    }
+                                                                  </span>
+                                                                  {(lastPageSplittingCondition.operator ==
+                                                                    'CONTAINS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'DOES_NOT_CONTAINS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'EQUALS' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'REGEX' ||
+                                                                    lastPageSplittingCondition.operator ==
+                                                                      'NOT_REGEX') && (
+                                                                    <span
+                                                                      className={
+                                                                        styles.lastPageSplittingValue
+                                                                      }
+                                                                    >
+                                                                      {
+                                                                        lastPageSplittingCondition.value
+                                                                      }
+                                                                    </span>
+                                                                  )}
+                                                                </div>
+                                                              </>
+                                                            )
+                                                          }
+                                                        }
+                                                      )}
 
-                                                <span
-                                                  className={
-                                                    styles.lastPageSplittingThen
-                                                  }
-                                                >
-                                                  Then
-                                                </span>
-                                              </div>
+                                                    <span
+                                                      className={
+                                                        styles.lastPageSplittingThen
+                                                      }
+                                                    >
+                                                      Then
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              {lastPageSplittingRule &&
+                                                lastPageSplittingRule.lastPageSplittingRuleType ==
+                                                  'WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_MATCH' && (
+                                                  <>
+                                                    When other first page
+                                                    splitting rules match
+                                                  </>
+                                                )}
                                               <div
                                                 className={
                                                   styles.lastPageSplittingRouter
@@ -1613,103 +1679,151 @@ const Splitting = () => {
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <Table striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Column</th>
-                      <th>Operator</th>
-                      <th>Value</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {splittingModal.conditions.map(
-                      (condition, conditionIndex) => (
-                        <tr key={conditionIndex}>
-                          <td>{conditionIndex + 1}</td>
-                          <td>
-                            <Select
-                              classNamePrefix="react-select"
-                              options={rules.map((r) => {
-                                return {
-                                  label: r.name,
-                                  value: r.id,
-                                }
-                              })}
-                              value={rules
-                                .map((r) => {
-                                  return {
-                                    label: r.name,
-                                    value: r.id,
-                                  }
-                                })
-                                .find((o) => o.value == condition.rule)}
-                              onChange={(e) =>
-                                selectConditionRuleChangeHandler(
-                                  conditionIndex,
-                                  e
-                                )
-                              }
-                              menuPlacement="auto"
-                              menuPosition="fixed"
-                            />
-                          </td>
-                          <td>
-                            <Select
-                              classNamePrefix="react-select"
-                              options={conditionOperators}
-                              value={conditionOperators.find(
-                                (o) => o.value == condition.operator
-                              )}
-                              onChange={(e) =>
-                                selectConditionOperatorChangeHandler(
-                                  conditionIndex,
-                                  e
-                                )
-                              }
-                              menuPlacement="auto"
-                              menuPosition="fixed"
-                            />
-                          </td>
-                          <td>
-                            {(condition.operator == 'EQUALS' ||
-                              condition.operator == 'REGEX' ||
-                              condition.operator == 'NOT_REGEX' ||
-                              condition.operator == 'CONTAINS' ||
-                              condition.operator == 'DOES_NOT_CONTAINS') && (
-                              <Form.Control
-                                value={condition.value}
-                                onChange={(e) =>
-                                  txtConditionValueChangeHandler(
-                                    conditionIndex,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            )}
-                          </td>
-                          <td>
-                            <Button
-                              variant="danger"
-                              onClick={() =>
-                                removeConditionBtnClickHandler(conditionIndex)
-                              }
-                              style={{ height: 46 }}
-                            >
-                              Remove
-                            </Button>
-                          </td>
+                {splittingModal.type == 'CONSECUTIVE_PAGE' && (
+                  <>
+                    <Form.Group
+                      className="mb-3"
+                      controlId="formConsecutivePageRuleType"
+                    >
+                      <Form.Select
+                        aria-label="Document"
+                        onChange={consecutivePageSplittingRuleTypeChangeHandler}
+                        value={splittingModal.consecutivePageSplittingRuleType}
+                      >
+                        <option value="BY_CONDITIONS">By Conditions</option>
+                        <option value="WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_DO_NOT_MATCH">
+                          When other first page splitting rules do not match
+                        </option>
+                      </Form.Select>
+                    </Form.Group>
+                  </>
+                )}
+                {splittingModal.type == 'LAST_PAGE' && (
+                  <>
+                    <Form.Group
+                      className="mb-3"
+                      controlId="formConsecutivePageRuleType"
+                    >
+                      <Form.Select
+                        aria-label="Document"
+                        onChange={lastPageSplittingRuleTypeChangeHandler}
+                        value={splittingModal.lastPageSplittingRuleType}
+                      >
+                        <option value="BY_CONDITIONS">By Conditions</option>
+                        <option value="WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_MATCH">
+                          When other first page splitting rules match
+                        </option>
+                      </Form.Select>
+                    </Form.Group>
+                  </>
+                )}
+                {(splittingModal.consecutivePageSplittingRuleType ==
+                  'BY_CONDITIONS' ||
+                  splittingModal.lastPageSplittingRuleType ==
+                    'BY_CONDITIONS') && (
+                  <>
+                    <Table striped bordered hover>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Column</th>
+                          <th>Operator</th>
+                          <th>Value</th>
+                          <th></th>
                         </tr>
-                      )
-                    )}
-                  </tbody>
-                </Table>
-                <Form.Group style={{ marginBottom: 10 }}>
-                  <Button onClick={addConditionBtnClickHandler}>
-                    Add Condition
-                  </Button>
-                </Form.Group>
+                      </thead>
+                      <tbody>
+                        {splittingModal.conditions.map(
+                          (condition, conditionIndex) => (
+                            <tr key={conditionIndex}>
+                              <td>{conditionIndex + 1}</td>
+                              <td>
+                                <Select
+                                  classNamePrefix="react-select"
+                                  options={rules.map((r) => {
+                                    return {
+                                      label: r.name,
+                                      value: r.id,
+                                    }
+                                  })}
+                                  value={rules
+                                    .map((r) => {
+                                      return {
+                                        label: r.name,
+                                        value: r.id,
+                                      }
+                                    })
+                                    .find((o) => o.value == condition.rule)}
+                                  onChange={(e) =>
+                                    selectConditionRuleChangeHandler(
+                                      conditionIndex,
+                                      e
+                                    )
+                                  }
+                                  menuPlacement="auto"
+                                  menuPosition="fixed"
+                                />
+                              </td>
+                              <td>
+                                <Select
+                                  classNamePrefix="react-select"
+                                  options={conditionOperators}
+                                  value={conditionOperators.find(
+                                    (o) => o.value == condition.operator
+                                  )}
+                                  onChange={(e) =>
+                                    selectConditionOperatorChangeHandler(
+                                      conditionIndex,
+                                      e
+                                    )
+                                  }
+                                  menuPlacement="auto"
+                                  menuPosition="fixed"
+                                />
+                              </td>
+                              <td>
+                                {(condition.operator == 'EQUALS' ||
+                                  condition.operator == 'REGEX' ||
+                                  condition.operator == 'NOT_REGEX' ||
+                                  condition.operator == 'CONTAINS' ||
+                                  condition.operator ==
+                                    'DOES_NOT_CONTAINS') && (
+                                  <Form.Control
+                                    value={condition.value}
+                                    onChange={(e) =>
+                                      txtConditionValueChangeHandler(
+                                        conditionIndex,
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                )}
+                              </td>
+                              <td>
+                                <Button
+                                  variant="danger"
+                                  onClick={() =>
+                                    removeConditionBtnClickHandler(
+                                      conditionIndex
+                                    )
+                                  }
+                                  style={{ height: 46 }}
+                                >
+                                  Remove
+                                </Button>
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </Table>
+                    <Form.Group style={{ marginBottom: 10 }}>
+                      <Button onClick={addConditionBtnClickHandler}>
+                        Add Condition
+                      </Button>
+                    </Form.Group>
+                  </>
+                )}
                 {splittingModal.type == 'FIRST_PAGE' && parser && (
                   <Form.Group>
                     <Form.Label>Parser</Form.Label>

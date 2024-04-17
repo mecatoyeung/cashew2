@@ -17,7 +17,7 @@ class LastPageSplittingRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = LastPageSplittingRule
         fields = ['id',
-                  'sort_order', "last_page_splitting_conditions"]
+                  'sort_order', "last_page_splitting_rule_type", "last_page_splitting_conditions"]
         read_only_fields = ['id']
 
     def _get_or_create_last_page_splitting_conditions(self, last_page_splitting_conditions, splitting_rule):

@@ -42,6 +42,8 @@ class SplittingSerializer(serializers.ModelSerializer):
             consecutive_page_splitting_rule_obj = ConsecutivePageSplittingRule()
             consecutive_page_splitting_rule_obj.sort_order = consecutive_page_splitting_rule[
                 "sort_order"]
+            consecutive_page_splitting_rule_obj.consecutive_page_splitting_rule_type = consecutive_page_splitting_rule[
+                "consecutive_page_splitting_rule_type"]
             consecutive_page_splitting_rule_obj.route_to_parser = None
             consecutive_page_splitting_rule_obj.splitting = splitting
             consecutive_page_splitting_rule_obj.parent_splitting_rule = splitting_rule
@@ -84,6 +86,8 @@ class SplittingSerializer(serializers.ModelSerializer):
             last_page_splitting_rule_obj = LastPageSplittingRule()
             last_page_splitting_rule_obj.sort_order = last_page_splitting_rule[
                 "sort_order"]
+            last_page_splitting_rule_obj.last_page_splitting_rule_type = last_page_splitting_rule[
+                "last_page_splitting_rule_type"]
             last_page_splitting_rule_obj.route_to_parser = None
             last_page_splitting_rule_obj.splitting = splitting
             last_page_splitting_rule_obj.parent_splitting_rule = splitting_rule

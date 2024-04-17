@@ -51,10 +51,10 @@ class DocumentParser:
                 rule.pages[:], 1, self.document.total_page_num)
 
         if self.document.document_pages.filter(ocred=False, page_num__in=page_nums).count() > 0:
-            if rule.rule_type == RuleType.TABLE.value:
-                return [["Please wait until the document finishes OCR"]]
-            else:
-                return ["Please wait until the document finishes OCR"]
+            return {
+                    "type": "TEXTFIELD",
+                    "value": ["Please wait until the document finishes OCR"]
+                }
 
         for page_num in page_nums:
             xml_page_already_exists = sum(
