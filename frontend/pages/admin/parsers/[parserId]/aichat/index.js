@@ -1251,14 +1251,16 @@ const AIChat = (props) => {
                         style={{ fontSize: textFontSize + '%' }}
                       >
                         <tbody>
-                          {textlines.map((row, rowIndex) => {
-                            return (
-                              <tr key={rowIndex}>
-                                {/* .replace(" ", "　").replace(/[!-~]/g, shiftCharCode(0xFEE0)) */}
-                                <td>{row.replace(/ /g, '\u00a0')}</td>
-                              </tr>
-                            )
-                          })}
+                          {textlines &&
+                            textlines.value &&
+                            textlines.value.map((row, rowIndex) => {
+                              return (
+                                <tr key={rowIndex}>
+                                  {/* .replace(" ", "　").replace(/[!-~]/g, shiftCharCode(0xFEE0)) */}
+                                  <td>{row.replace(/ /g, '\u00a0')}</td>
+                                </tr>
+                              )
+                            })}
                         </tbody>
                       </table>
                     </div>
