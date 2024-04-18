@@ -23,6 +23,8 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor
 import cv2
 
+import fitz
+
 from parsers.models.parser_type import ParserType
 from parsers.models.rule import Rule
 from parsers.models.queue import Queue
@@ -43,7 +45,7 @@ from parsers.helpers.document_parser import DocumentParser
 from parsers.helpers.stream_processor import StreamProcessor
 
 from parsers.helpers.detect_pdf_is_searchable import detect_pdf_is_searchable
-from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml
+from parsers.helpers.parse_pdf_to_xml import parse_pdf_to_xml, convert_json_to_xml
 from parsers.helpers.path_helpers import source_file_pdf_path, ocr_folder_path, ocred_pdf_path, original_image_path, \
     pre_processed_image_path, ocred_image_path, gcv_path, hocr_path, xml_path, document_path, \
     pre_processed_image_path
@@ -132,16 +134,6 @@ def convert_page(parser, document, ocr, document_page):
 
     preprocessings = PreProcessing.objects.filter(parser_id=parser.id)
 
-    """xml_is_empty = False
-    try:
-        parsed = ET.fromstring(document_page.xml)
-    except ET.ParseError:
-        xml_is_empty = True
-    if not xml_is_empty:
-        document_page.ocred = True
-        document_page.save()
-        return"""
-
     abs_ocr_folder_path = ocr_folder_path(document)
     if not os.path.exists(abs_ocr_folder_path):
         os.makedirs(abs_ocr_folder_path)
@@ -192,12 +184,26 @@ def convert_page(parser, document, ocr, document_page):
         queue.queue_status = QueueStatus.COMPLETED.value
         queue.save()
 
-    # if document_page.ocred:
-    #    continue
-
     abs_ocred_image_path = ocred_image_path(document, page_num)
     abs_hocr_path = hocr_path(document, page_num)
     abs_xml_path = xml_path(document, page_num)
+
+    if ocr_engine == "NO_OCR":
+
+        abs_source_file_pdf_path = source_file_pdf_path(document)
+
+        doc = fitz.open(abs_source_file_pdf_path)
+        for page in doc:
+
+            document_page = DocumentPage.objects.get(
+                document_id=document.id, page_num=page_num)
+            if document_page.ocred == True:
+                continue
+
+            text_page = page.get_textpage()
+            json_dict = json.loads(text_page.extractJSON())
+            xml = convert_json_to_xml(json_dict).decode('utf-8')
+            document_page.xml = xml
 
     if ocr_engine == "DOCTR":
         from doctr.io import DocumentFile
@@ -208,6 +214,9 @@ def convert_page(parser, document, ocr, document_page):
             hocr_output.write(outfile)
             outfile.close()
 
+        xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
+        document_page.xml = xml
+
     elif ocr_engine == "PADDLE":
         result = paddle_model.ocr(abs_ocred_image_path, cls=True)
         im = cv2.imread(abs_ocred_image_path)
@@ -215,6 +224,9 @@ def convert_page(parser, document, ocr, document_page):
         with open(abs_hocr_path, 'wb') as f:
             f.write(hocr_output)
             f.close()
+
+        xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
+        document_page.xml = xml
 
     elif ocr_engine == "GOOGLE_VISION":
         google_vision_api_key = ocr.google_vision_ocr_api_key
@@ -260,6 +272,9 @@ def convert_page(parser, document, ocr, document_page):
                 outfile.write(hocr_page.render().encode(
                     'utf-8') if str == bytes else hocr_page.render())
                 outfile.close()
+
+        xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
+        document_page.xml = xml
 
     elif ocr_engine == "OMNIPAGE":
         from omnipage import kRecInit, kRecQuit, kRecSetLicense, kRecLoadImgF, \
@@ -408,8 +423,9 @@ def convert_page(parser, document, ocr, document_page):
         with open(abs_hocr_path, "w", encoding="utf-8") as f:
             f.write(updated_hocr)
 
-    xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
-    document_page.xml = xml
+        xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
+        document_page.xml = xml
+
     document_page.ocred = True
     document_page.save()
 
@@ -1031,6 +1047,9 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
 
                 document_page_index = document_page_index + 1
                 page_num = document_page_index + 1
+
+            else:
+                break
 
     if is_searchable and ocr.detect_searchable:
 

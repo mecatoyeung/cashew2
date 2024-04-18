@@ -44,6 +44,7 @@ class DocumentParser:
         return textlines_in_all_pages
     
     def extract(self, rule, parsed_result=[]):
+
         if rule.rule_type == RuleType.DEPENDENT_RULE.value:
             page_nums = list(range(1, self.document.total_page_num + 1))
         else:

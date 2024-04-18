@@ -44,6 +44,6 @@ class OpenAITextStreamProcessor(StreamBase):
 
         return {
             "type": StreamType.JSON.value,
-            "value": completion.choices[0].message.content
+            "value": completion.choices[0].message.content.replace("```json\n", "").replace("\n```", "")
         }
 
