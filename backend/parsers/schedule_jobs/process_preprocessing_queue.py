@@ -133,11 +133,11 @@ def process_single_preprocessing_queue(queue_job):
             document_page.save()
         queue_job.save()
 
-        ocr = OCR.objects.get(parser_id=parser.id)
-        if ocr.ocr_type == OCRType.NO_OCR.value:
-            process_single_no_ocr_queue(queue_job)
-        else:
-            process_single_ocr_queue(queue_job)
+        #ocr = OCR.objects.get(parser_id=parser.id)
+        #if ocr.ocr_type == OCRType.NO_OCR.value:
+            #process_single_no_ocr_queue(queue_job)
+        #else:
+        process_single_ocr_queue(queue_job)
 
     except Exception as e:
         print(traceback.format_exc())

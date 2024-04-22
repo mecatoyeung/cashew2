@@ -183,7 +183,10 @@ class StreamProcessor:
                 processedStreams.append({
                     "status": "error",
                     "error_message": str(e),
-                    "data": [str(e)],
+                    "data": {
+                        "type": "TEXTFIELD",
+                        "value": [str(e)]
+                    },
                     "id": streams[streamIndex].id,
                     "step": streams[streamIndex].step,
                     "type": last_processed_data["type"],

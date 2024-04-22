@@ -145,7 +145,8 @@ const Splitting = () => {
   }
 
   const editFirstPageSplittingClickHandler = (index) => {
-    setSplittingModal(
+    console.log(index)
+    /*setSplittingModal(
       produce((draft) => {
         draft.show = true
         draft.type = 'FIRST_PAGE'
@@ -153,6 +154,17 @@ const Splitting = () => {
         draft.firstPageSplittingRuleIndex = index
         draft.conditions = splitting.splittingRules[0].splittingConditions
         draft.parentSplittingRule = null
+      })
+    )*/
+    setSplittingModal(
+      produce((draft) => {
+        console.log(splitting.splittingRules[index])
+        draft.show = true
+        draft.type = 'FIRST_PAGE'
+        draft.addOrEdit = 'EDIT'
+        draft.firstPageSplittingRuleIndex = index
+        draft.conditions = splitting.splittingRules[index].splittingConditions
+        draft.routeToParser = splitting.splittingRules[index].routeToParser
       })
     )
   }
@@ -174,7 +186,6 @@ const Splitting = () => {
   }
 
   const consecutivePageSplittingRuleTypeChangeHandler = (e) => {
-    console.log(e)
     setSplittingModal(
       produce((draft) => {
         draft.consecutivePageSplittingRuleType = e.target.value
@@ -226,7 +237,6 @@ const Splitting = () => {
   }
 
   const lastPageSplittingRuleTypeChangeHandler = (e) => {
-    console.log(e)
     setSplittingModal(
       produce((draft) => {
         draft.lastPageSplittingRuleType = e.target.value
@@ -480,7 +490,6 @@ const Splitting = () => {
             consecutivePageSplittingConditions: splittingModal.conditions,
           }
         }
-        console.log(draft)
       })
     )
     setSplittingModal(
@@ -503,7 +512,6 @@ const Splitting = () => {
               splittingModal.firstPageSplittingRuleIndex
             ].lastPageSplittingRules = []
           }
-          console.log(splittingModal)
           draft.splittingRules[
             splittingModal.firstPageSplittingRuleIndex
           ].lastPageSplittingRules.push({
@@ -1717,8 +1725,9 @@ const Splitting = () => {
                     </Form.Group>
                   </>
                 )}
-                {(splittingModal.consecutivePageSplittingRuleType ==
-                  'BY_CONDITIONS' ||
+                {(splittingModal.type == 'FIRST_PAGE' ||
+                  splittingModal.consecutivePageSplittingRuleType ==
+                    'BY_CONDITIONS' ||
                   splittingModal.lastPageSplittingRuleType ==
                     'BY_CONDITIONS') && (
                   <>

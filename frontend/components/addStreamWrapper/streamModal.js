@@ -201,7 +201,6 @@ const jsonStreamOptions = [
 ]
 
 const StreamModal = (props) => {
-  console.log(props.stream)
   const [stream, setStream] = useState({
     step: props.stream.step + 1,
     rule: props.rule.id,
@@ -371,7 +370,6 @@ const StreamModal = (props) => {
           <Form.Control value={stream.step} readOnly />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formStreamClass">
-          {console.log(stream)}
           {stream.type == 'TEXTFIELD' && (
             <Select
               options={textfieldStreamOptions}

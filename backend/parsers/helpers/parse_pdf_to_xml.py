@@ -14,6 +14,7 @@ from parsers.models.queue import Queue
 from parsers.models.queue_class import QueueClass
 from parsers.models.queue_status import QueueStatus
 from parsers.helpers.convert_pdf_to_xml import convert_pdf_to_xml
+from parsers.helpers.path_helpers import xml_path
 
 from django.db import transaction
 
@@ -78,7 +79,7 @@ def convert_json_to_xml(json_dict):
 
                     word_in_line_count += 1
         
-    return tostring(xml, xml_declaration=True, encoding="utf-8")
+    return tostring(xml, xml_declaration=True, encoding="utf-8").decode("utf-8")
 
 
 def parse_pdf_to_xml(document):
@@ -96,6 +97,8 @@ def parse_pdf_to_xml(document):
 
             page_num = page_idx + 1
 
+            abs_xml_path = xml_path(document, page_num)
+
             queue = Queue.objects.get(
                 document_id=document.id
             )
@@ -112,7 +115,9 @@ def parse_pdf_to_xml(document):
 
             text_page = page.get_textpage()
             json_dict = json.loads(text_page.extractJSON())
-            xml = convert_json_to_xml(json_dict).decode('utf-8')
+            xml = convert_json_to_xml(json_dict)
+            with open(abs_xml_path, 'w', encoding="utf-8") as xml_file:
+                xml_file.write(xml)
             document_page.xml = xml
 
             document_page.ocred = True

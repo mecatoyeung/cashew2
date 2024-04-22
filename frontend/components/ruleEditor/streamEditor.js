@@ -167,7 +167,6 @@ const StreamEditor = () => {
         </div>
       </div>
       <div className={styles.streamEditorWrapper}>
-        {console.log(processedStreams)}
         {processedStreams &&
           processedStreams.map((processedStream) => (
             <div key={processedStream.step}>
@@ -311,7 +310,6 @@ const StreamEditor = () => {
                           </div>
                         </>
                       )}
-                      {console.log(processedStream)}
                       {processedStream.class ==
                         'REMOVE_ROWS_WITH_CONDITIONS' && (
                         <>
@@ -683,7 +681,6 @@ const StreamEditor = () => {
                           </div>
                         </>
                       )}
-                      {console.log(processedStream)}
                       {processedStream.status != 'error' &&
                         processedStream.data.value && (
                           <div className={styles.streamTableDiv}>
@@ -729,7 +726,6 @@ const StreamEditor = () => {
                         )}
                     </>
                   )}
-                  {console.log(processedStream)}
                   {processedStream.type == 'JSON' && (
                     <>
                       {processedStream.class == 'OPEN_AI_TEXT' && (

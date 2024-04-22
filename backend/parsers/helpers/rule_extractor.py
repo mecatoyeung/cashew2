@@ -148,6 +148,7 @@ class RuleExtractor:
 
                     if toppest_textline.region.is_in_same_line(textlines_within_area[textline_index].region, 
                                                                same_line_acceptance_range=self.parser.same_line_acceptance_range):
+                        
 
                         overlapping_column_with_existing_textlines = False
                         for textline_that_are_the_same_line_with_toppest in textlines_that_are_the_same_line_with_toppest:

@@ -39,7 +39,7 @@ class DocumentParser:
 
         for page_num in page_nums:
             textlines_in_all_pages += self.extract_all_text_in_one_page(
-                page_num)
+                page_num)["value"]
 
         return textlines_in_all_pages
     

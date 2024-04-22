@@ -46,18 +46,15 @@ const shiftCharCode = (Δ) => (c) => String.fromCharCode(c.charCodeAt(0) + Δ)
 
 const isMultipleArrays = (chat) => {
   for (const [key, value] of Object.entries(chat)) {
-    console.log('value: ', value)
     if (!Array.isArray(value)) {
       return false
     }
     for (let item of value) {
-      console.log('Item: ', item)
       if (typeof item !== 'string' && typeof item !== 'number') {
         return false
       }
     }
   }
-  console.log('isMultipleArrays')
   return true
 }
 
@@ -184,12 +181,9 @@ const recursiveChatInExcel = (
 }
 
 const RecursiveChat = ({ chat }) => {
-  console.log('raw: ', chat)
   if (typeof chat === 'string' || typeof chat === 'number') {
-    console.log('string: ', chat)
     return <div className={styles.talkValue}>{chat}</div>
   } else if (isMultipleArrays(chat)) {
-    console.log('multiple arrays: ', chat)
     return (
       <div className="talk-table-div">
         <table className="talk-table">
@@ -237,55 +231,55 @@ const RecursiveChat = ({ chat }) => {
       </div>
     )
   } else if (Array.isArray(chat)) {
-    console.log('array: ', chat)
     if (chat.length == 0) return <></>
+
+    let tableHeaders = []
+    for (let i = 0; i < chat.length; i++) {
+      let row = chat[i]
+      for (const [key, value] of Object.entries(row)) {
+        tableHeaders.push(key)
+      }
+    }
+    tableHeaders = tableHeaders.filter(
+      (item, index) => tableHeaders.indexOf(item) === index
+    )
+
+    let body = []
+    for (let i = 0; i < chat.length; i++) {
+      let row = chat[i]
+      let line = {}
+      for (let i = 0; i < tableHeaders.length; i++) {
+        let tableHeader = tableHeaders[i]
+        if (row[tableHeader] == undefined) {
+          line[tableHeader] = ''
+        } else {
+          line[tableHeader] = row[tableHeader]
+        }
+      }
+      body.push(line)
+    }
 
     return (
       <div className="talk-table-div">
         <table className="talk-table">
           <thead>
             <tr>
-              {Object.keys(chat[0]).map((tableKey, tableKeyIndex) => {
-                return <th key={tableKeyIndex}>{tableKey}</th>
+              {tableHeaders.map((tableHeader, tableHeaderIndex) => {
+                return <th key={tableHeaderIndex}>{tableHeader}</th>
               })}
             </tr>
           </thead>
           <tbody>
-            {chat.map((tableRow, tableRowIndex) => {
-              let tableRowObjectKeys = Object.keys(tableRow)
-              if (tableRowObjectKeys.length > 0) {
-                return (
-                  <tr key={tableRowIndex}>
-                    {tableRowObjectKeys.map(
-                      (tableRowObjectKey, tableRowObjectKeyIndex) => {
-                        if (typeof tableRow[tableRowObjectKey] == 'object') {
-                          return (
-                            <td
-                              key={tableRowObjectKeyIndex}
-                              style={{ verticalAlign: 'top' }}
-                            >
-                              <RecursiveChat
-                                chat={tableRow[tableRowObjectKey]}
-                              />
-                            </td>
-                          )
-                        } else {
-                          return (
-                            <td
-                              key={tableRowObjectKeyIndex}
-                              style={{ verticalAlign: 'top' }}
-                            >
-                              {tableRow[tableRowObjectKey]}
-                            </td>
-                          )
-                        }
-                      }
-                    )}
-                  </tr>
-                )
-              } else {
-                return <tr key={tableRowIndex}></tr>
-              }
+            {body.map((bodyLine, bodyLineIndex) => {
+              return (
+                <tr key={bodyLineIndex}>
+                  {tableHeaders.map((tableHeader, tableHeaderIndex) => {
+                    return (
+                      <td key={tableHeaderIndex}>{bodyLine[tableHeader]}</td>
+                    )
+                  })}
+                </tr>
+              )
             })}
           </tbody>
         </table>
@@ -545,10 +539,7 @@ const AIChat = (props) => {
             )
 
             setChatHistories(updatedChatHistories)
-            console.log('updatedChatHistories: ', updatedChatHistories)
           } catch (error) {
-            console.error(error)
-            console.log(chatHistories)
             setChatIsLoading(false)
           }
         }
@@ -597,7 +588,6 @@ const AIChat = (props) => {
   }
 
   const markAsCompletedBtnClickHandler = (e) => {
-    console.log(e)
     service.post(
       'documents/' +
         documentId +
@@ -654,7 +644,6 @@ const AIChat = (props) => {
   }
 
   const downloadTextBtnClickHandler = () => {
-    console.log(textlines)
     service.get(
       'parsers/' + parserId + '/documents/' + documentId + '/extract_all_text/',
       (response) => {
@@ -756,7 +745,6 @@ const AIChat = (props) => {
   const resize = useCallback(
     (mouseMoveEvent) => {
       if (isResizing) {
-        console.log(mouseMoveEvent)
         setSidebarWidth(
           mouseMoveEvent.clientX -
             sidebarRef.current.getBoundingClientRect().left
@@ -803,7 +791,6 @@ const AIChat = (props) => {
 
   const renderChat = (chat) => {
     if (typeof chat === 'string' || typeof chat === Number) {
-      console.log(chat)
       return <div className={styles.talkKeyToValue}>{chat}</div>
     } else if (Array.isArray(chat)) {
       return (
@@ -1144,57 +1131,6 @@ const AIChat = (props) => {
                     >
                       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
                         <>
-                          {/*<div
-                            className={styles.tools}
-                            style={{
-                              display: showDocumentPagePreview
-                                ? "block"
-                                : "none",
-                            }}
-                          >
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => zoomIn()}
-                            >
-                              Zoom in
-                            </Button>
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => zoomOut()}
-                            >
-                              Zoom out
-                            </Button>
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => resetTransform()}
-                            >
-                              Reset
-                            </Button>
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => prevPage()}
-                            >
-                              <i className="bi bi-arrow-left"></i>
-                            </Button>
-                            <Button className={styles.toolsBtn}>
-                              Page {pageNum} of{" "}
-                              {document && document.documentPages.length}
-                            </Button>
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => nextPage()}
-                            >
-                              <i className="bi bi-arrow-right"></i>
-                            </Button>
-                            <Button
-                              className={styles.toolsBtn}
-                              onClick={() => downloadPDFBtnClickHandler()}
-                            >
-                              <i className="bi bi-file-earmark-pdf"></i>{" "}
-                              Download
-                          </Button>
-                          </div>
-                          <TransformComponent></TransformComponent>*/}
                           <div
                             style={{ width: 100, height: 100, margin: 'auto' }}
                           >
@@ -1256,7 +1192,6 @@ const AIChat = (props) => {
                             textlines.value.map((row, rowIndex) => {
                               return (
                                 <tr key={rowIndex}>
-                                  {/* .replace(" ", "　").replace(/[!-~]/g, shiftCharCode(0xFEE0)) */}
                                   <td>{row.replace(/ /g, '\u00a0')}</td>
                                 </tr>
                               )
@@ -1293,6 +1228,7 @@ const AIChat = (props) => {
                 {chatHistories &&
                   chatHistories.map((chatHistory, chatHistoryIndex) => (
                     <div key={chatHistory.uuid}>
+                      {console.log(chatHistory)}
                       {chatHistory.from == 'staff' && (
                         <div
                           className={[
