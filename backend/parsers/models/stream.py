@@ -42,6 +42,10 @@ class Stream(models.Model):
         null=True, blank=True, max_length=1024, default="")
     json_extract_code = models.TextField(
         null=True, blank=True, max_length=1024, default="")
+    current_page_regex = models.TextField(
+        null=True, blank=True, max_length=1024, default="")
+    last_page_regex = models.TextField(
+        null=True, blank=True, max_length=1024, default="")
 
     class Meta:
         db_table = 'streams'

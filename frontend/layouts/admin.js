@@ -24,6 +24,8 @@ export default function WorkspaceLayout({ children }) {
 
   let { parserId } = router.query
 
+  const [permitted, setPermitted] = useState(false)
+
   const [parser, setParser] = useState(null)
   const [user, setUser] = useState(null)
 
@@ -92,7 +94,9 @@ export default function WorkspaceLayout({ children }) {
   }
 
   useEffect(() => {
-    if (!hasPermission('cashew_parser_management')) {
+    let tmpPermitted = hasPermission('cashew_parser_management')
+    setPermitted(tmpPermitted)
+    if (!tmpPermitted) {
       router.push('/workbench/parsers')
     }
   })

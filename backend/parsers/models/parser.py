@@ -1,13 +1,13 @@
-from django.db import models
-
 from datetime import datetime
 from django.utils import timezone
 import uuid
 
 from enum import Enum
 
+from django.db import models
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import get_user_model
+
 
 from parsers.models.parser_type import ParserType
 

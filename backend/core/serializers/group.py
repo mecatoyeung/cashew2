@@ -6,15 +6,17 @@ from parsers.models.parser import Parser
 
 class GroupSerializer(serializers.ModelSerializer):
 
-    user_ids = serializers.SerializerMethodField()
+    user_set = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all(),
+        default=None)
     permission_codenames = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'user_ids', 'permissions', 'permission_codenames']
+        fields = ['id', 'name', 'user_set', 'permissions', 'permission_codenames']
         read_only_fields = ['id']
 
-    def get_user_ids(self, instance):
+    def get_user_set(self, instance):
         return map(lambda u: u.id, User.objects.filter(groups__id=instance.id))
     
     def get_permission_codenames(self, instance):
@@ -22,12 +24,15 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class GroupCreateSerializer(GroupSerializer):
     
-    user_ids = serializers.ListField(child = serializers.IntegerField())
+    user_set = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all(),
+        default=None)
+    #user_ids = serializers.ListField(child = serializers.IntegerField())
     permission_codenames = serializers.ListField(child = serializers.CharField(), read_only=True)
     
     def create(self, validated_data):
         user_ids = validated_data.pop(
-            "user_ids", None)
+            "user_set", None)
         
         permission_codenames = validated_data.pop(
             "permission_codenames", None)
@@ -40,8 +45,6 @@ class GroupCreateSerializer(GroupSerializer):
             for user_id in user_ids:
                 user = User.objects.get(id=user_id)
                 instance.user_set.add(user)
-        
-        instance.user_ids = user_ids
 
         if permission_codenames is not None:
             permission_objs = Permission.objects.filter(codename__in=permission_codenames)
@@ -57,32 +60,27 @@ class GroupRetrieveSerializer(GroupSerializer):
 
 class GroupUpdateSerializer(GroupSerializer):
 
-    user_ids = serializers.ListField(child = serializers.IntegerField())
+    user_set = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all(),
+        default=None)
+    #user_ids = serializers.ListField(child = serializers.IntegerField())
     permission_codenames = serializers.ListField(child = serializers.CharField())
     
     def update(self, instance, validated_data):
         user_ids = validated_data.pop(
-            "user_ids", None)
+            "user_set", None)
         
         permission_codenames = validated_data.pop(
             "permission_codenames", None)
         
-        """permitted_parser_ids = map(lambda p: p.id, instance.permitted_parsers.all())"""
-
-        """Group.objects.filter(id=instance.id).delete()"""
-
-        """ Update Group. """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        instance.save()
+        instance.user_set.clear()
 
         if user_ids is not None:
-            for user_id in user_ids:
-                user = User.objects.get(id=user_id)
+            for user in user_ids:
                 instance.user_set.add(user)
-
-        instance.user_ids = user_ids
 
         if permission_codenames is not None:
             permission_objs = Permission.objects.filter(codename__in=permission_codenames)
@@ -90,11 +88,7 @@ class GroupUpdateSerializer(GroupSerializer):
 
         instance.permission_codenames = permission_codenames
 
-        """for permitted_parser_id in permitted_parser_ids:
-            permitted_parser = Parser()
-            permitted_parser.id = permitted_parser_id
-            permitted_parser.permitted_groups.add(permitted_parser)
-            permitted_parser.save()"""
+        instance.save()
 
         return instance
 

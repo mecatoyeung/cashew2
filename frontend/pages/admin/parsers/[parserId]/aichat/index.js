@@ -34,10 +34,6 @@ const ExcelJS = require('exceljs')
 
 const FileSaver = require('file-saver')
 
-import hasPermission from '../../../../../helpers/hasPermission'
-
-import AIChatLayout from '../../../../../layouts/aichat'
-
 import service from '../../../../../service'
 
 import styles from '../../../../../styles/AIChat.module.css'
@@ -343,11 +339,7 @@ const AIChat = (props) => {
     })
   }
 
-  useEffect(() => {
-    /*if (!hasPermission('cashew_parser_management')) {
-      router.push('/workbench/parsers')
-    }*/
-  }, [])
+  useEffect(() => {}, [])
 
   useEffect(() => {
     if (!router.isReady) return

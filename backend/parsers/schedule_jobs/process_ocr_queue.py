@@ -86,12 +86,6 @@ def process_single_ocr_queue(queue_job):
         else:
 
             if parser.type == ParserType.ROUTING.value:
-                """if ocr.ocr_type == OCRType.NO_OCR.value:
-                    queue_job.queue_class = QueueClass.SPLITTING.value
-                    queue_job.queue_status = QueueStatus.READY.value
-                    queue_job.save()
-                    process_single_splitting_queue(queue_job)
-                else:"""
                 queue_job.queue_class = QueueClass.PROCESSED.value
                 queue_job.queue_status = QueueStatus.COMPLETED.value
                 queue_job.save()

@@ -251,6 +251,20 @@ const StreamEditor = () => {
                           {processedStream.jsonExtractCode}
                         </div>
                       )}
+                      {console.log(processedStream)}
+                      {processedStream.class == 'LAST_PAGE_DETECTOR' && (
+                        <div className={styles.streamDescription}>
+                          <p>Last Page Detector: </p>
+                          <p>
+                            {'Current page regex: ' +
+                              processedStream.currentPageRegex}{' '}
+                          </p>
+                          <p>
+                            {'Last page regex: ' +
+                              processedStream.lastPageRegex}
+                          </p>
+                        </div>
+                      )}
                       <div className={styles.streamDeleteBtn}>
                         <Button
                           variant="danger"

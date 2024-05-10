@@ -4,11 +4,15 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import traceback
 
+from functools import reduce
+import operator
+
 from rest_framework import (
     viewsets,
 )
 
 from django.db.models import Prefetch
+from django.db.models import Q
 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +25,7 @@ from rest_framework.authentication import SessionAuthentication
 import requests
 import json
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from parsers.models.parser import Parser
 from parsers.models.rule import Rule
@@ -91,6 +95,7 @@ class ParserViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         if self.action == "retrieve":
+
             queryset = queryset\
                 .select_related("owner")\
                 .select_related("ocr") \
@@ -114,15 +119,19 @@ class ParserViewSet(viewsets.ModelViewSet):
                                                                       queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions")))
                                            ))\
                 .prefetch_related("permitted_users")\
-                .prefetch_related("permitted_groups")
+                .prefetch_related("permitted_groups")\
+                .filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
             
             return queryset
+        
+        else:
 
-        return queryset.prefetch_related("rules") \
-            .select_related("owner")\
-            .select_related("chatbot") \
-            .select_related("ocr") \
-            .order_by('id').distinct()
+            return queryset.prefetch_related("rules") \
+                .select_related("owner")\
+                .select_related("chatbot") \
+                .select_related("ocr") \
+                .filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))\
+                .order_by('id').distinct()
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
@@ -322,8 +331,17 @@ class ParserViewSet(viewsets.ModelViewSet):
 
         if question == "":
             return Response("Please ask me with meaningful questions.", status=200)
+        
+        if chatbot.chatbot_type == ChatBotType.NO_CHATBOT.value:
 
-        if chatbot.chatbot_type == ChatBotType.OPEN_AI.value:
+            response_dict = {
+                    "Message": "You did not define any chat bot in the settings. Please define Chat Bot in the settings and try again."
+                }
+            return StreamingHttpResponse(
+                    json.dumps(response_dict), status=200,
+                    content_type='text/event-stream')
+
+        elif chatbot.chatbot_type == ChatBotType.OPEN_AI.value:
 
             content_to_be_sent_to_openai = "\n".join(
                 document_parser.extract_all_text_in_all_pages())

@@ -95,6 +95,15 @@ const textfieldStreamOptions = [
       },
     ],
   },
+  {
+    label: 'Last Page Detector',
+    options: [
+      {
+        label: 'Last Page Detector',
+        value: 'LAST_PAGE_DETECTOR',
+      },
+    ],
+  },
 ]
 
 const tableStreamOptions = [
@@ -220,6 +229,8 @@ const StreamModal = (props) => {
     unpivotPropertyAssignCharacter: '',
     convertToTableBySpecifyHeaders: '',
     openAIQuestion: '',
+    firstPageRegex: '',
+    lastPageRegex: '',
   })
 
   const selectedStreamClassChangeHandler = (e) => {
@@ -343,6 +354,18 @@ const StreamModal = (props) => {
   const txtJsonExtractCodeChangeHandler = (e) => {
     let updatedStream = { ...stream }
     updatedStream.jsonExtractCode = e.target.value
+    setStream(updatedStream)
+  }
+
+  const txtCurrentPageRegexChangeHandler = (e) => {
+    let updatedStream = { ...stream }
+    updatedStream.currentPageRegex = e.target.value
+    setStream(updatedStream)
+  }
+
+  const txtLastPageRegexChangeHandler = (e) => {
+    let updatedStream = { ...stream }
+    updatedStream.lastPageRegex = e.target.value
     setStream(updatedStream)
   }
 
@@ -667,6 +690,26 @@ const StreamModal = (props) => {
               value={stream.jsonExtractCode}
               onChange={(e) => txtJsonExtractCodeChangeHandler(e)}
             />
+          </>
+        )}
+        {stream.streamClass.value == 'LAST_PAGE_DETECTOR' && (
+          <>
+            <Form.Group className="mb-3" controlId="formCurrentPageRegex">
+              <Form.Label>Current page regex: </Form.Label>
+              <Form.Control
+                placeholder="Page ([0-9]+) of (?:[0-9]+)"
+                value={stream.currentPageRegex}
+                onChange={(e) => txtCurrentPageRegexChangeHandler(e)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formLastPageRegex">
+              <Form.Label>Last page regex: </Form.Label>
+              <Form.Control
+                placeholder="Page (?:[0-9]+) of ([0-9]+)"
+                value={stream.lastPageRegex}
+                onChange={(e) => txtLastPageRegexChangeHandler(e)}
+              />
+            </Form.Group>
           </>
         )}
       </Modal.Body>

@@ -24,6 +24,7 @@ from parsers.helpers.stream_processors.textfield.remove_text_after_end_of_text i
 from parsers.helpers.stream_processors.textfield.convert_to_table_by_specify_header import ConvertToTableBySpecifyHeaderStreamProcessor
 from parsers.helpers.stream_processors.textfield.remove_empty_lines import RemoveEmptyLinesStreamProcessor
 from parsers.helpers.stream_processors.textfield.openai import OpenAITextStreamProcessor
+from parsers.helpers.stream_processors.textfield.last_page_detector import LastPageDetectorStreamProcessor
 
 from parsers.helpers.stream_processors.table.combine_first_n_lines import CombineFirstNLinesStreamProcessor
 from parsers.helpers.stream_processors.table.get_chars_from_next_col_if_regex_not_match import GetCharsFromNextColIfRegexNotMatchStreamProcessor
@@ -65,7 +66,8 @@ STREAM_PROCESSOR_MAPPING = {
     "MAKE_FIRST_ROW_TO_BE_HEADER": MakeFirstRowToBeHeaderStreamProcessor,
     "OPEN_AI_TABLE": OpenAITableStreamProcessor,
     "EXTRACT_JSON_AS_TEXT": ExtractJSONAsTextStreamProcessor,
-    "EXTRACT_JSON_AS_TABLE": ExtractJSONAsTableStreamProcessor
+    "EXTRACT_JSON_AS_TABLE": ExtractJSONAsTableStreamProcessor,
+    "LAST_PAGE_DETECTOR": LastPageDetectorStreamProcessor
 }
 
 
@@ -106,48 +108,6 @@ class StreamProcessor:
             else:
                 raise Exception("No such stream")
 
-            """if streams[streamIndex].stream_class == "CONVERT_TO_TABLE_BY_SPECIFY_HEADERS":
-                streams[streamIndex].type = "TABLE"
-
-            if streams[streamIndex].stream_class == "OPEN_AI_TEXT":
-                streams[streamIndex].type = "JSON"
-
-            if streams[streamIndex].stream_class == "OPEN_AI_TABLE":
-                streams[streamIndex].type = "JSON"
-
-            if streams[streamIndex].stream_class == "EXTRACT_JSON_AS_TEXT":
-                streams[streamIndex].type = "TEXTFIELD"
-
-            if streams[streamIndex].stream_class == "EXTRACT_JSON_AS_TABLE":
-                streams[streamIndex].type = "TABLE"""
-
-            """if processedStreams[-1]["step"] != 0 and processedStreams[-1]["status"] == "error":
-                processedStreams.append({
-                    "status": "error",
-                    "error_message": "Please correct the error in the above step first.",
-                    "id": streams[streamIndex].id,
-                    "step": streams[streamIndex].step,
-                    "type": streams[streamIndex].type,
-                    "class": streams[streamIndex].stream_class,
-                    "col_index": streams[streamIndex].col_index,
-                    "col_indexes": streams[streamIndex].col_indexes,
-                    "remove_matched_row_also": streams[streamIndex].remove_matched_row_also,
-                    "text": streams[streamIndex].text,
-                    "regex": streams[streamIndex].regex,
-                    "join_string": streams[streamIndex].join_string,
-                    "extract_first_n_lines": streams[streamIndex].extract_first_n_lines,
-                    "extract_nth_lines": streams[streamIndex].extract_nth_lines,
-                    "open_ai_question": streams[streamIndex].open_ai_question,
-                    "combine_first_n_lines": streams[streamIndex].combine_first_n_lines,
-                    "convert_to_table_by_specify_headers": streams[streamIndex].convert_to_table_by_specify_headers,
-                    "unpivot_column_index": streams[streamIndex].unpivot_column_index,
-                    "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
-                    "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
-                    "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
-                    "json_extract_code": streams[streamIndex].json_extract_code
-                })
-                continue"""
-
             try:
                 if not has_error:
                     processed_data = sp.process(last_processed_data)
@@ -175,6 +135,8 @@ class StreamProcessor:
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
                     "json_extract_code": streams[streamIndex].json_extract_code,
+                    "current_page_regex": streams[streamIndex].current_page_regex,
+                    "last_page_regex": streams[streamIndex].last_page_regex,
                     "data": processed_data
                 })
                 last_processed_data = processed_data
@@ -206,7 +168,9 @@ class StreamProcessor:
                     "unpivot_newline_char": streams[streamIndex].unpivot_newline_char,
                     "unpivot_property_assign_char": streams[streamIndex].unpivot_property_assign_char,
                     "stream_conditions": [model_to_dict(condition) for condition in streams[streamIndex].streamcondition_set.all()],
-                    "json_extract_code": streams[streamIndex].json_extract_code
+                    "json_extract_code": streams[streamIndex].json_extract_code,
+                    "current_page_regex": streams[streamIndex].current_page_regex,
+                    "last_page_regex": streams[streamIndex].last_page_regex
                 })
                 has_error = True
 

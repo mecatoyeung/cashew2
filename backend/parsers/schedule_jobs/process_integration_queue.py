@@ -81,10 +81,11 @@ def process_single_integration_queue(queue_job):
         updated_parsed_result = {}
         for single_parsed_result in parsed_result:
             if single_parsed_result["streamed"]["type"] == "TEXTFIELD":
-                value_result = " ".join(single_parsed_result["streamed"]["value"])
+                str_value = [str(x) for x in single_parsed_result["streamed"]["value"]]
+                value_result = " ".join(str_value)
                 updated_parsed_result[single_parsed_result["rule"]
                                       ["name"]] = value_result
-            elif single_parsed_result["rule"]["type"] == "TABLE":
+            elif single_parsed_result["streamed"]["type"] == "TABLE":
                 value_result = []
                 for row in single_parsed_result["streamed"]["value"]["body"]:
                     row_result = {}
@@ -94,7 +95,7 @@ def process_single_integration_queue(queue_job):
                     value_result.append(row_result)
                 updated_parsed_result[single_parsed_result["rule"]
                                       ["name"]] = value_result
-            elif single_parsed_result["rule"]["type"] == "JSON":
+            elif single_parsed_result["streamed"]["type"] == "JSON":
                 updated_parsed_result[single_parsed_result["rule"]
                                       ["name"]] = "Parse value is in JSON format. Please correct it by add streams to convert the JSON to Textfield or Table."
 

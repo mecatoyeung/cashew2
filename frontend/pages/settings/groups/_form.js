@@ -42,7 +42,7 @@ export default function _GroupForm(props) {
   const [groupForm, setGroupForm] = useState({
     id: 0,
     name: '',
-    userIds: [],
+    userSet: [],
     permissions: [],
     submitting: false,
   })
@@ -53,11 +53,12 @@ export default function _GroupForm(props) {
     if (!groupId) return
     if (users.length == 0) return
     service.get(`/groups/${groupId}/`, (response) => {
+      console.log(response)
       setGroupForm(
         produce((draft) => {
           draft.id = response.data.id
           draft.name = response.data.name
-          draft.userIds = response.data.userIds.map((userId) => {
+          draft.userSet = response.data.userSet.map((userId) => {
             return users.find((u) => u.value == userId)
           })
           draft.permissions = response.data.permissionCodenames
@@ -97,7 +98,7 @@ export default function _GroupForm(props) {
       `/groups/`,
       {
         name: groupForm.name,
-        user_ids: groupForm.userIds.map((userId) => userId.value),
+        userSet: groupForm.userSet.map((userId) => userId.value),
         permissionCodenames: groupForm.permissions,
       },
       (response) => {
@@ -120,11 +121,12 @@ export default function _GroupForm(props) {
   }
 
   const saveBtnClickHandler = (e) => {
+    console.log(groupForm)
     service.put(
       `/groups/${groupForm.id}/`,
       {
         name: groupForm.name,
-        user_ids: groupForm.userIds.map((userId) => userId.value),
+        userSet: groupForm.userSet.map((userId) => userId.value),
         permissionCodenames: groupForm.permissions,
       },
       (response) => {
@@ -141,7 +143,7 @@ export default function _GroupForm(props) {
   const usersInGroupChangeHandler = (e) => {
     setGroupForm(
       produce((draft) => {
-        draft.userIds = e
+        draft.userSet = e
       })
     )
   }
@@ -232,7 +234,7 @@ export default function _GroupForm(props) {
               <Form.Label>Users in the group</Form.Label>
               <Select
                 instanceId="users-in-group"
-                value={groupForm.userIds}
+                value={groupForm.userSet}
                 isMulti
                 name="colors"
                 options={users}
@@ -242,7 +244,7 @@ export default function _GroupForm(props) {
               />
               {!formValidation.isValid && (
                 <div className="formErrorMessage">
-                  {formValidation.errorMessages.userIds}
+                  {formValidation.errorMessages.userSet}
                 </div>
               )}
             </Form.Group>

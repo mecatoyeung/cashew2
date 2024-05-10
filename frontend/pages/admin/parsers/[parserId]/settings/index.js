@@ -679,7 +679,7 @@ const Settings = () => {
                     className="mb-3"
                     controlId="formChatbotOpenAIDeployment"
                   >
-                    <Form.Label>Open AI Deplyment</Form.Label>
+                    <Form.Label>Open AI Deployment</Form.Label>
                     <Form.Control
                       onChange={chatbotOpenAIDeploymentChangeHandler}
                       value={parser.chatbot.openAiDeployment}

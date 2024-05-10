@@ -33,6 +33,7 @@ class RuleSerializer(serializers.ModelSerializer):
         many=True, required=False, allow_null=True)
     depends_on = serializers.PrimaryKeyRelatedField(
         many=False, allow_null=True, queryset=Rule.objects.all())
+    last_stream_type = serializers.SerializerMethodField('get_last_stream_type')
 
     class Meta:
         model = Rule
@@ -61,8 +62,17 @@ class RuleSerializer(serializers.ModelSerializer):
                   'acrobat_form_field',
                   'depends_on',
                   'streams',
+                  'last_stream_type',
                   'last_modified_at']
         read_only_fields = ['id']
+        
+    def get_last_stream_type(self, obj):
+        if obj.streams.count() == 0:
+            return obj.rule_type
+        else:
+            all_streams = obj.streams.all()
+            last_stream = all_streams[len(all_streams)-1]
+            return last_stream.type
 
     def _get_or_create_table_column_separators(self, table_column_separators, rule):
         """ Handle getting or creating tags as needed. """

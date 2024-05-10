@@ -18,6 +18,10 @@ import axios from 'axios'
 export default function ParserLayout({ children }) {
   const router = useRouter()
 
+  const [permittedUserManagement, setPermittedUserManagement] = useState(false)
+  const [permittedParserManagement, setPermittedParserManagement] =
+    useState(false)
+
   const [user, setUser] = useState(null)
 
   const getUser = () => {
@@ -35,6 +39,14 @@ export default function ParserLayout({ children }) {
 
   useEffect(() => {
     getUser()
+
+    let tmpPermittedUserManagement = hasPermission('cashew_user_management')
+    setPermittedUserManagement(tmpPermittedUserManagement)
+    let tmpPermittedParserManagement = hasPermission('cashew_parser_management')
+    setPermittedParserManagement(tmpPermittedParserManagement)
+    if (!tmpPermittedParserManagement) {
+      router.push('/workbench/parsers')
+    }
   }, [])
 
   return (
@@ -113,7 +125,7 @@ export default function ParserLayout({ children }) {
                           </Dropdown.Item>
                         )}
                         {router.pathname.split('/')[1] == 'workbench' &&
-                          hasPermission('cashew_parser_management') && (
+                          permittedParserManagement && (
                             <Dropdown.Item href="/admin/parsers">
                               Switch to Admin Console
                             </Dropdown.Item>
@@ -121,7 +133,7 @@ export default function ParserLayout({ children }) {
                         <Dropdown.Item href="/account/profile">
                           Account
                         </Dropdown.Item>
-                        {hasPermission('cashew_user_management') && (
+                        {permittedUserManagement && (
                           <Dropdown.Item href="/settings/users">
                             User Management
                           </Dropdown.Item>

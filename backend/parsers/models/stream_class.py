@@ -38,6 +38,8 @@ class StreamtClass(Enum):
     EXTRACT_JSON_AS_TEXT = "EXTRACT_JSON_AS_TEXT"
     EXTRACT_JSON_AS_TABLE = "EXTRACT_JSON_AS_TABLE"
 
+    LAST_PAGE_DETECTOR = "LAST_PAGE_DETECTOR"
+
     @classmethod
     def choices(cls):
         return tuple((i.name, i.value) for i in cls)

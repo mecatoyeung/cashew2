@@ -2,9 +2,11 @@ from .xml_helpers import XMLPage
 from decimal import Decimal
 import math
 import re
+import json
 
 from parsers.models.rule import Rule
 from parsers.models.rule_type import RuleType
+from parsers.models.stream_type import StreamType
 
 from parsers.helpers.get_document_nos_from_range import get_document_nos_from_range
 from parsers.helpers.rule_extractor import RuleExtractor
@@ -92,11 +94,33 @@ class DocumentParser:
 
         elif rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
 
-            return ""
+            parsed_result = json.loads(self.document.queue.parsed_result)
+            for single_parsed_result in parsed_result:
+                if single_parsed_result["rule"]["id"] == rule.id:
+                    extracted = {
+                        "type": StreamType.TEXTFIELD.value,
+                        "value": single_parsed_result["extracted"]["value"]
+                    }
+                    return extracted
+            extracted = {
+                "type": StreamType.TEXTFIELD.value,
+                "value": [""]
+            }
 
         elif rule.rule_type == RuleType.INPUT_DROPDOWN.value:
 
-            return ""
+            parsed_result = json.loads(self.document.queue.parsed_result)
+            for single_parsed_result in parsed_result:
+                if single_parsed_result["rule"]["id"] == rule.id:
+                    extracted = {
+                        "type": StreamType.TEXTFIELD.value,
+                        "value": single_parsed_result["extracted"]["value"]
+                    }
+                    return extracted
+            extracted = {
+                "type": StreamType.TEXTFIELD.value,
+                "value": [""]
+            }
         
         elif rule.rule_type == RuleType.DEPENDENT_RULE.value:
 

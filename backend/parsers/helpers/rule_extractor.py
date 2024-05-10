@@ -67,11 +67,17 @@ class RuleExtractor:
 
         elif self.rule.rule_type == RuleType.INPUT_TEXTFIELD.value:
 
-            return ""
+            return {
+                "type": StreamType.TEXTFIELD.value,
+                "value": [""]
+            }
 
         elif self.rule.rule_type == RuleType.INPUT_DROPDOWN.value:
 
-            return ""
+            return {
+                "type": StreamType.TEXTFIELD.value,
+                "value": [""]
+            }
 
         return result
 

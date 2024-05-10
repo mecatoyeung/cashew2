@@ -21,10 +21,14 @@ import hasPermission from '../helpers/hasPermission'
 export default function AccountLayout({ children }) {
   const router = useRouter()
 
+  const [permitted, setPermitted] = useState(false)
+
   let {} = router.query
 
   useEffect(() => {
-    if (!hasPermission('cashew_user_management')) {
+    let tmpPermitted = hasPermission('cashew_user_management')
+    setPermitted(tmpPermitted)
+    if (!tmpPermitted) {
       router.push('/workbench/parsers')
     }
   }, [])
@@ -40,7 +44,7 @@ export default function AccountLayout({ children }) {
         ></meta>
         <link rel="icon" href="/static/favicon.ico" />
       </Head>
-      {hasPermission('cashew_user_management') && (
+      {permitted && (
         <div className={settingsStyles.wrapper}>
           <AdminHeader />
           <hr className={settingsStyles.headerHr} />

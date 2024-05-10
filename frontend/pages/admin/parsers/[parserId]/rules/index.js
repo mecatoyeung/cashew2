@@ -31,7 +31,7 @@ export default function Parsers() {
     { label: 'Table', value: 'TABLE' },
     { label: 'Acrobat Form', value: 'ACROBAT_FORM' },
     { label: 'Barcode', value: 'BARCODE' },
-    { label: 'Input Textfield (In Progress)', value: 'INPUT_TEXTFIELD' },
+    { label: 'Input Textfield', value: 'INPUT_TEXTFIELD' },
     { label: 'Input Dropdown (In Progress)', value: 'INPUT_DROPDOWN' },
     { label: 'Dependent Rule', value: 'DEPENDENT_RULE' },
   ]
@@ -89,9 +89,14 @@ export default function Parsers() {
                     </Dropdown.Item>
                   </>
                 )}
-                <Dropdown.Item onClick={() => streamEditorClickHandler(rule)}>
-                  Stream Editor
-                </Dropdown.Item>
+                {rule.ruleType != 'INPUT_TEXTFIELD' &&
+                  rule.ruleType != 'INPUT_DROPDOWN' && (
+                    <Dropdown.Item
+                      onClick={() => streamEditorClickHandler(rule)}
+                    >
+                      Stream Editor
+                    </Dropdown.Item>
+                  )}
               </Dropdown.Menu>
             </Dropdown>
             &nbsp;
@@ -253,7 +258,7 @@ export default function Parsers() {
   useEffect(() => {
     if (!router.isReady) return
     if (!router.query.parserId) return
-  }, [router.isReady])
+  }, [router.isReady, router.query.parserId])
 
   useEffect(() => {
     getRules()

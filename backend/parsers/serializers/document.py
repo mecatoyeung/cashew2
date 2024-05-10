@@ -1,7 +1,12 @@
 import os
+import traceback
 import io
 import uuid
 from datetime import datetime
+
+import json
+
+from django.db import transaction
 
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -18,6 +23,7 @@ from parsers.models.queue_class import QueueClass
 from parsers.models.queue import Queue
 from parsers.models.queue_status import QueueStatus
 from parsers.models.parser import Parser
+from parsers.models.rule import Rule
 
 from parsers.serializers.queue import QueueSerializer
 from parsers.serializers.document_page import DocumentPageSerializer, DocumentPageDetailSerializer
@@ -26,7 +32,6 @@ from parsers.helpers.generate_images_from_pdf import generate_images_from_pdf
 from parsers.helpers.path_helpers import source_file_pdf_path, document_path
 
 from backend import settings
-
 
 class DocumentSerializer(serializers.ModelSerializer):
 
@@ -67,7 +72,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 class DocumentUploadSerializer(DocumentSerializer):
     """ Serializer for document upload view. """
     document_extension = serializers.CharField(required=False, allow_null=True)
@@ -86,60 +90,91 @@ class DocumentUploadSerializer(DocumentSerializer):
         filepath = os.path.join('documents', instance.guid, "source_file.pdf")
         instance.file = filepath
 
+    @transaction.atomic
     def create(self, validated_data):
-        """ Create a document. """
-        guid = str(uuid.uuid4())
-        file = validated_data.pop("file")
-        filename_without_extension = Path(file.name).stem
-        extension = Path(file.name).suffix[1:]
-        validated_data["guid"] = guid
-        validated_data["filename_without_extension"] = filename_without_extension
 
-        im = None
-        if extension == "pdf" or extension == "PDF":
-            validated_data["document_extension"] = DocumentExtension.PDF.value
-        elif extension == "jpg" or extension == "JPG":
-            image = PIL.Image.open(file)
-            im = image.convert('RGB')
-        elif extension == "png" or extension == "PNG":
-            image = PIL.Image.open(file)
-            im = image.convert('RGB')
-        elif extension == "tiff" or extension == "TIFF":
-            image = PIL.Image.open(file)
-            im = image.convert('RGB')
+        abs_source_file_pdf_path = None
+        try:
+            with transaction.atomic():
+                """ Create a document. """
+                guid = str(uuid.uuid4())
+                file = validated_data.pop("file")
+                filename_without_extension = Path(file.name).stem
+                extension = Path(file.name).suffix[1:]
+                validated_data["guid"] = guid
+                validated_data["filename_without_extension"] = filename_without_extension
+                input_data = json.loads(self.context['request'].POST.get('input_data', '[]'))
 
-        validated_data["extension"] = "pdf"
-        validated_data["document_extension"] = "PDF"
-        validated_data["last_modified_at"] = datetime.now()
-        document = Document.objects.create(**validated_data)
+                im = None
+                if extension == "pdf" or extension == "PDF":
+                    validated_data["document_extension"] = DocumentExtension.PDF.value
+                elif extension == "jpg" or extension == "JPG":
+                    image = PIL.Image.open(file)
+                    im = image.convert('RGB')
+                elif extension == "png" or extension == "PNG":
+                    image = PIL.Image.open(file)
+                    im = image.convert('RGB')
+                elif extension == "tiff" or extension == "TIFF":
+                    image = PIL.Image.open(file)
+                    im = image.convert('RGB')
 
-        document.save()
+                validated_data["extension"] = "pdf"
+                validated_data["document_extension"] = "PDF"
+                validated_data["last_modified_at"] = datetime.now()
+                document = Document.objects.create(**validated_data)
 
-        abs_document_path = document_path(document)
-        is_folder_exist = os.path.exists(abs_document_path)
-        if not is_folder_exist:
-            os.makedirs(abs_document_path)
-        abs_source_file_pdf_path = source_file_pdf_path(document)
-        if im != None:
-            im.save(abs_source_file_pdf_path)
-        else:
-            with open(abs_source_file_pdf_path, "wb+") as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
+                #document.save()
 
-        parser = Parser.objects.get(id=document.parser_id)
+                abs_document_path = document_path(document)
+                is_folder_exist = os.path.exists(abs_document_path)
+                if not is_folder_exist:
+                    os.makedirs(abs_document_path)
+                abs_source_file_pdf_path = source_file_pdf_path(document)
+                if im != None:
+                    im.save(abs_source_file_pdf_path)
+                else:
+                    with open(abs_source_file_pdf_path, "wb+") as destination:
+                        for chunk in file.chunks():
+                            destination.write(chunk)
 
-        generate_images_from_pdf(parser, document)
+                parser = Parser.objects.get(id=document.parser_id)
 
-        # Create queue object in database
-        q = Queue()
-        q.queue_status = QueueStatus.READY.value
-        q.parser = parser
-        q.document = document
-        q.queue_class = QueueClass.IMPORT.value
-        q.save()
+                generate_images_from_pdf(parser, document)
 
-        return document
+                # Create queue object in database
+                q = Queue()
+                q.queue_status = QueueStatus.READY.value
+                q.parser = parser
+                q.document = document
+                q.queue_class = QueueClass.IMPORT.value
+
+                parserd_result = []
+                for single_input_data in input_data:
+                    rule = Rule.objects.get(pk=single_input_data["ruleId"])
+                    parserd_result.append({
+                        "rule": {
+                            "id": rule.id,
+                            "name": rule.name,
+                            "type": "TEXTFIELD"
+                        },
+                        "extracted": {
+                            "type": "TEXTFIELD",
+                            "value": [single_input_data["ruleValue"]]
+                        },
+                        "streamed": {
+                            "type": "TEXTFIELD",
+                            "value": [single_input_data["ruleValue"]]
+                        }
+                    })
+                q.parsed_result = json.dumps(parserd_result)
+                
+                q.save()
+
+                return document
+        except:
+            traceback.print_exc()
+            if abs_source_file_pdf_path != None and os.path.exists(abs_source_file_pdf_path):
+                os.remove(abs_source_file_pdf_path)
 
 
 class DocumentDetailSerializer(DocumentSerializer):

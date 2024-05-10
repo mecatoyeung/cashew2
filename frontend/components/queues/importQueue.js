@@ -119,6 +119,8 @@ const ImportQueue = (props) => {
       let formData = new FormData()
       formData.set('parser', props.parserId)
       formData.set('documentType', documentType)
+      formData.set('inputData', JSON.stringify(inputData))
+      console.log(formData)
       formData.append('file', droppedFile, droppedFile.name)
 
       const response = service
@@ -168,7 +170,7 @@ const ImportQueue = (props) => {
   const [documents, setDocuments] = useState([])
   const [queues, setQueues] = useState([])
   const [selectedIds, setSelectedIds] = useState([])
-  const [inputData, setInputData] = useState({})
+  const [inputData, setInputData] = useState([])
   const [documentType, setDocumentType] = useState('IMPORT')
 
   const getParser = () => {
@@ -179,8 +181,16 @@ const ImportQueue = (props) => {
   }
 
   const txtInputChangeHandler = (rule, value) => {
-    let updatedInputData = { ...inputData }
-    updatedInputData[rule.name] = value
+    let updatedInputData = [...inputData]
+    let ruleKeyValue = updatedInputData.find((el) => el.ruleId == rule.id)
+    if (ruleKeyValue == undefined) {
+      updatedInputData.push({
+        ruleId: rule.id,
+        ruleValue: value,
+      })
+    } else {
+      ruleKeyValue.ruleValue = value
+    }
     setInputData(updatedInputData)
   }
 
@@ -203,11 +213,6 @@ const ImportQueue = (props) => {
   useEffect(() => {
     getParser()
     setQueues(props.queues)
-    /*getQueues();
-    const interval = setInterval(() => {
-      getQueues();
-    }, 5000);
-    return () => clearInterval(interval);*/
   }, [router.isReady, props.queues])
 
   return (

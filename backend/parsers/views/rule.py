@@ -1,4 +1,7 @@
 import os
+
+from django.db.models import Prefetch
+
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
@@ -21,6 +24,7 @@ from pdfminer.psparser import PSLiteral, PSKeyword
 from pdfminer.utils import decode_text
 
 from parsers.models.rule import Rule
+from parsers.models.stream import Stream
 from parsers.models.document import Document
 
 from parsers.serializers.rule import RuleSerializer, RuleCreateSerializer, RuleUpdateSerializer
@@ -50,7 +54,9 @@ class RuleViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """ Retrieve parsers for authenticated user. """
-        queryset = self.queryset.prefetch_related('table_column_separators')
+        queryset = self.queryset \
+            .prefetch_related(Prefetch('streams', queryset=Stream.objects.order_by('step'))) \
+            .prefetch_related('table_column_separators')
 
         if self.action == 'list':
             parser_id = int(self.request.query_params.get("parserId"))
