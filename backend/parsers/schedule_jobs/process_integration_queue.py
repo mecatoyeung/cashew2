@@ -131,6 +131,9 @@ def process_single_integration_queue(queue_job):
                 t = Template(template)
                 rendered_template = t.render(
                     parsed_result=updated_parsed_result, document=document, datetime=datetime, builtin_vars=builtin_vars, str=str)
+                
+                if "&" in rendered_template:
+                    rendered_template = rendered_template.replace("&", "&#38;")
 
                 text_file = open(os.path.join(
                     rendered_path_template), "w", encoding="utf-8")
