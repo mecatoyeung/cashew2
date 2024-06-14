@@ -103,7 +103,7 @@ class DocumentUploadSerializer(DocumentSerializer):
                 extension = Path(file.name).suffix[1:]
                 validated_data["guid"] = guid
                 validated_data["filename_without_extension"] = filename_without_extension
-                input_data = json.loads(self.context['request'].POST.get('input_data', '[]'))
+                #input_data = json.loads(self.context['request'].POST.get('input_data', '[]'))
 
                 im = None
                 if extension == "pdf" or extension == "PDF":
@@ -149,7 +149,7 @@ class DocumentUploadSerializer(DocumentSerializer):
                 q.queue_class = QueueClass.IMPORT.value
 
                 parserd_result = []
-                for single_input_data in input_data:
+                """for single_input_data in input_data:
                     rule = Rule.objects.get(pk=single_input_data["ruleId"])
                     parserd_result.append({
                         "rule": {
@@ -165,7 +165,7 @@ class DocumentUploadSerializer(DocumentSerializer):
                             "type": "TEXTFIELD",
                             "value": [single_input_data["ruleValue"]]
                         }
-                    })
+                    })"""
                 q.parsed_result = json.dumps(parserd_result)
                 
                 q.save()

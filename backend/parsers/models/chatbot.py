@@ -16,7 +16,7 @@ class ChatBot(models.Model):
         max_length=1024, null=True, blank=True)
     open_ai_api_key = models.CharField(max_length=1024, null=True)
     open_ai_deployment = models.CharField(max_length=1024, null=True)
-    open_ai_default_question = models.CharField(max_length=1024, null=True)
+    open_ai_default_question = models.CharField(max_length=8192, null=True)
     base_url = models.CharField(max_length=1024, null=True)
 
     class Meta:
