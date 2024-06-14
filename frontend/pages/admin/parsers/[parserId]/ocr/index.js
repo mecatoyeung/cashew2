@@ -235,6 +235,7 @@ const OCR = () => {
                     <Form.Control
                       onChange={googleVisionOcrApiKeyChangeHandler}
                       value={parser.ocr.googleVisionOcrApiKey}
+                      type="password"
                     />
                   </Form.Group>
                 </>

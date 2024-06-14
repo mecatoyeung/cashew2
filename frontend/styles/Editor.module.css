@@ -31,6 +31,7 @@
   background: #f5f5fd;
   flex-grow: 1;
   position: relative;
+  overflow-y: auto;
 }
 
 .parsingRules ul {

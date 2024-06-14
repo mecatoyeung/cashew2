@@ -493,7 +493,7 @@ const Settings = () => {
               >
                 <Form.Label>Same Line Acceptance Range</Form.Label>
                 <RangeSlider
-                  min={0.1}
+                  min={-1.0}
                   max={1.0}
                   step={0.05}
                   value={parser.sameLineAcceptanceRange}
@@ -506,7 +506,7 @@ const Settings = () => {
               >
                 <Form.Label>Same Column Acceptance Range</Form.Label>
                 <RangeSlider
-                  min={0.1}
+                  min={-1.0}
                   max={1.0}
                   step={0.05}
                   value={parser.sameColumnAcceptanceRange}
@@ -693,6 +693,8 @@ const Settings = () => {
                     <Form.Control
                       onChange={chatbotOpenAIDefaultQuestionChangeHandler}
                       value={parser.chatbot.openAiDefaultQuestion}
+                      as="textarea"
+                      rows={10}
                     />
                   </Form.Group>
                 </>

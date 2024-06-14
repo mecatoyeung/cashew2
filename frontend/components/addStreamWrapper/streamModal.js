@@ -6,7 +6,9 @@ import Modal from 'react-bootstrap/Modal'
 import Table from 'react-bootstrap/Table'
 
 import Select from 'react-select'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+import { useRouter } from 'next/router'
 
 import StreamConditions from './streamConditions'
 
@@ -210,9 +212,12 @@ const jsonStreamOptions = [
 ]
 
 const StreamModal = (props) => {
+  const router = useRouter()
+  const { ruleId } = router.query
+
   const [stream, setStream] = useState({
     step: props.stream.step + 1,
-    rule: props.rule.id,
+    rule: ruleId,
     type: props.stream.data.type,
     streamClass: '',
     extractFirstNLines: 1,
@@ -381,6 +386,13 @@ const StreamModal = (props) => {
       }
     )
   }
+
+  useEffect(() => {
+    setStream({
+      ...stream,
+      rule: ruleId,
+    })
+  }, [router.isReady, ruleId])
 
   return (
     <Modal show={props.show} onHide={() => props.hideHandler(false)} size="lg">
