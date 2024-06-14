@@ -447,10 +447,10 @@ def first_page_conditions_passed_func(page_num, first_page_splitting_rule, parse
             if not splitting_condition.value == streamed_rule_value:
                 first_page_conditions_passed = False
         elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-            if not re.match(splitting_condition.value, streamed_rule_value):
+            if not re.search(splitting_condition.value, streamed_rule_value):
                 first_page_conditions_passed = False
         elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-            if re.match(splitting_condition.value, streamed_rule_value):
+            if re.search(splitting_condition.value, streamed_rule_value):
                 first_page_conditions_passed = False
         elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
             if not streamed_rule_value.strip() == "":
@@ -496,10 +496,10 @@ def any_last_page_conditions_passed_func(page_num, first_page_splitting_rule, pa
                     if not splitting_condition.value == streamed_rule_value:
                         last_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                    if not re.match(splitting_condition.value, streamed_rule_value):
+                    if not re.search(splitting_condition.value, streamed_rule_value):
                         last_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                    if re.match(splitting_condition.value, streamed_rule_value):
+                    if re.search(splitting_condition.value, streamed_rule_value):
                         last_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                     if not streamed_rule_value.strip() == "":
@@ -541,10 +541,10 @@ def any_last_page_conditions_passed_func(page_num, first_page_splitting_rule, pa
                         if not splitting_condition.value == streamed_rule_value:
                             last_page_conditions_passed = False
                     elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                        if not re.match(splitting_condition.value, streamed_rule_value):
+                        if not re.search(splitting_condition.value, streamed_rule_value):
                             last_page_conditions_passed = False
                     elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                        if re.match(splitting_condition.value, streamed_rule_value):
+                        if re.search(splitting_condition.value, streamed_rule_value):
                             last_page_conditions_passed = False
                     elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                         if not streamed_rule_value.strip() == "":
@@ -594,10 +594,10 @@ def any_consecutive_page_conditions_passed_func(page_num, first_page_splitting_r
                     if not splitting_condition.value == streamed_rule_value:
                         consecutive_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                    if not re.match(splitting_condition.value, streamed_rule_value):
+                    if not re.search(splitting_condition.value, streamed_rule_value):
                         consecutive_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                    if re.match(splitting_condition.value, streamed_rule_value):
+                    if re.search(splitting_condition.value, streamed_rule_value):
                         consecutive_page_conditions_passed = False
                 elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                     if not streamed_rule_value.strip() == "":
@@ -640,10 +640,10 @@ def any_consecutive_page_conditions_passed_func(page_num, first_page_splitting_r
                         if not splitting_condition.value == streamed_rule_value:
                             first_page_splitting_rules_matched = False
                     elif splitting_condition.operator == SplittingOperatorType.REGEX.value:
-                        if not re.match(splitting_condition.value, streamed_rule_value):
+                        if not re.search(splitting_condition.value, streamed_rule_value):
                             first_page_splitting_rules_matched = False
                     elif splitting_condition.operator == SplittingOperatorType.NOT_REGEX.value:
-                        if re.match(splitting_condition.value, streamed_rule_value):
+                        if re.search(splitting_condition.value, streamed_rule_value):
                             first_page_splitting_rules_matched = False
                     elif splitting_condition.operator == SplittingOperatorType.IS_EMPTY.value:
                         if not streamed_rule_value.strip() == "":
