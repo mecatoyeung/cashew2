@@ -73,6 +73,14 @@ const conditionOperators = [
     label: 'not changed',
     value: 'NOT_CHANGED',
   },
+  {
+    label: 'always true',
+    value: 'ALWAYS_TRUE',
+  },
+  {
+    label: 'always false',
+    value: 'ALWAYS_FALSE',
+  },
 ]
 
 const noFirstPageRulesMatchedOperations = [

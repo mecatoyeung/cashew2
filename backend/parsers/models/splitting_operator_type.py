@@ -12,6 +12,8 @@ class SplittingOperatorType(Enum):
     IS_NOT_EMPTY = "IS_NOT_EMPTY"
     CHANGED = "CHANGED"
     NOT_CHANGED = "NOT_CHANGED"
+    ALWAYS_TRUE = "ALWAYS_TRUE"
+    ALWAYS_FALSE = "ALWAYS_FALSE"
 
     @classmethod
     def choices(cls):

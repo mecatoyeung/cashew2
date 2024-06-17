@@ -161,6 +161,10 @@ def process_single_splitting_queue(queue_job):
                                 splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
                             if not streamed_rule_value == previous_streamed_rule_value:
                                 first_page_conditions_passed = False
+                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_TRUE.value:
+                            continue
+                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_FALSE.value:
+                            first_page_conditions_passed = False
 
                     if first_page_conditions_passed:
 
@@ -223,6 +227,10 @@ def process_single_splitting_queue(queue_job):
                                                 splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
                                             if not streamed_rule_value == previous_streamed_rule_value:
                                                 last_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_TRUE.value:
+                                            continue
+                                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_FALSE.value:
+                                            last_page_conditions_passed = False
                                 elif last_page_splitting_rule.last_page_splitting_rule_type == LastPageSplittingRuleType.WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_MATCH.value:
                                     for first_page_splitting_rule in splitting.splitting_rules.exclude(pk=last_page_splitting_rule.parent_splitting_rule.id).all():
                                         last_page_conditions_passed = True
@@ -265,6 +273,10 @@ def process_single_splitting_queue(queue_job):
                                                     splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
                                                 if not streamed_rule_value == previous_streamed_rule_value:
                                                     last_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.ALWAYS_TRUE.value:
+                                                continue
+                                            elif splitting_condition.operator == SplittingOperatorType.ALWAYS_FALSE.value:
+                                                last_page_conditions_passed = False
 
                                 if last_page_conditions_passed:
 
@@ -319,6 +331,10 @@ def process_single_splitting_queue(queue_job):
                                                 splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
                                             if not streamed_rule_value == previous_streamed_rule_value:
                                                 consecutive_page_conditions_passed = False
+                                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_TRUE.value:
+                                            continue
+                                        elif splitting_condition.operator == SplittingOperatorType.ALWAYS_FALSE.value:
+                                            consecutive_page_conditions_passed = False
                                 elif consecutive_page_splitting_rule.consecutive_page_splitting_rule_type == ConsecutivePageSplittingRuleType.WHEN_OTHER_FIRST_PAGE_SPLITTING_RULES_DO_NOT_MATCH.value:
                                     for first_page_splitting_rule in splitting.splitting_rules.exclude(pk=consecutive_page_splitting_rule.parent_splitting_rule.id).all():
                                         consecutive_page_conditions_passed = True
@@ -361,6 +377,10 @@ def process_single_splitting_queue(queue_job):
                                                     splitting_condition.rule.id, previous_pages_parsed_result[page_num - 1]))
                                                 if not streamed_rule_value == previous_streamed_rule_value:
                                                     consecutive_page_conditions_passed = False
+                                            elif splitting_condition.operator == SplittingOperatorType.ALWAYS_TRUE.value:
+                                                continue
+                                            elif splitting_condition.operator == SplittingOperatorType.ALWAYS_FALSE.value:
+                                                consecutive_page_conditions_passed = False
 
                                     if consecutive_page_conditions_passed:
 
