@@ -422,7 +422,7 @@ def convert_page(parser, document, ocr, document_page):
         # Fix Omnipage Bug
         with open(abs_hocr_path, "r", encoding="utf-8") as f:
             updated_hocr = f.read()
-            updated_hocr = updated_hocr.split('</html>', 1)[0] + '</html>'
+            updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
         with open(abs_hocr_path, "w", encoding="utf-8") as f:
             f.write(updated_hocr)
 
@@ -832,7 +832,7 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                             # Fix Omnipage Bug
                             with open(abs_hocr_path, "r", encoding="utf-8") as f:
                                 updated_hocr = f.read()
-                                updated_hocr = updated_hocr.split('</html>', 1)[0] + '</html>'
+                                updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
                             with open(abs_hocr_path, "w", encoding="utf-8") as f:
                                 f.write(updated_hocr)
 

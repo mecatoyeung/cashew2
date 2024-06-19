@@ -480,7 +480,7 @@ const ParserView = (props) => {
                   100
             }
             label={
-              `Processed ` +
+              `Waiting for Processing ` +
               processedQueueStatusRec.count +
               ` of ` +
               (importQueueStatusRec.count +
