@@ -287,9 +287,9 @@ export default function Parsers() {
               </ToastContainer>
             </div>
           )}
-          <div className={aichatStyles.uploadBoxWrapper}>
+          <div className={aichatStyles.uploadBoxWrapper} {...rootProps}>
             <div className={aichatStyles.uploadBox}>
-              <div className={aichatStyles.dragZone} {...rootProps}>
+              <div className={aichatStyles.dragZone}>
                 <input {...getInputProps()} />
                 {isDragActive ? (
                   <p>Drag and drop the PDF/JPG/PNG/TIFF(s) here ...</p>
