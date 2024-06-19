@@ -239,3 +239,7 @@ h2.accordion-header {
   border-left: 1px solid #e31a2f;
   margin-bottom: 10px;
 }
+
+.progress-bar {
+  min-width: 30%;
+}

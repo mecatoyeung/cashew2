@@ -386,26 +386,26 @@ def convert_page(parser, document, ocr, document_page):
             kRecQuit()
             return
 
-        InfoMsg("Get an output array of the recognized text -- kRecGetLetters()")
-        rc, pText = kRecGetLetters(hPage, II_CURRENT)
-        if (rc != REC_OK):
-            ErrMsg("Error code = {}", rc)
-            kRecFreeImg(hPage)
-            kRecQuit()
-            return
+        #InfoMsg("Get an output array of the recognized text -- kRecGetLetters()")
+        #rc, pText = kRecGetLetters(hPage, II_CURRENT)
+        #if (rc != REC_OK):
+        #    ErrMsg("Error code = {}", rc)
+        #    kRecFreeImg(hPage)
+        #    kRecQuit()
+        #    return
 
-        ApiMsg("# Now your application can process the recognized data #")
-        ApiMsg("We just display the recognized OMR information.")
-        pResult = ""
-        for letter in pText:
-            if (letter.code != ' '):
-                if (letter.code == '0'):
-                    pResult = "NO"
-                elif (letter.code == '1'):
-                    pResult = "YES"
-                else:
-                    pResult = "Rejected"
-                LoopMsg("{}: '{}' = {}", letter.zone, letter.code, pResult)
+        #ApiMsg("# Now your application can process the recognized data #")
+        #ApiMsg("We just display the recognized OMR information.")
+        #pResult = ""
+        #for letter in pText:
+        #    if (letter.code != ' '):
+        #        if (letter.code == '0'):
+        #            pResult = "NO"
+        #        elif (letter.code == '1'):
+        #            pResult = "YES"
+        #        else:
+        #            pResult = "Rejected"
+        #        LoopMsg("{}: '{}' = {}", letter.zone, letter.code, pResult)
 
         InfoMsg("Free the image -- kRecFreeImg()")
         rc = kRecFreeImg(hPage)
@@ -422,7 +422,7 @@ def convert_page(parser, document, ocr, document_page):
         # Fix Omnipage Bug
         with open(abs_hocr_path, "r", encoding="utf-8") as f:
             updated_hocr = f.read()
-            updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
+            updated_hocr = updated_hocr.split('</html>', 1)[0]
         with open(abs_hocr_path, "w", encoding="utf-8") as f:
             f.write(updated_hocr)
 
@@ -829,6 +829,13 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                         ocr_dpi = (300, 300)
                         # get dimensions of the OCR, which may not match the image
                         if os.path.exists(abs_hocr_path):
+                            # Fix Omnipage Bug
+                            with open(abs_hocr_path, "r", encoding="utf-8") as f:
+                                updated_hocr = f.read()
+                                updated_hocr = updated_hocr.split('</html>', 1)[0]
+                            with open(abs_hocr_path, "w", encoding="utf-8") as f:
+                                f.write(updated_hocr)
+
                             hocr_tree = ET.parse(abs_hocr_path)
                             hocr = hocr_tree.getroot()
                             if hocr is not None:
