@@ -999,7 +999,6 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                     new_document_page.preprocessed = False
                     new_document_page.ocred = True
                     new_document_page.postprocessed = False
-                    new_document_page.chatbot_completed = False
 
                     preprocessings = PreProcessing.objects.order_by(
                         "-step").filter(parser_id=document.parser.id)

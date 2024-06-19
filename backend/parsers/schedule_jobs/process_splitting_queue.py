@@ -473,7 +473,6 @@ def process_single_splitting_queue(queue_job):
                             else:
                                 new_document_page.ocred = False
                             new_document_page.postprocessed = False
-                            new_document_page.chatbot_completed = False
 
                             preprocessings = PreProcessing.objects.order_by(
                                 "-step").filter(parser_id=document.parser.id)

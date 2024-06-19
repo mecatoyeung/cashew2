@@ -320,7 +320,8 @@ const AIChat = (props) => {
     show: false,
   })
 
-  const [completedMark, setCompletedMark] = useState(false)
+  const [markAsCompletedText, setMarkAsCompletedText] =
+    useState('Mark as completed')
 
   const [imageUri, setImageUri] = useState(null)
   const [imageRef, setImageRef] = useState()
@@ -357,6 +358,9 @@ const AIChat = (props) => {
       'documents/' + documentId + '/?parserId=' + parserId,
       (response) => {
         setDocument(response.data)
+      },
+      (errorResponse) => {
+        console.error(errorResponse)
       }
     )
   }
@@ -590,7 +594,8 @@ const AIChat = (props) => {
         status: true,
       },
       (response) => {
-        getDocument()
+        getParserDocuments()
+        setMarkAsCompletedText('Document already in trash')
       },
       (errorResponse) => {
         console.error(errorResponse)
@@ -664,29 +669,35 @@ const AIChat = (props) => {
 
   const getParserDocuments = () => {
     if (!parserId) return
-    service.get('documents/?parserId=' + parserId, (response) => {
-      let parserDocuments = response.data
-      for (let j = 0; j < parserDocuments.length; j++) {
-        let pd = parserDocuments[j]
-        let ocredPagesCount = 0
-        for (let i = 0; i < pd.documentPages.length; i++) {
-          if (pd.documentPages[i].ocred) {
-            ocredPagesCount += 1
+    service.get(
+      'documents/?parserId=' + parserId,
+      (response) => {
+        let parserDocuments = response.data
+        for (let j = 0; j < parserDocuments.length; j++) {
+          let pd = parserDocuments[j]
+          let ocredPagesCount = 0
+          for (let i = 0; i < pd.documentPages.length; i++) {
+            if (pd.documentPages[i].ocred) {
+              ocredPagesCount += 1
+            }
           }
+          pd.ocredPagesCount = ocredPagesCount
+          pd.name =
+            pd.filenameWithoutExtension +
+            '.' +
+            pd.extension +
+            ' (Page ' +
+            ocredPagesCount +
+            ' of ' +
+            pd.totalPageNum +
+            ')'
         }
-        pd.ocredPagesCount = ocredPagesCount
-        pd.name =
-          pd.filenameWithoutExtension +
-          '.' +
-          pd.extension +
-          ' (Page ' +
-          ocredPagesCount +
-          ' of ' +
-          pd.totalPageNum +
-          ')'
+        setParserDocuments(parserDocuments)
+      },
+      (errorResponse) => {
+        console.error(errorResponse)
       }
-      setParserDocuments(parserDocuments)
-    })
+    )
   }
 
   const changeDocumentModalOpenHandler = () => {
@@ -704,6 +715,7 @@ const AIChat = (props) => {
         draft.show = false
       })
     )
+    setMarkAsCompletedText('Mark as completed')
   }
 
   const changeDocumentModalCloseHandler = () => {
@@ -919,7 +931,8 @@ const AIChat = (props) => {
               >
                 {parserDocuments &&
                   parserDocuments.length > 0 &&
-                  documentId && (
+                  documentId &&
+                  parserDocuments.find((d) => d.id == documentId) && (
                     <>
                       {parserDocuments.find((d) => d.id == documentId)
                         .filenameWithoutExtension +
@@ -1285,36 +1298,19 @@ const AIChat = (props) => {
                   >
                     Download as Excel
                   </Button>
-                  {document &&
-                    document.documentPages.find((dp) => dp.pageNum == pageNum)
-                      .chatbotCompleted && (
-                      <Button
-                        style={{
-                          marginLeft: 10,
-                          marginBottom: 10,
-                          marginTop: 10,
-                          whiteSpace: 'nowrap',
-                        }}
-                        onClick={markAsIncompletedBtnClickHandler}
-                      >
-                        Mark as incompleted
-                      </Button>
-                    )}
-                  {document &&
-                    !document.documentPages.find((dp) => dp.pageNum == pageNum)
-                      .chatbotCompleted && (
-                      <Button
-                        style={{
-                          marginLeft: 10,
-                          marginBottom: 10,
-                          marginTop: 10,
-                          whiteSpace: 'nowrap',
-                        }}
-                        onClick={markAsCompletedBtnClickHandler}
-                      >
-                        Mark as completed
-                      </Button>
-                    )}
+                  {document && (
+                    <Button
+                      style={{
+                        marginLeft: 10,
+                        marginBottom: 10,
+                        marginTop: 10,
+                        whiteSpace: 'nowrap',
+                      }}
+                      onClick={markAsCompletedBtnClickHandler}
+                    >
+                      {markAsCompletedText}
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className={styles.chatTextfield}>

@@ -29,6 +29,7 @@ from drf_spectacular.utils import (
 from parsers.models.pre_processing import PreProcessing
 from parsers.models.document import Document
 from parsers.models.document_page import DocumentPage
+from parsers.models.queue import Queue
 
 from parsers.serializers.document import DocumentSerializer, DocumentUploadSerializer, DocumentDetailSerializer
 
@@ -79,6 +80,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
             return queryset.filter(
                 parser_id=parser_id
+            ).exclude(document_type="TRASH"
             ).order_by('-last_modified_at').distinct()
 
         else:
@@ -86,6 +88,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
             return queryset.filter(
                 parser_id=parser_id
+            ).exclude(document_type="TRASH"
             ).order_by('-last_modified_at').distinct()
 
     def get_serializer_class(self):
@@ -181,21 +184,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
             url_path='pages/(?P<page_num>[^/.]+)/mark_as_chatbot_completed')
     def ask_openai_about_pdf_content(self, request, pk, page_num, *args, **kwargs):
 
-        document_page = DocumentPage.objects.get(
-            document_id=pk, page_num=page_num)
+        
+        queue = Queue.objects.get(document__id=pk)
+        queue.queue_class = "TRASH"
+        queue.save()
 
-        document_page.chatbot_completed = request.data["status"]
-
-        document_page.save()
-
-        page_completed = DocumentPage.objects.filter(
-            document_id=pk,
-            page_num=page_num,
-            chatbot_completed=False).count() == 0
+        document = Document.objects.get(
+            id=pk)
+        document.document_type = "TRASH"
+        document.save()
 
         try:
 
-            return Response({"completed": page_completed}, status=200)
+            return Response({"completed": True}, status=200)
 
         except Exception as e:
             print(e)

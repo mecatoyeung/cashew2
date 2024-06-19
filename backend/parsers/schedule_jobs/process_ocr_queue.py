@@ -77,10 +77,13 @@ def process_single_ocr_queue(queue_job):
 
         if document.document_type == DocumentType.AICHAT.value:
 
-            if not splitting.activated:
-                # Mark the job as preprocessing in progress
-                queue_job.queue_class = QueueClass.AICHAT.value
-                queue_job.queue_status = QueueStatus.READY.value
+            if parser.type == ParserType.ROUTING.value:
+                queue_job.queue_class = QueueClass.PROCESSED.value
+                queue_job.queue_status = QueueStatus.COMPLETED.value
+                queue_job.save()
+            elif parser.type == ParserType.LAYOUT.value:
+                queue_job.queue_class = QueueClass.PROCESSED.value
+                queue_job.queue_status = QueueStatus.COMPLETED.value
                 queue_job.save()
 
         else:

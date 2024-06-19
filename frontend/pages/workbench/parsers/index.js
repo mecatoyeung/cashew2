@@ -28,6 +28,8 @@ export default function Parsers() {
 
   const [parsers, setParsers] = useState([])
 
+  const [queueStatus, setQueueStatus] = useState(null)
+
   const [showDefaultParserWarning, setShowDefaultParserWarning] =
     useState(false)
 
@@ -162,6 +164,7 @@ export default function Parsers() {
                 updatedFiles[i].uploaded = true
                 setDroppedFiles(updatedFiles)
               }
+              console.log(updatedFiles)
             },
           }
         )
@@ -203,6 +206,65 @@ export default function Parsers() {
     closeUploadConfigModalHandler()
   }
 
+  const getQueueStatus = () => {
+    service.get('queues/status', (response) => {
+      let queueStatus = []
+      for (let i = 0; i < parsers.length; i++) {
+        queueStatus.push({
+          parserId: parsers[i].id,
+          queueClass: 'IMPORT',
+          count: 0,
+        })
+
+        queueStatus.push({
+          parserId: parsers[i].id,
+          queueClass: 'PRE_PROCESSING',
+          count: 0,
+        })
+
+        queueStatus.push({
+          parserId: parsers[i].id,
+          queueClass: 'OCR',
+          count: 0,
+        })
+
+        queueStatus.push({
+          parserId: parsers[i].id,
+          queueClass: 'SPLITTING',
+          count: 0,
+        })
+
+        queueStatus.push({
+          parserId: parsers[i].id,
+          queueClass: 'PROCESSED',
+          count: 0,
+        })
+      }
+      for (let i = 0; i < response.data.length; i++) {
+        let singleQueueStatus = queueStatus.find(
+          (o) =>
+            response.data[i].parser_Id == o.parserId &&
+            response.data[i].queueClass == o.queueClass
+        )
+        if (singleQueueStatus !== undefined) {
+          singleQueueStatus.count = response.data[i].count
+        }
+      }
+      console.log(queueStatus)
+      setQueueStatus(queueStatus)
+    })
+  }
+
+  useEffect(() => {
+    getQueueStatus()
+    const interval = setInterval(() => {
+      getQueueStatus()
+    }, 1000)
+    return () => {
+      clearTimeout(interval)
+    }
+  }, [parsers])
+
   useEffect(() => {
     getParsers()
   }, [])
@@ -243,8 +305,9 @@ export default function Parsers() {
                   now={
                     droppedFiles.length == 0
                       ? 0
-                      : droppedFiles.filter((f) => f.uploaded).length /
-                        droppedFiles.length
+                      : (droppedFiles.filter((f) => f.uploaded).length /
+                          droppedFiles.length) *
+                        100
                   }
                   label={
                     `Uploading ` +
@@ -314,26 +377,18 @@ export default function Parsers() {
             </div>
           </div>
           <ul className={aichatStyles.parsersUl}>
+            {console.log(parsers)}
+            {console.log(queueStatus)}
             {parsers &&
               parsers.length > 0 &&
+              queueStatus &&
+              queueStatus.length > 0 &&
               parsers.map((parser) => (
-                <li key={parser.id}>
-                  <div className={aichatStyles.parserName}>
-                    <span>{parser.name}</span>
-                  </div>
-                  <div className={aichatStyles.parserActions}>
-                    <Button
-                      onClick={() =>
-                        router.push(
-                          '/workbench/parsers/' + parser.id + '/aichat/'
-                        )
-                      }
-                    >
-                      AI Chat
-                    </Button>
-                    <Button>Verifier</Button>
-                  </div>
-                </li>
+                <>
+                  {parser && queueStatus && (
+                    <ParserView parser={parser} queueStatus={queueStatus} />
+                  )}
+                </>
               ))}
             <Modal
               show={trashConfirmForm.show}
@@ -377,5 +432,75 @@ export default function Parsers() {
         </>
       )}
     </ParserLayout>
+  )
+}
+
+const ParserView = (props) => {
+  const router = useRouter()
+
+  let queueStatusRecs = props.queueStatus.filter(
+    (qs) => qs.parserId == props.parser.id
+  )
+  let importQueueStatusRec = queueStatusRecs.find(
+    (qs) => qs.queueClass == 'IMPORT'
+  )
+  let preProcessingQueueStatusRec = queueStatusRecs.find(
+    (qs) => qs.queueClass == 'PRE_PROCESSING'
+  )
+  let ocrQueueStatusRec = queueStatusRecs.find((qs) => qs.queueClass == 'OCR')
+  let splittingQueueStatusRec = queueStatusRecs.find(
+    (qs) => qs.queueClass == 'SPLITTING'
+  )
+  let processedQueueStatusRec = queueStatusRecs.find(
+    (qs) => qs.queueClass == 'PROCESSED'
+  )
+
+  return (
+    <li key={props.parser.id}>
+      <div className={aichatStyles.parserWrapper}>
+        <div className={aichatStyles.parserName}>
+          <span>{props.parser.name}</span>
+        </div>
+        <div className={aichatStyles.progressBarDiv}>
+          <ProgressBar
+            now={
+              importQueueStatusRec.count +
+                preProcessingQueueStatusRec.count +
+                ocrQueueStatusRec.count +
+                splittingQueueStatusRec.count +
+                processedQueueStatusRec.count ==
+              0
+                ? 100
+                : (processedQueueStatusRec.count /
+                    (importQueueStatusRec.count +
+                      preProcessingQueueStatusRec.count +
+                      ocrQueueStatusRec.count +
+                      splittingQueueStatusRec.count +
+                      processedQueueStatusRec.count)) *
+                  100
+            }
+            label={
+              `Processed ` +
+              processedQueueStatusRec.count +
+              ` of ` +
+              (importQueueStatusRec.count +
+                preProcessingQueueStatusRec.count +
+                ocrQueueStatusRec.count +
+                splittingQueueStatusRec.count +
+                processedQueueStatusRec.count)
+            }
+          />
+        </div>
+      </div>
+      <div className={aichatStyles.parserActions}>
+        <Button
+          onClick={() =>
+            router.push('/workbench/parsers/' + props.parser.id + '/aichat/')
+          }
+        >
+          AI Chat
+        </Button>
+      </div>
+    </li>
   )
 }

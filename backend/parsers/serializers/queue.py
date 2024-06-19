@@ -34,7 +34,6 @@ class QueueDocumentPageSerializer(serializers.ModelSerializer):
             'preprocessed',
             'ocred',
             'postprocessed',
-            'chatbot_completed'
         ]
         read_only_fields = ['id']
 

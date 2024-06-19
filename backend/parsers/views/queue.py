@@ -17,10 +17,16 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from django.db import transaction
+from django.db.models import Prefetch
+from django.db.models import Q
+from django.db.models import Count
 
+from parsers.models.parser import Parser
 from parsers.models.document import Document
+from parsers.models.document_type import DocumentType
 from parsers.models.document_page import DocumentPage
 from parsers.models.queue import Queue
+
 
 from parsers.serializers.queue import QueueSerializer
 
@@ -100,3 +106,16 @@ class QueueViewSet(viewsets.ModelViewSet):
         Document.objects.filter(queue__id=instance.id).delete()
 
         return super().perform_destroy(instance)
+    
+    @action(detail=False,
+            methods=['GET'],
+            name="Get Queue",
+            url_path='status')
+    def queue_status(self, request, *args, **kwargs):
+        parsers = Parser.objects.filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
+        parser_ids = parsers.values_list('id', flat=True)
+        queues = Queue.objects.filter(parser__id__in=parser_ids, document__document_type__in=["AICHAT", "IMPORT"])
+        queue_status = list(queues.values('parser__id', 'queue_class') \
+            .annotate(count=Count('queue_class')) \
+            .order_by())
+        return Response(queue_status, status=200)

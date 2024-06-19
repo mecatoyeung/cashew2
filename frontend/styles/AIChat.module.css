@@ -14,10 +14,9 @@
   border-radius: 6px;
   margin: 10px 0;
   width: 100%;
-  height: 120px;
+  height: 74px;
   display: flex;
   justify-content: center;
-  align-items: center;
   list-style: none;
   vertical-align: middle;
   float: left;
@@ -32,11 +31,16 @@
   border: 3px dotted #e31a2f;
 }
 
-.parserName {
+.parserWrapper {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
+  padding: 5px;
+}
+
+.parserName {
   text-align: center;
-  line-height: 114px;
+  line-height: 43px;
 }
 
 .parserName span {
@@ -54,7 +58,7 @@
 .parserActions {
   position: absolute;
   right: 5px;
-  bottom: 5px;
+  top: 5px;
 }
 
 .parserActions button {

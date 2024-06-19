@@ -673,6 +673,7 @@ const Settings = () => {
                     <Form.Control
                       onChange={chatbotOpenAIApiKeyChangeHandler}
                       value={parser.chatbot.openAiApiKey}
+                      type="password"
                     />
                   </Form.Group>
                   <Form.Group
@@ -741,6 +742,7 @@ const Settings = () => {
                 <Form.Control
                   onChange={openAIApiKeyChangeHandler}
                   value={parser.openAi.openAiApiKey}
+                  type="password"
                 />
               </Form.Group>
               <Form.Group className="mb-3" controlId="formOpenAIDeployment">
@@ -778,6 +780,7 @@ const Settings = () => {
                 <Form.Control
                   onChange={openAIMetricsClientIdChangeHandler}
                   value={parser.openAiMetricsKey.openAiMetricsClientId}
+                  type="password"
                 />
               </Form.Group>
               <Form.Group
@@ -788,6 +791,7 @@ const Settings = () => {
                 <Form.Control
                   onChange={openAIMetricsClientSecretChangeHandler}
                   value={parser.openAiMetricsKey.openAiMetricsClientSecret}
+                  type="password"
                 />
               </Form.Group>
               <Form.Group

@@ -14,8 +14,6 @@ class DocumentPage(models.Model):
     preprocessed = models.BooleanField(null=False, blank=False, default=False)
     ocred = models.BooleanField(null=False, blank=False, default=False)
     postprocessed = models.BooleanField(null=False, blank=False, default=False)
-    chatbot_completed = models.BooleanField(
-        null=False, blank=False, default=False)
 
     class Meta:
         db_table = 'document_pages'

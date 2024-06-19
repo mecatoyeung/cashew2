@@ -15,8 +15,7 @@ class DocumentPageSerializer(serializers.ModelSerializer):
             'height',
             'preprocessed',
             'ocred',
-            'postprocessed',
-            'chatbot_completed'
+            'postprocessed'
         ]
         read_only_fields = ['id']
 
@@ -48,7 +47,6 @@ class DocumentPageDetailSerializer(serializers.ModelSerializer):
             'xml',
             'preprocessed',
             'ocred',
-            'postprocessed',
-            'chatbot_completed'
+            'postprocessed'
         ]
         read_only_fields = ['id']

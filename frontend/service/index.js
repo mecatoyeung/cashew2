@@ -55,8 +55,11 @@ class Service {
     document.location = path
   }
 
-  get(path, callback) {
-    return this.service.get(path).then((response) => callback(response))
+  get(path, callback, errorCallback) {
+    return this.service
+      .get(path)
+      .then((response) => callback(response))
+      .catch(errorCallback)
   }
 
   getFile(path, callback) {
@@ -101,7 +104,7 @@ class Service {
     })
   }
 
-  patch(path, payload, callback) {
+  patch(path, payload, callback, errorCallback) {
     return this.service
       .request({
         method: 'PATCH',
@@ -110,6 +113,10 @@ class Service {
         data: payload,
       })
       .then((response) => callback(response))
+      .catch((error) => {
+        if (errorCallback == null) return
+        errorCallback(error)
+      })
   }
 
   post(path, payload, callback, errorCallback, headers, extraArgs = {}) {
