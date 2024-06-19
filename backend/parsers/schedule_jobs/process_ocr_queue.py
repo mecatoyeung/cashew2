@@ -78,7 +78,7 @@ def process_single_ocr_queue(queue_job):
         if document.document_type == DocumentType.AICHAT.value:
 
             if parser.type == ParserType.ROUTING.value:
-                queue_job.queue_class = QueueClass.PROCESSED.value
+                queue_job.queue_class = QueueClass.TRASH.value
                 queue_job.queue_status = QueueStatus.COMPLETED.value
                 queue_job.save()
             elif parser.type == ParserType.LAYOUT.value:
