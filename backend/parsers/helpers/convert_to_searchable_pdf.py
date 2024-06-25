@@ -420,10 +420,10 @@ def convert_page(parser, document, ocr, document_page):
         kRecQuit()
 
         # Fix Omnipage Bug
-        with open(abs_hocr_path, "r", encoding="utf-8") as f:
+        with open(abs_hocr_path, "r", encoding="utf-8", errors="ignore") as f:
             updated_hocr = f.read()
             updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
-        with open(abs_hocr_path, "w", encoding="utf-8") as f:
+        with open(abs_hocr_path, "w", encoding="utf-8", errors="ignore") as f:
             f.write(updated_hocr)
 
         xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
@@ -830,10 +830,10 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                         # get dimensions of the OCR, which may not match the image
                         if os.path.exists(abs_hocr_path):
                             # Fix Omnipage Bug
-                            with open(abs_hocr_path, "r", encoding="utf-8") as f:
+                            with open(abs_hocr_path, "r", encoding="utf-8", errors="ignore") as f:
                                 updated_hocr = f.read()
                                 updated_hocr = updated_hocr.split('</html>')[0] + '</html>'
-                            with open(abs_hocr_path, "w", encoding="utf-8") as f:
+                            with open(abs_hocr_path, "w", encoding="utf-8", errors="ignore") as f:
                                 f.write(updated_hocr)
 
                             hocr_tree = ET.parse(abs_hocr_path)

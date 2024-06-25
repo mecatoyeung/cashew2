@@ -112,7 +112,10 @@ class QueueViewSet(viewsets.ModelViewSet):
             name="Get Queue",
             url_path='status')
     def queue_status(self, request, *args, **kwargs):
-        parsers = Parser.objects.filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
+        if self.request.user.is_superuser:
+            parsers = Parser.objects
+        else:
+            parsers = Parser.objects.filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
         parser_ids = parsers.values_list('id', flat=True)
         queues = Queue.objects.filter(parser__id__in=parser_ids, document__document_type__in=["AICHAT", "IMPORT"])
         queue_status = list(queues.values('parser__id', 'queue_class') \
