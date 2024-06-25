@@ -119,19 +119,26 @@ class ParserViewSet(viewsets.ModelViewSet):
                                                                       queryset=LastPageSplittingRule.objects.prefetch_related("last_page_splitting_conditions")))
                                            ))\
                 .prefetch_related("permitted_users")\
-                .prefetch_related("permitted_groups")\
-                .filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
+                .prefetch_related("permitted_groups")
+            
+            if not self.request.user.is_superuser:
+            
+                queryset = queryset.filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
             
             return queryset
         
         else:
 
-            return queryset.prefetch_related("rules") \
+            queryset = queryset.prefetch_related("rules") \
                 .select_related("owner")\
                 .select_related("chatbot") \
                 .select_related("ocr") \
-                .filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))\
                 .order_by('id').distinct()
+
+            if not self.request.user.is_superuser:
+                queryset = queryset.filter(Q(permitted_users=self.request.user) | Q(permitted_groups__pk__in=self.request.user.groups.values_list('id', flat=True)) | Q(owner=self.request.user))
+
+            return queryset
 
     def get_serializer_class(self):
         """ Return the serializer class for request """
