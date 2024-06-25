@@ -48,6 +48,8 @@ export default function Parsers() {
         : parseInt(localStorage.getItem('uploadDefaultParser')),
   })
 
+  const [maxProcessedQueueStatus, setMaxProcessedQueueStatus] = useState({})
+
   const closeUploadConfigModalHandler = () => {
     setShowUploadConfigModal({
       ...showUploadConfigModal,
@@ -125,7 +127,8 @@ export default function Parsers() {
     )
   }
 
-  const defaultUploadConfigClickHandler = () => {
+  const defaultUploadConfigClickHandler = (e) => {
+    e.stopPropagation()
     setShowUploadConfigModal({
       ...showUploadConfigModal,
       show: true,
@@ -320,65 +323,58 @@ export default function Parsers() {
               <div className={aichatStyles.parserSettingActions}>
                 <i
                   className="bi bi-gear"
-                  onClick={() => defaultUploadConfigClickHandler()}
+                  onClick={(e) => defaultUploadConfigClickHandler(e)}
                   style={{ cursor: 'pointer' }}
                 ></i>
-                <Modal
-                  show={showUploadConfigModal.show}
-                  onHide={closeUploadConfigModalHandler}
-                >
-                  <Modal.Header closeButton>
-                    <Modal.Title>Upload Configurations</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="uploadDefaultParser"
-                    >
-                      <Form.Label>Default Parser</Form.Label>
-                      <Select
-                        instanceId="uploadDefaultParserSelectId"
-                        options={parsers.map((p) => {
-                          return {
-                            label: p.name,
-                            value: p.id,
-                          }
-                        })}
-                        onChange={uploadDefaultParserChangeHandler}
-                        value={{
-                          value: parsers.find(
-                            (d) =>
-                              d.id == showUploadConfigModal.uploadDefaultParser
-                          )?.id,
-                          label: parsers.find(
-                            (d) =>
-                              d.id == showUploadConfigModal.uploadDefaultParser
-                          )?.name,
-                        }}
-                      />
-                    </Form.Group>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button
-                      variant="primary"
-                      onClick={confirmUploadConfigBtnClickHandler}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={closeUploadConfigModalHandler}
-                    >
-                      Close
-                    </Button>
-                  </Modal.Footer>
-                </Modal>
               </div>
             </div>
           </div>
+          <Modal
+            show={showUploadConfigModal.show}
+            onHide={closeUploadConfigModalHandler}
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Upload Configurations</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group className="mb-3" controlId="uploadDefaultParser">
+                <Form.Label>Default Parser</Form.Label>
+                <Select
+                  instanceId="uploadDefaultParserSelectId"
+                  options={parsers.map((p) => {
+                    return {
+                      label: p.name,
+                      value: p.id,
+                    }
+                  })}
+                  onChange={uploadDefaultParserChangeHandler}
+                  value={{
+                    value: parsers.find(
+                      (d) => d.id == showUploadConfigModal.uploadDefaultParser
+                    )?.id,
+                    label: parsers.find(
+                      (d) => d.id == showUploadConfigModal.uploadDefaultParser
+                    )?.name,
+                  }}
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="primary"
+                onClick={confirmUploadConfigBtnClickHandler}
+              >
+                Save
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={closeUploadConfigModalHandler}
+              >
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
           <ul className={aichatStyles.parsersUl}>
-            {console.log(parsers)}
-            {console.log(queueStatus)}
             {parsers &&
               parsers.length > 0 &&
               queueStatus &&
@@ -462,34 +458,66 @@ const ParserView = (props) => {
           <span>{props.parser.name}</span>
         </div>
         <div className={aichatStyles.progressBarDiv}>
-          <ProgressBar
-            now={
-              importQueueStatusRec.count +
-                preProcessingQueueStatusRec.count +
-                ocrQueueStatusRec.count +
-                splittingQueueStatusRec.count +
-                processedQueueStatusRec.count ==
-              0
-                ? 100
-                : (processedQueueStatusRec.count /
-                    (importQueueStatusRec.count +
-                      preProcessingQueueStatusRec.count +
-                      ocrQueueStatusRec.count +
-                      splittingQueueStatusRec.count +
-                      processedQueueStatusRec.count)) *
-                  100
-            }
-            label={
-              `Waiting for Processing ` +
-              processedQueueStatusRec.count +
-              ` of ` +
-              (importQueueStatusRec.count +
-                preProcessingQueueStatusRec.count +
-                ocrQueueStatusRec.count +
-                splittingQueueStatusRec.count +
-                processedQueueStatusRec.count)
-            }
-          />
+          {props.parser.type == 'ROUTING' && (
+            <ProgressBar
+              now={
+                importQueueStatusRec.count +
+                  preProcessingQueueStatusRec.count +
+                  ocrQueueStatusRec.count +
+                  splittingQueueStatusRec.count +
+                  processedQueueStatusRec.count ==
+                0
+                  ? 100
+                  : (processedQueueStatusRec.count /
+                      (importQueueStatusRec.count +
+                        preProcessingQueueStatusRec.count +
+                        ocrQueueStatusRec.count +
+                        splittingQueueStatusRec.count +
+                        processedQueueStatusRec.count)) *
+                    100
+              }
+              label={
+                `Processed ` +
+                processedQueueStatusRec.count +
+                ` of ` +
+                (importQueueStatusRec.count +
+                  preProcessingQueueStatusRec.count +
+                  ocrQueueStatusRec.count +
+                  splittingQueueStatusRec.count +
+                  processedQueueStatusRec.count)
+              }
+            />
+          )}
+          {props.parser.type == 'LAYOUT' && (
+            <ProgressBar
+              now={
+                importQueueStatusRec.count +
+                  preProcessingQueueStatusRec.count +
+                  ocrQueueStatusRec.count +
+                  splittingQueueStatusRec.count +
+                  processedQueueStatusRec.count ==
+                0
+                  ? 100
+                  : (processedQueueStatusRec.count /
+                      (importQueueStatusRec.count +
+                        preProcessingQueueStatusRec.count +
+                        ocrQueueStatusRec.count +
+                        splittingQueueStatusRec.count +
+                        processedQueueStatusRec.count)) *
+                    100
+              }
+              label={
+                `Waiting for Processing ` +
+                processedQueueStatusRec.count +
+                ` of ` +
+                (importQueueStatusRec.count +
+                  preProcessingQueueStatusRec.count +
+                  ocrQueueStatusRec.count +
+                  splittingQueueStatusRec.count +
+                  processedQueueStatusRec.count)
+              }
+            />
+          )}
         </div>
       </div>
       <div className={aichatStyles.parserActions}>
