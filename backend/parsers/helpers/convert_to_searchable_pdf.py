@@ -429,6 +429,21 @@ def convert_page(parser, document, ocr, document_page):
         xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
         document_page.xml = xml
 
+    elif ocr_engine == "APPLE_VISION":
+        from ocrmac import ocrmac
+        annotations = ocrmac.OCR(abs_ocred_image_path, language_preference=[ocr.apple_vision_ocr_language]).recognize()
+        im = cv2.imread(abs_ocred_image_path)
+        height, width, c = im.shape
+
+        hocr_result = export_apple_vision_result_as_hocr(im, annotations)
+
+        with (open(abs_hocr_path, 'wb+')) as outfile:
+            outfile.write(hocr_result)
+            outfile.close()
+
+        xml = convert_hocr_to_xml(abs_hocr_path, abs_xml_path)
+        document_page.xml = xml
+
     document_page.ocred = True
     document_page.save()
 
@@ -1198,6 +1213,19 @@ def convert_to_searchable_pdf(parser, document: Document, ocr):
                             text.setFont(fontname, fontsize)
                             text.setTextOrigin(x, y + 4)
 
+                        elif ocr_engine == "APPLE_VISION":
+                            x = (
+                                float(coords[0])/ocr_dpi[0]) * inch
+                            y = (height*inch) - \
+                                (float(coords[3])/ocr_dpi[1])*inch
+                            text_width = (
+                                float(coords[2])/ocr_dpi[0])*inch - (float(coords[0])/ocr_dpi[0])*inch
+                            text_height = (
+                                float(coords[3])/ocr_dpi[0])*inch - (float(coords[1])/ocr_dpi[1])*inch
+                            fontsize = text_height * 0.70
+                            text.setFont(fontname, fontsize)
+                            text.setTextOrigin(x, y + 4)
+
                         # redline the word
                         if ocr.debug:
                             pdf.rect(x, y, text_width,
@@ -1348,6 +1376,116 @@ def export_as_hocr(im, result):
         )
         word_div.text = ""
         for word in line[1][0]:
+            """word_xmin = (xmax - xmin) / \
+                len(line[1][0]) * word_in_line_count + xmin
+            word_xmax = (xmax - xmin) / \
+                len(line[1][0]) * (word_in_line_count+1) + xmin
+            word_ymin = ymin
+            word_ymax = ymax
+            conf = line[1][1]"""
+            # set the text
+            word_div.text += word
+            word_count += 1
+            word_in_line_count += 1
+
+    return tostring(page_hocr, encoding="utf-8", method="xml")
+
+def export_apple_vision_result_as_hocr(im, result):
+    """Export the page as hOCR-format"""
+    p_idx = 1
+    block_count: int = 1
+    line_count: int = 1
+    word_count: int = 1
+    (height, width, c) = im.shape
+    language = "en"
+    # Create the XML root element
+    page_hocr = ETElement("html", attrib={
+                          "xmlns": "http://www.w3.org/1999/xhtml", "xml:lang": str(language)})
+    # Create the header / SubElements of the root element
+    head = SubElement(page_hocr, "head")
+    SubElement(head, "title").text = "Paddle OCR hocr"
+    SubElement(head, "meta", attrib={
+               "http-equiv": "Content-Type", "content": "text/html; charset=utf-8"})
+    SubElement(
+        head,
+        "meta",
+        attrib={"name": "ocr-system", "content": f"paddleocr"},
+    )
+    SubElement(
+        head,
+        "meta",
+        attrib={"name": "ocr-capabilities",
+                "content": "ocr_page ocr_carea ocr_par ocr_line ocrx_word"},
+    )
+    # Create the body
+    body = SubElement(page_hocr, "body")
+    page = SubElement(
+        body,
+        "div",
+        attrib={
+            "class": "ocr_page",
+            "id": f"page_{p_idx}",
+            "title": f"image; bbox 0 0 {width} {height}; ppageno 0",
+        },
+    )
+
+    # iterate over the blocks / lines / words and create the XML elements in body line by line with the attributes
+    for line in result:
+        x = line[2][0] * width
+        y = line[2][1] * height
+        line_width = line[2][2] * width
+        line_height = line[2][3] * height
+        xmin = x
+        ymin = height - y - line_height
+        xmax = x + line_width
+        ymax = height - y
+
+        # NOTE: baseline, x_size, x_descenders, x_ascenders is currently initalized to 0
+        block_span = SubElement(
+            body,
+            "div",
+            attrib={
+                "class": "ocr_carea",
+                "id": f"block_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}",
+            },
+        )
+        paragraph_span = SubElement(
+            block_span,
+            "p",
+            attrib={
+                "class": "ocr_par",
+                "id": f"par_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}",
+            },
+        )
+        line_span = SubElement(
+            paragraph_span,
+            "span",
+            attrib={
+                "class": "ocr_line",
+                "id": f"line_{line_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}; baseline 0 0; x_size 0; x_descenders 0; x_ascenders 0",
+            },
+        )
+        line_count += 1
+        word_in_line_count = 0
+        confs = []
+        for word in line[0]:
+            conf = line[1]
+            confs.append(conf)
+        confs_mean = mean(confs)
+        word_div = SubElement(
+            line_span,
+            "span",
+            attrib={
+                "class": "ocrx_word",
+                "id": f"word_{word_count}",
+                "title": f"bbox {int(round(xmin))} {int(round(ymin))} {int(round(xmax))} {int(round(ymax))}; x_wconf {int(round(confs_mean * 100))}",
+            },
+        )
+        word_div.text = ""
+        for word in line[0]:
             """word_xmin = (xmax - xmin) / \
                 len(line[1][0]) * word_in_line_count + xmin
             word_xmax = (xmax - xmin) / \

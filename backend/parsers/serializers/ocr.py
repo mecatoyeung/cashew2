@@ -17,6 +17,7 @@ class OCRSerializer(serializers.ModelSerializer):
         fields = ['id', 'guid', 'ocr_type',
                   'google_vision_ocr_api_key', 'paddle_ocr_language', 
                   'omnipage_ocr_language', 
+                  'apple_vision_ocr_language',
                   'ocr_image_layer_type', 'image_layer_preprocessing', 
                   'detect_searchable',
                   'debug']
@@ -43,6 +44,7 @@ class ProtectedOCRSerializer(serializers.ModelSerializer):
         fields = ['id', 'guid', 'ocr_type',
                   'paddle_ocr_language', 
                   'omnipage_ocr_language', 
+                  'apple_vision_ocr_language',
                   'ocr_image_layer_type', 'image_layer_preprocessing', 
                   'detect_searchable',
                   'debug']

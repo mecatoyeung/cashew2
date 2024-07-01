@@ -24,6 +24,8 @@ class OCR(models.Model):
         max_length=256, null=True, blank=True, default="cn")
     omnipage_ocr_language = models.CharField(
         max_length=256, null=True, blank=True, default="LANG_ENG")
+    apple_vision_ocr_language = models.CharField(
+        max_length=256, null=True, blank=True, default="en-US")
     detect_searchable = models.BooleanField(
         default=False
     )

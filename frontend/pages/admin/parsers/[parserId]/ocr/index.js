@@ -44,6 +44,11 @@ const ocrOptions = [
       'Omnipage OCR (On Premise, Paid, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)',
     value: 'OMNIPAGE',
   },
+  {
+    label:
+      'Apple Vision Framework OCR (On Premise, Free, very good at Traditional (Especially 香港常用字)/Simplified Chinese/English.)',
+    value: 'APPLE_VISION',
+  },
 ]
 
 const paddleOCRLangOptions = [
@@ -93,6 +98,21 @@ const omnipageOCRLangOptions = [
   {
     label: 'English',
     value: 'LANG_ENG',
+  },
+]
+
+const appleVisionOCRLangOptions = [
+  {
+    label: 'Traditional Chinese',
+    value: 'zh-Hant',
+  },
+  {
+    label: 'Simplified Chinese',
+    value: 'zh-Hans',
+  },
+  {
+    label: 'English',
+    value: 'en-US',
   },
 ]
 
@@ -150,6 +170,16 @@ const OCR = () => {
   const omnipageOCRLanguageChangeHandler = (e) => {
     let updatedOCR = { ...parser.ocr }
     updatedOCR.omnipageOcrLanguage = e.value
+    setParser({
+      ...parser,
+      ocr: updatedOCR,
+    })
+  }
+
+  const appleVisionFrameworkOCRLanguageChangeHandler = (e) => {
+    let updatedOCR = { ...parser.ocr }
+    updatedOCR.appleVisionOcrLanguage = e.value
+    console.log(updatedOCR)
     setParser({
       ...parser,
       ocr: updatedOCR,
@@ -275,10 +305,30 @@ const OCR = () => {
                   </Form.Group>
                 </>
               )}
+              {parser.ocr.ocrType == 'APPLE_VISION' && (
+                <>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formAppleVisionOcrApiKey"
+                  >
+                    <Form.Label>Apple Vision Framework OCR Language</Form.Label>
+                    <Select
+                      options={appleVisionOCRLangOptions}
+                      value={appleVisionOCRLangOptions.find(
+                        (oo) => oo.value == parser.ocr.appleVisionOcrLanguage
+                      )}
+                      onChange={(e) => appleVisionFrameworkOCRLanguageChangeHandler(e)}
+                      menuPlacement="auto"
+                      menuPosition="fixed"
+                    />
+                  </Form.Group>
+                </>
+              )}
               {(parser.ocr.ocrType == 'DOCTR' ||
                 parser.ocr.ocrType == 'GOOGLE_VISION' ||
                 parser.ocr.ocrType == 'PADDLE' ||
-                parser.ocr.ocrType == 'OMNIPAGE') && (
+                parser.ocr.ocrType == 'OMNIPAGE' ||
+                parser.ocr.ocrType == 'APPLE_VISION') && (
                 <>
                   <Form.Group className="mb-3" controlId="formDetectSearchable">
                     <Form.Label>Detect Searchable</Form.Label>

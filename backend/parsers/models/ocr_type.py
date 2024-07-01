@@ -8,6 +8,7 @@ class OCRType(Enum):
     DOCTR = "DOCTR"
     PADDLE = "PADDLE"
     OMNIPAGE = "OMNIPAGE"
+    APPLE_VISION = "APPLE_VISION"
 
     @classmethod
     def choices(cls):
