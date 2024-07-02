@@ -232,7 +232,7 @@ class ParserExportSerializer(ParserSerializer):
     pass
 
 
-class ParserImportSerializer(ParserSerializer):
+class ParserImportSerializer(serializers.Serializer):
 
     pass
 

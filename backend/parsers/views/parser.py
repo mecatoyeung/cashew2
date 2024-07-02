@@ -1,6 +1,7 @@
 import re
 import decimal
 from datetime import datetime
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 import traceback
 
@@ -293,6 +294,8 @@ class ParserViewSet(viewsets.ModelViewSet):
                         .prefetch_related(Prefetch("last_page_splitting_rules",
                                                    queryset=LastPageSplittingRule.objects.prefetch_related("consecutive_page_splitting_conditions")))
                     )) \
+                    .prefetch_related("permitted_users")\
+                    .prefetch_related("permitted_groups")\
                     .get(pk=parser_id)
 
                 serializer = ParserExportSerializer(parser)
@@ -552,11 +555,11 @@ class ParserViewSet(viewsets.ModelViewSet):
 
     
 
-class ParserGenericViewSet(viewsets.GenericViewSet):
+#class ParserGenericViewSet(viewsets.GenericViewSet):
 
-    authentication_classes = [
-        TokenAuthentication]
-    permission_classes = [IsAuthenticated, ParserManagementPermission]
+    #authentication_classes = [
+    #    TokenAuthentication]
+    #permission_classes = [IsAuthenticated, ParserManagementPermission]
 
     @action(detail=False,
             methods=['POST'],
@@ -584,8 +587,18 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                 parser.name = parser_json_obj["name"]
                 parser.last_modified_at = datetime.now()
                 parser.total_num_of_pages_processed = parser_json_obj["totalNumOfPagesProcessed"]
-                parser.user = request.user
-
+                parser.pdf_to_image_dpi = parser_json_obj["pdfToImageDpi"]
+                parser.assumed_text_width = parser_json_obj["assumedTextWidth"]
+                parser.assumed_text_height = parser_json_obj["assumedTextHeight"]
+                parser.same_line_acceptance_range = parser_json_obj["sameLineAcceptanceRange"]
+                parser.same_column_acceptance_range = parser_json_obj["sameColumnAcceptanceRange"]
+                parser.owner = request.user
+                
+                parser.save()
+                
+                parser.permitted_users.set(parser_json_obj["permittedUsers"])
+                parser.permitted_groups.set(parser_json_obj["permittedGroups"])
+                
                 parser.save()
 
                 if splitting_parser_counter < len(json_obj):
@@ -597,30 +610,34 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                         parser_id=parser.id,
                         source_path=source_json_obj["sourcePath"],
                         interval_seconds=source_json_obj["intervalSeconds"],
-                        next_run_time=source_json_obj["nextRunTime"],
+                        next_run_time=timezone.now(),
+                        is_running = False,
                         activated=source_json_obj["activated"],
-                        is_running = False
                     )
                     s.save()
 
                 for preprocessing_json_obj in parser_json_obj["preprocessings"]:
                     pp = PreProcessing(
-                        name=preprocessing_json_obj["name"],
                         pre_processing_type=preprocessing_json_obj["preProcessingType"],
-                        parser=parser,
+                        name=preprocessing_json_obj["name"],
                         step=preprocessing_json_obj["step"],
+                        parser=parser,
+                        orientation_detection_tesseract_confidence_above=preprocessing_json_obj["orientationDetectionTesseractConfidenceAbove"],
                         threshold_binarization=preprocessing_json_obj["thresholdBinarization"],
                         debug=preprocessing_json_obj["debug"],
-                        orientation_detection_tesseract_confidence_above=preprocessing_json_obj["orientationDetectionTesseractConfidenceAbove"]
                     )
                     pp.save()
 
                 ocr = OCR()
                 ocr.parser = parser
                 ocr.ocr_type = parser_json_obj["ocr"]["ocrType"]
+                ocr.ocr_image_layer_type = parser_json_obj["ocr"]["ocrImageLayerType"]
+                ocr.image_layer_preprocessing = parser_json_obj["ocr"]["imageLayerPreprocessing"]
                 ocr.google_vision_ocr_api_key = parser_json_obj["ocr"]["googleVisionOcrApiKey"]
                 ocr.paddle_ocr_language = parser_json_obj["ocr"]["paddleOcrLanguage"]
                 ocr.omnipage_ocr_language = parser_json_obj["ocr"]["omnipageOcrLanguage"]
+                ocr.apple_vision_ocr_language = parser_json_obj["ocr"]["appleVisionOcrLanguage"]
+                ocr.detect_searchable = parser_json_obj["ocr"]["detectSearchable"]
                 ocr.debug = parser_json_obj["ocr"]["debug"]
                 ocr.save()
 
@@ -630,7 +647,6 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                     except:
                         anchor_document = None
                     r = Rule(
-                        guid=rule_json_obj["guid"],
                         parser_id=parser.id,
                         name=rule_json_obj["name"],
                         rule_type=rule_json_obj["ruleType"],
@@ -651,6 +667,7 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                         anchor_document=anchor_document,
                         anchor_page_num=rule_json_obj["anchorPageNum"],
                         acrobat_form_field=rule_json_obj["acrobatFormField"],
+                        depends_on_id=rule_json_obj["dependsOn"],
                         last_modified_at=datetime.now()
                     )
                     r.save()
@@ -674,13 +691,16 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                             extract_nth_lines=stream_json_obj["extractNthLines"],
                             combine_first_n_lines=stream_json_obj["combineFirstNLines"],
                             convert_to_table_by_specify_headers=stream_json_obj["convertToTableBySpecifyHeaders"],
-                            col_index=stream_json_obj["col_index"],
-                            col_indexes=stream_json_obj["col_indexes"],
-                            remove_matched_row_also=stream_json_obj["remove_matched_row_also"],
-                            unpivot_column_index=stream_json_obj["unpivot_column_index"],
-                            unpivot_newline_char=stream_json_obj["unpivot_newline_char"],
-                            unpivot_property_assign_char=stream_json_obj["unpivot_property_assign_char"],
-                            open_ai_question=stream_json_obj["open_ai_question"],
+                            open_ai_question=stream_json_obj["openAiQuestion"],
+                            col_index=stream_json_obj["colIndex"],
+                            col_indexes=stream_json_obj["colIndexes"],
+                            remove_matched_row_also=stream_json_obj["removeMatchedRowAlso"],
+                            unpivot_column_index=stream_json_obj["unpivotColumnIndex"],
+                            unpivot_newline_char=stream_json_obj["unpivotNewlineChar"],
+                            unpivot_property_assign_char=stream_json_obj["unpivotPropertyAssignChar"],
+                            json_extract_code=stream_json_obj["jsonExtractCode"],
+                            current_page_regex=stream_json_obj["currentPageRegex"],
+                            last_page_regex=stream_json_obj["lastPageRegex"]
                         )
                         stream.save()
 
@@ -690,24 +710,24 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                     splitting.parser = parser
                     splitting.split_type = parser_json_obj["splitting"]["splitType"]
                     splitting.no_first_page_rules_matched_operation_type = parser_json_obj["splitting"]["noFirstPageRulesMatchedOperationType"]
-                    splitting.no_first_page_rules_matched_route_to_parser_id = parser_json_obj["splitting"]["noFirstPageRulesMatchedRouteToParser"]
+                    splitting.no_first_page_rules_matched_route_to_parser = parser_json_obj["splitting"]["noFirstPageRulesMatchedRouteToParser"]
                     splitting.activated = parser_json_obj["splitting"]["activated"]
                     splitting.save()
 
                     for splitting_rule_json_obj in parser_json_obj["splitting"]["splittingRules"]:
                         splitting_rule = SplittingRule()
+                        splitting_rule.splitting_rule_type = splitting_rule_json_obj[
+                            "splittingRuleType"]
                         splitting_rule.splitting = splitting
                         splitting_rule.route_to_parser = Parser.objects.get(pk=splitting_parser_ids_mapping[
                             splitting_rule_json_obj["routeToParser"]])
-                        splitting_rule.splitting_rule_type = splitting_rule_json_obj[
-                            "splittingRuleType"]
                         splitting_rule.sort_order = splitting_rule_json_obj["sortOrder"]
                         splitting_rule.save()
 
                         for splitting_condition_json_obj in splitting_rule_json_obj["splittingConditions"]:
                             splitting_condition = SplittingCondition()
-                            splitting_condition.rule = r
                             splitting_condition.splitting_rule = splitting_rule
+                            splitting_condition.rule = r
                             splitting_condition.operator = splitting_condition_json_obj["operator"]
                             splitting_condition.value = splitting_condition_json_obj["value"]
                             splitting_condition.sort_order = splitting_condition_json_obj["sortOrder"]
@@ -715,7 +735,8 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
 
                         for consecutive_page_splitting_rule_json_obj in splitting_rule_json_obj["consecutivePageSplittingRules"]:
                             consecutive_page_splitting_rule = ConsecutivePageSplittingRule()
-                            consecutive_page_splitting_rule.splitting = splitting
+                            consecutive_page_splitting_rule.consecutive_page_splitting_rule_type = consecutive_page_splitting_rule_json_obj[
+                                "consecutivePageSplittingRuleType"]
                             consecutive_page_splitting_rule.parent_splitting_rule = splitting_rule
                             consecutive_page_splitting_rule.sort_order = consecutive_page_splitting_rule_json_obj[
                                 "sortOrder"]
@@ -723,8 +744,8 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
 
                             for consecutive_page_splitting_condition_json_obj in consecutive_page_splitting_rule_json_obj["consecutivePageSplittingConditions"]:
                                 consecutive_page_splitting_condition = ConsecutivePageSplittingCondition()
-                                consecutive_page_splitting_condition.rule = r
                                 consecutive_page_splitting_condition.consecutive_page_splitting_rule = consecutive_page_splitting_rule
+                                consecutive_page_splitting_condition.rule = r
                                 consecutive_page_splitting_condition.operator = consecutive_page_splitting_condition_json_obj[
                                     "operator"]
                                 consecutive_page_splitting_condition.value = consecutive_page_splitting_condition_json_obj[
@@ -735,16 +756,16 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
 
                         for last_page_splitting_rule_json_obj in splitting_rule_json_obj["lastPageSplittingRules"]:
                             last_page_splitting_rule = LastPageSplittingRule()
-                            last_page_splitting_rule.splitting = splitting
+                            last_page_splitting_rule.last_page_splitting_rule_type = last_page_splitting_rule_json_obj["lastPageSplittingRuleType"]
                             last_page_splitting_rule.parent_splitting_rule = splitting_rule
-                            last_page_splitting_rule.sort_order = consecutive_page_splitting_rule_json_obj[
+                            last_page_splitting_rule.sort_order = last_page_splitting_rule_json_obj[
                                 "sortOrder"]
                             last_page_splitting_rule.save()
 
                             for last_page_splitting_condition_json_obj in last_page_splitting_rule_json_obj["lastPageSplittingConditions"]:
                                 last_page_splitting_condition = LastPageSplittingCondition()
-                                last_page_splitting_condition.rule = r
                                 last_page_splitting_condition.last_page_splitting_rule = last_page_splitting_rule
+                                last_page_splitting_condition.rule = r
                                 last_page_splitting_condition.operator = last_page_splitting_condition[
                                     "operator"]
                                 last_page_splitting_condition.value = last_page_splitting_condition_json_obj[
@@ -759,25 +780,25 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
                 chatbot.open_ai_resource_name = parser_json_obj["chatbot"]["openAiResourceName"]
                 chatbot.open_ai_api_key = parser_json_obj["chatbot"]["openAiApiKey"]
                 chatbot.open_ai_default_question = parser_json_obj["chatbot"]["openAiDefaultQuestion"]
-                chatbot.base_url = parser_json_obj["chatbot"]["baseUrl"]
                 chatbot.open_ai_deployment = parser_json_obj["chatbot"]["openAiDeployment"]
+                chatbot.base_url = parser_json_obj["chatbot"]["baseUrl"]
                 chatbot.save()
 
                 open_ai = OpenAI()
                 open_ai.parser = parser
                 open_ai.enabled = parser_json_obj["openAi"]["enabled"]
                 open_ai.open_ai_resource_name = parser_json_obj["openAi"]["openAiResourceName"]
-                open_ai.open_ai_api_key = parser_json_obj["openAi"]["openAiApiKey"]
                 open_ai.open_ai_deployment = parser_json_obj["openAi"]["openAiDeployment"]
+                open_ai.open_ai_api_key = parser_json_obj["openAi"]["openAiApiKey"]
                 open_ai.save()
 
                 for postprocessing_json_obj in parser_json_obj["postprocessings"]:
                     pp = PostProcessing(
                         name=postprocessing_json_obj["name"],
-                        post_processing_type=postprocessing_json_obj["postProcessingType"],
                         parser=parser,
-                        redaction_regex=postprocessing_json_obj["redactionRegex"],
-                        step=postprocessing_json_obj["step"]
+                        post_processing_type=postprocessing_json_obj["postProcessingType"],
+                        step=postprocessing_json_obj["step"],
+                        redaction_regex=postprocessing_json_obj["redactionRegex"]
                     )
                     pp.save()
 
@@ -800,6 +821,7 @@ class ParserGenericViewSet(viewsets.GenericViewSet):
             return Response({}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            traceback.print_exc()
             return Response({"message": "ERROR", "detail": str(e)}, status=400)
 
     @action(detail=False,

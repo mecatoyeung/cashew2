@@ -16,7 +16,7 @@ from parsers.models.queue_status import QueueStatus
 from parsers.models.source import Source
 from parsers.models.open_ai_metrics import OpenAIMetrics
 
-from parsers.views.parser import ParserViewSet, ParserGenericViewSet
+from parsers.views.parser import ParserViewSet
 from parsers.views.rule import RuleViewSet
 from parsers.views.stream import StreamViewSet
 from parsers.views.open_ai import OpenAIViewSet
@@ -42,8 +42,8 @@ def running_migration(argv):
 
 parsers_router = DefaultRouter()
 parsers_router.register('', ParserViewSet, basename="parsers")
-parsers_generic_router = DefaultRouter()
-parsers_generic_router.register('', ParserGenericViewSet, basename="parsers")
+#parsers_generic_router = DefaultRouter()
+#parsers_generic_router.register('', ParserGenericViewSet, basename="parsers")
 rules_router = DefaultRouter()
 rules_router.register('', RuleViewSet, basename="rules")
 streams_router = DefaultRouter()
@@ -80,7 +80,7 @@ app_name = "parsers"
 
 urlpatterns = [
     path('parsers/', include(parsers_router.urls), name="parsers"),
-    path('parsers/', include(parsers_generic_router.urls), name="parsers"),
+    #path('parsers/', include(parsers_generic_router.urls), name="parsers"),
     path('rules/', include(rules_router.urls), name="rules"),
     path('streams/', include(streams_router.urls), name="streams"),
     path('queues/', include(queues_router.urls), name="queues"),

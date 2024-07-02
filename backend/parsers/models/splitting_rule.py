@@ -22,29 +22,3 @@ class SplittingRule(models.Model):
 
     class Meta:
         db_table = 'splitting_rules'
-
-
-"""class ConsecutivePageSplittingRule(models.Model):
-    id = models.AutoField(primary_key=True)
-    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
-    splitting_rule_type = models.CharField(
-        max_length=255, choices=SplittingRuleType.choices())
-    parent_splitting_rule = models.ForeignKey(
-        "SplittingRule", on_delete=models.CASCADE, related_name="consecutive_page_splitting_rules", null=True)
-    sort_order = models.IntegerField(null=False)
-
-    class Meta:
-        db_table = 'consecutive_page_splitting_rules'
-
-
-class LastPageSplittingRule(models.Model):
-    id = models.AutoField(primary_key=True)
-    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
-    splitting_rule_type = models.CharField(
-        max_length=255, choices=SplittingRuleType.choices())
-    parent_splitting_rule = models.ForeignKey(
-        "SplittingRule", on_delete=models.CASCADE, related_name="last_page_splitting_rules", null=True)
-    sort_order = models.IntegerField(null=False)
-
-    class Meta:
-        db_table = 'last_page_splitting_rules'"""

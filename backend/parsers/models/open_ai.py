@@ -5,9 +5,9 @@ from django.db import models
 
 class OpenAI(models.Model):
     id = models.AutoField(primary_key=True)
+    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     parser = models.OneToOneField(
         "Parser", on_delete=models.CASCADE, related_name="open_ai")
-    guid = models.CharField(max_length=255, null=False, default=uuid.uuid4)
     enabled = models.BooleanField(null=False, default=False)
     open_ai_resource_name = models.CharField(
         max_length=1024, null=True, blank=True)
