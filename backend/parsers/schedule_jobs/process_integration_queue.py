@@ -137,6 +137,7 @@ def process_single_integration_queue(queue_job):
 
                 text_file = open(os.path.join(
                     rendered_path_template), "w", encoding="utf-8")
+                text_file.write('\ufeff')
                 text_file.write(rendered_template)
                 text_file.close()
 
